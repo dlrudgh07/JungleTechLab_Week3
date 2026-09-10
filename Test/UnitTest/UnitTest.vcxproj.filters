@@ -1,53 +1,53 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="TestExample.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="..\..\Week2\Object.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\Object.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TestObject.cpp" />
-    <ClCompile Include="..\..\Week2\Core.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\Core.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\EngineStatics.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\EngineStatics.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TestActor.cpp" />
-    <ClCompile Include="..\..\Week2\Actor.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\Actor.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\SceneComponent.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\SceneComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\ActorComponent.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\ActorComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TestSceneData.cpp" />
-    <ClCompile Include="..\..\Week2\SceneData.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\SceneData.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TestFileManager.cpp" />
-    <ClCompile Include="..\..\Week2\FileManager.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\FileManager.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\ObjectFactory.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\ObjectFactory.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TestsTArray.cpp" />
-    <ClCompile Include="..\..\Week2\JsonUtil.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\JsonUtil.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\CubeComponent.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\CubeComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\World.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\World.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\PrimitiveComponent.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\PrimitiveComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\SphereComponent.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\SphereComponent.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="TestWorld.cpp" />
@@ -56,31 +56,31 @@
     <ClCompile Include="TestSparseArray.cpp" />
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\Console.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\Console.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\ImGui\imgui.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\ImGui\imgui.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\ImGui\imgui_impl_dx11.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\ImGui\imgui_impl_dx11.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\ImGui\imgui_impl_win32.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\ImGui\imgui_impl_win32.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\ImGui\imgui_tables.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\ImGui\imgui_tables.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\ImGui\imgui_widgets.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\ImGui\imgui_widgets.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Week2\ImGui\imgui_draw.cpp">
+    <ClCompile Include="..\..\JungleTechLab_Week3\ImGui\imgui_draw.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="..\..\Week2\Json\json.hpp">
+    <ClInclude Include="..\..\JungleTechLab_Week3\Json\json.hpp">
       <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
