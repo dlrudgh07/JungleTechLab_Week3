@@ -117,3 +117,35 @@ typedef struct FVector4
 	float Length() const { return FMath::Sqrt(x * x + y * y + z * z + w * w); }
 
 } FVector4;
+
+typedef struct FVector2
+{
+	float x, y;
+	FVector2(float _x = 0, float _y = 0) : x(_x), y(_y) {}
+
+	const FVector2 operator-(const FVector2& Others) const
+	{
+		return FVector2(x - Others.x, y - Others.y);
+	}
+
+	void operator+=(const FVector2& Others)
+	{
+		x += Others.x;
+		y += Others.y;
+	}
+
+	void operator-=(const FVector2& Others)
+	{
+		x -= Others.x;
+		y -= Others.y;
+	}
+
+	//내적
+	inline static float dot(const FVector2& A, const FVector2& B)
+	{
+		return A.x * B.x + A.y * B.y;
+	}
+
+	float Length() const { return FMath::Sqrt(x * x + y * y); }
+
+} FVector2;

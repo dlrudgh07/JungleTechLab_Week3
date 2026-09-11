@@ -19,6 +19,7 @@
 #include "imGui/imgui_impl_win32.h"
 #include "Actor.h"
 #include "World.h"
+#include "FResourceManager.h"
 
 void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 {
@@ -76,6 +77,10 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 
 	const FVector4 NearTint(1.0f, 0.65f, 0.15f, 0.85f); // 주황 = 가까운 쪽
 	const FVector4 FarTint(0.25f, 0.55f, 1.0f, 0.85f); // 파랑 = 먼 쪽
+
+	//리소스들 초기화
+	FResourceManager::Get().SetDevice(mGraphicsManager->GetRenderer()->Device);
+	FResourceManager::Get().Initialize();
 
 	mSceneManager = new FSceneManager();
 	mFileManager = new FFileManager();

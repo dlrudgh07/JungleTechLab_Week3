@@ -132,7 +132,10 @@
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="EngineStatics.cpp" />
+    <ClCompile Include="FFontAsset.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="FResourceManager.cpp" />
+    <ClCompile Include="FTexture.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="JsonUtil.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
@@ -156,11 +159,15 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SphereComponent.cpp" />
     <ClInclude Include="Circle.h" />
+    <ClInclude Include="FFontAsset.h" />
+    <ClInclude Include="FResourceManager.h" />
+    <ClInclude Include="FTexture.h" />
     <ClInclude Include="GizmoArrow.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="TSparseArray.inl">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClCompile Include="UTextComponent.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -210,6 +217,7 @@
     <ClInclude Include="ActorComponent.h" />
     <ClInclude Include="CubeComponent.h" />
     <ClInclude Include="TSparseArray.h" />
+    <ClInclude Include="UTextComponent.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="Transform.h" />
@@ -225,8 +233,16 @@
   <ItemGroup>
     <None Include="Object.inl" />
     <None Include="ObjectFactory.inl" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\directxtk_desktop_win10.2026.5.8.1\build\native\directxtk_desktop_win10.targets" Condition="Exists('..\packages\directxtk_desktop_win10.2026.5.8.1\build\native\directxtk_desktop_win10.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\directxtk_desktop_win10.2026.5.8.1\build\native\directxtk_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk_desktop_win10.2026.5.8.1\build\native\directxtk_desktop_win10.targets'))" />
+  </Target>
 </Project>
