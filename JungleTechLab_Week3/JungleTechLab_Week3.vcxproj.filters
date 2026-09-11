@@ -13,274 +13,307 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{7a466ff4-07ff-4dab-9089-fe1fef142a9f}</UniqueIdentifier>
+    <Filter Include="Core">
+      <UniqueIdentifier>{28d462a2-14d2-4cc5-a739-ce0ad0e1b764}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ImGui">
+    <Filter Include="Rendering">
+      <UniqueIdentifier>{36f10f0f-9b36-4ef1-a1dd-e9bf3b29ceb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\ImGui">
       <UniqueIdentifier>{1eb93b47-d381-43d9-8583-ffd9edc14d98}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Json">
+    <Filter Include="Core\Serialize">
+      <UniqueIdentifier>{fb3246a8-0aca-4141-9374-f7bf3b18e5c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Serialize\Json">
       <UniqueIdentifier>{b53c8b88-1e9b-488b-b73f-093142aa82d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Shaders">
+      <UniqueIdentifier>{7a466ff4-07ff-4dab-9089-fe1fef142a9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\UObject">
+      <UniqueIdentifier>{898b5d5c-852f-4afd-959a-3c0a773c1e75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Component">
+      <UniqueIdentifier>{c1b2cb11-b728-4b86-8fd7-158971cab8d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Console">
+      <UniqueIdentifier>{b957b66e-866c-4936-b980-4734b54fb893}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Types">
+      <UniqueIdentifier>{b01e7ee4-9dda-452b-bd71-3a057f8d762f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Scene">
+      <UniqueIdentifier>{92ec41a8-2413-448a-a81a-2461abbbc64f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Shapes">
+      <UniqueIdentifier>{a53baca7-5762-4833-83fb-6a3ec7b0cc83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\Gizmo">
+      <UniqueIdentifier>{3fa6e762-e278-4ab0-b959-ea9eeb459e46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Base">
+      <UniqueIdentifier>{e1c06605-5fbe-449c-b8ff-f92d51f4d4b4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="ImGui\imgui.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="ImGui\imgui_demo.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="ImGui\imgui_draw.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="ImGui\imgui_impl_dx11.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="ImGui\imgui_impl_win32.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="ImGui\imgui_tables.cpp">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="ImGui\imgui_widgets.cpp">
-      <Filter>ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Console.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Object.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Core.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="EngineStatics.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Actor.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="ActorComponent.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneComponent.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="GraphicsManager.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="PrimitiveComponent.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CubeComponent.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClCompile>
     <ClCompile Include="World.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="MathUtility.cpp">
-      <Filter>소스 파일</Filter>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="LaunchEngineLoop.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneData.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="FileManager.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneManager.cpp">
-      <Filter>소스 파일</Filter>
+    <ClCompile Include="Object.cpp">
+      <Filter>Core\UObject</Filter>
     </ClCompile>
     <ClCompile Include="ObjectFactory.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Core\UObject</Filter>
     </ClCompile>
-    <ClCompile Include="JsonUtil.cpp">
-      <Filter>소스 파일</Filter>
+    <ClCompile Include="ActorComponent.cpp">
+      <Filter>Core\Component</Filter>
     </ClCompile>
-    <ClCompile Include="FEditorViewportClient.cpp">
-      <Filter>소스 파일</Filter>
+    <ClCompile Include="CubeComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="PrimitiveComponent.cpp">
+      <Filter>Core\Component</Filter>
     </ClCompile>
     <ClCompile Include="SphereComponent.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Console.cpp">
+      <Filter>Core\Console</Filter>
+    </ClCompile>
+    <ClCompile Include="FEditorViewportClient.cpp">
+      <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Gizmo.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsManager.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonUtil.cpp">
+      <Filter>Core\Serialize</Filter>
+    </ClCompile>
+    <ClCompile Include="FileManager.cpp">
+      <Filter>Core\Serialize</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Core.cpp">
+      <Filter>Core\Types</Filter>
+    </ClCompile>
+    <ClCompile Include="MathUtility.cpp">
+      <Filter>Core\Types</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneData.cpp">
+      <Filter>Core\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneManager.cpp">
+      <Filter>Core\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Core\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineStatics.cpp">
+      <Filter>Core\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="LaunchEngineLoop.cpp">
+      <Filter>Core\Base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Renderer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="ImGui\imconfig.h">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="ImGui\imgui.h">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="ImGui\imgui_impl_dx11.h">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="ImGui\imgui_impl_win32.h">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="ImGui\imgui_internal.h">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="ImGui\imstb_rectpack.h">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="ImGui\imstb_textedit.h">
-      <Filter>ImGui</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="ImGui\imstb_truetype.h">
-      <Filter>ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Sphere.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameTimer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Core.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Console.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Object.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="TArray.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="TMap.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="TQueue.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="TSet.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="EngineStatics.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Actor.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ActorComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="GraphicsManager.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Vector.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Enum.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="PrimitiveComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="CubeComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="SphereComponent.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="World.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Cube.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="MathUtility.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="InputState.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowApplication.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="LaunchEngineLoop.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Matrix.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Transform.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneData.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>Rendering\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Json\json.hpp">
-      <Filter>Json</Filter>
+      <Filter>Core\Serialize\Json</Filter>
     </ClInclude>
-    <ClInclude Include="FEditorViewportClient.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="Actor.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="RenderInfo.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="ActorComponent.h">
+      <Filter>Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="Gizmo.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="CubeComponent.h">
+      <Filter>Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="FileManager.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="PrimitiveComponent.h">
+      <Filter>Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="SceneManager.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="SceneComponent.h">
+      <Filter>Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="ObjectFactory.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="JsonUtil.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="TSparseArray.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="TSparseArray.inl">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="GizmoArrow.h">
-      <Filter>헤더 파일</Filter>
+    <ClInclude Include="SphereComponent.h">
+      <Filter>Core\Component</Filter>
     </ClInclude>
     <ClInclude Include="Circle.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>Rendering\Shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>Rendering\Shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
+      <Filter>Rendering\Shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="Enum.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Console.h">
+      <Filter>Core\Console</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Core.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="MathUtility.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderInfo.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="FEditorViewportClient.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Gizmo.h">
+      <Filter>Rendering\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="GizmoArrow.h">
+      <Filter>Rendering\Gizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Core\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="TArray.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="TMap.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="TQueue.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="TSet.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="TSparseArray.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="TSparseArray.inl">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonUtil.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectFactory.h">
+      <Filter>Core\UObject</Filter>
     </ClInclude>
     <ClInclude Include="Triangle.h">
-      <Filter>헤더 파일</Filter>
+      <Filter>Rendering\Shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsManager.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneData.h">
+      <Filter>Core\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneManager.h">
+      <Filter>Core\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="FileManager.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="InputState.h">
+      <Filter>Core\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameTimer.h">
+      <Filter>Core\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowApplication.h">
+      <Filter>Core\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineStatics.h">
+      <Filter>Core\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="LaunchEngineLoop.h">
+      <Filter>Core\Base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderW0.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Rendering\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Object.inl">
-      <Filter>헤더 파일</Filter>
+      <Filter>Core\UObject</Filter>
     </None>
     <None Include="ObjectFactory.inl">
-      <Filter>헤더 파일</Filter>
+      <Filter>Core\UObject</Filter>
     </None>
   </ItemGroup>
 </Project>

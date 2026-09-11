@@ -8,9 +8,6 @@ class UPrimitiveComponent : public USceneComponent
 public:
 	UPrimitiveComponent();
 
-	//void Initialize(GraphicsManager* graphicsManager, EPrimitive ePrimitive);
-	//void Initialize(GraphicsManager* graphicsManager, EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D);
-
 	void Initialize(EPrimitive ePrimitive);
 	void Initialize(EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D);
 
@@ -19,13 +16,9 @@ public:
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
-	//virtual void Render();
-	void Update(TArray<FRenderInfo>* outRenderInfos) override final;
-	void GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const override final;
+	void Update(TArray<FRenderInfo>* outRenderInfos) override;
+	void GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const override;
 
 protected:
-	//GraphicsManager* mGraphicsManager;
 	EPrimitive mePrimitive;
 };
-
-

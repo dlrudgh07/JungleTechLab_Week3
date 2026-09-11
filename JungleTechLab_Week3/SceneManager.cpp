@@ -364,7 +364,7 @@ void FSceneManager::updateObjectListPanelGUI(const FGuiReference& guiReference)
 			//for (UObject* object : mGuiInputField.SortedObjectLists)
 
 			UObject* bDeleteActorOrNull = nullptr;
-			for (unsigned int objectsIndex = 0; objectsIndex < mGuiInputField.SortedObjectLists.Num(); ++objectsIndex)
+			for (int32 objectsIndex = 0; objectsIndex < mGuiInputField.SortedObjectLists.Num(); ++objectsIndex)
 			{
 				UObject* object = mGuiInputField.SortedObjectLists[objectsIndex];
 
@@ -486,6 +486,7 @@ void FSceneManager::SaveScene(
 	catch (const std::exception& e)
 	{
 		// If the file does not exist or cannot be read, we can assume it's a new scene and set version to 0
+		assert(e.what());
 		version = 0;
 	}
 

@@ -5,7 +5,7 @@
 
 #include "Vector.h"
 
-class FTransform;
+struct FTransform;
 
 class USceneComponent : public UActorComponent
 {

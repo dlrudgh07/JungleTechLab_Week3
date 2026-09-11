@@ -108,7 +108,7 @@ void UWorld::Render()
 
 int32 UWorld::getActorIndex(uint32 actorUUID) const
 {
-	for (uint32 i = 0; i < mActors.Num(); ++i)
+	for (int32 i = 0; i < mActors.Num(); ++i)
 	{
 		if (mActors[i]->UUID == actorUUID)
 		{

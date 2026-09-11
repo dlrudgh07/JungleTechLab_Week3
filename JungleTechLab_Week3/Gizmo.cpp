@@ -336,13 +336,10 @@ FMatrix FGizmo::GetAxisMatrix(EGIZMO_AXIS axis) const // 축모양 도형을 반
 			* FMatrix::Translation(mLocation);
 	}
 
-	else { // eType == SCALE
-		return FMatrix::Scale(FVector(length, ScaleBarthickness, ScaleBarthickness))
-			* FMatrix::Translation(FVector(length * 0.5f, 0.0f, 0.0f))
-			* FMatrix::Rotate(rotation)
-			* FMatrix::Translation(mLocation);
-	}
-
+	return FMatrix::Scale(FVector(length, ScaleBarthickness, ScaleBarthickness))
+		* FMatrix::Translation(FVector(length * 0.5f, 0.0f, 0.0f))
+		* FMatrix::Rotate(rotation)
+		* FMatrix::Translation(mLocation);
 }
 
 
