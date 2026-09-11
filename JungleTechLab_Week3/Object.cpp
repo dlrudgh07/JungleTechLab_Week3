@@ -15,9 +15,10 @@ UObject* FClassInfo::CreateInstance() const
 }
 
 
-UObject::UObject()
+UObject::UObject() 
 {
-	InternalIndex = GUObjectArray.Add(this);
+	ObjectID.InternalIndex = GUObjectArray.Add(this);
+	ObjectID.GUID = FGuid::NewGuid();
 	GUObjectRevision++;
 }
 
@@ -32,7 +33,7 @@ UObject::~UObject()
 	}
 	*/
 
-	GUObjectArray.RemoveAt(InternalIndex);
+	GUObjectArray.RemoveAt(ObjectID.InternalIndex);
 	GUObjectRevision++;
 }
 
@@ -43,7 +44,8 @@ void UObject::Destroy()
 
 void UObject::Initialize()
 {
-	UUID = UEngineStatics::GenerateUUID();
+	if (ObjectID.GUID.IsValid() == false)
+		ObjectID.GUID = FGuid::NewGuid();
 }
 
 const FClassInfo* UObject::GetClass()
@@ -61,7 +63,7 @@ void UObject::SerializeClass(json::JSON& outJson) const
 	outJson["ClassName"] = GetRuntimeClass()->Name;
 
 	json::JSON propertiesJson = json::JSON::Make(json::JSON::Class::Object);
-	propertiesJson["UUID"] = UUID;
+	propertiesJson["GUID"] = ObjectID.GUID.ToString();
 	outJson["Properties"] = propertiesJson;
 }
 
@@ -73,12 +75,12 @@ void UObject::DeserializeClass(const json::JSON& inJson)
 	}
 	const json::JSON& propertiesJson = inJson.at("Properties");
 
-	if (!propertiesJson.hasKey("UUID") || propertiesJson.at("UUID").JSONType() != json::JSON::Class::Integral)
+	if (!propertiesJson.hasKey("GUID") || propertiesJson.at("GUID").JSONType() != json::JSON::Class::String)
 	{
-		throw std::runtime_error("Invalid JSON format for UUID");
+		throw std::runtime_error("Invalid JSON format for GUID");
 	}
 
-	UUID = propertiesJson.at("UUID").ToInt();
+	ObjectID.GUID.Parse(FString{ propertiesJson.at("GUID").ToString() });
 }
 
 bool UObject::IsA(const FClassInfo* classInfo) const
@@ -95,11 +97,11 @@ bool UObject::IsA(const FClassInfo* classInfo) const
 	return false;
 }
 
-UObject* UObject::GetObjectByUUID(int32 uuid)
+UObject* UObject::GetObjectByGUID(FGuid TargetGuid)
 {
 	for (const auto& object : GUObjectArray)
 	{
-		if (object && object->UUID == uuid)
+		if (object && object->ObjectID.GUID == TargetGuid)
 		{
 			return object;
 		}

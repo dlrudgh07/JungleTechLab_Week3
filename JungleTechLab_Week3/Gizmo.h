@@ -78,15 +78,16 @@ struct FGizmo {
 	bool IsRayInGizmo(FVector nearPoint, FVector farPoint);
 	void Reset();
 
-	EPrimitive GetAxisPrimitive() const;
 	FMatrix GetAxisMatrix(EGIZMO_AXIS axis) const; // 축모양 도형을 반환
+
+	class UStaticMesh* GetAxisMesh(class FResourceManager* RM) const;
+	TArray<FRenderInfo> GetGizmoRenderInfo(class FResourceManager* RM) const;
 	
 
 	FVector4 GetAxisColor(EGIZMO_AXIS axis) const;
 
 	FMatrix GetScaleHandleMatrix(EGIZMO_AXIS axis) const;
 
-	TArray<FRenderInfo> GetGizmoRenderInfo() const; // Gizmo 모형 렌더정보
 
 	void SetGizmoType(EGIZMO_TYPE type) { eType = type; }
 	void CycleGizmoType() { eType = static_cast<EGIZMO_TYPE>((static_cast<int>(eType) + 1) % 3); }

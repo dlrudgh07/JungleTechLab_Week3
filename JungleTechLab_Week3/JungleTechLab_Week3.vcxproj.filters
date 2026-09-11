@@ -55,6 +55,9 @@
     <Filter Include="Core\Base">
       <UniqueIdentifier>{e1c06605-5fbe-449c-b8ff-f92d51f4d4b4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Asset">
+      <UniqueIdentifier>{94b7d475-1ada-4488-bf91-b15639563fd9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImGui\imgui.cpp">
@@ -89,18 +92,6 @@
     </ClCompile>
     <ClCompile Include="ObjectFactory.cpp">
       <Filter>Core\UObject</Filter>
-    </ClCompile>
-    <ClCompile Include="ActorComponent.cpp">
-      <Filter>Core\Component</Filter>
-    </ClCompile>
-    <ClCompile Include="CubeComponent.cpp">
-      <Filter>Core\Component</Filter>
-    </ClCompile>
-    <ClCompile Include="PrimitiveComponent.cpp">
-      <Filter>Core\Component</Filter>
-    </ClCompile>
-    <ClCompile Include="SphereComponent.cpp">
-      <Filter>Core\Component</Filter>
     </ClCompile>
     <ClCompile Include="Console.cpp">
       <Filter>Core\Console</Filter>
@@ -141,11 +132,23 @@
     <ClCompile Include="main.cpp">
       <Filter>Core\Base</Filter>
     </ClCompile>
-    <ClCompile Include="EngineStatics.cpp">
+    <ClCompile Include="EngineLoop.cpp">
       <Filter>Core\Base</Filter>
     </ClCompile>
-    <ClCompile Include="LaunchEngineLoop.cpp">
+    <ClCompile Include="PrimitiveComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticMeshComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Guid.cpp">
       <Filter>Core\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Core\Asset</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -182,16 +185,10 @@
     <ClInclude Include="ActorComponent.h">
       <Filter>Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="CubeComponent.h">
-      <Filter>Core\Component</Filter>
-    </ClInclude>
     <ClInclude Include="PrimitiveComponent.h">
       <Filter>Core\Component</Filter>
     </ClInclude>
     <ClInclude Include="SceneComponent.h">
-      <Filter>Core\Component</Filter>
-    </ClInclude>
-    <ClInclude Include="SphereComponent.h">
       <Filter>Core\Component</Filter>
     </ClInclude>
     <ClInclude Include="Circle.h">
@@ -299,8 +296,32 @@
     <ClInclude Include="EngineStatics.h">
       <Filter>Core\Base</Filter>
     </ClInclude>
-    <ClInclude Include="LaunchEngineLoop.h">
+    <ClInclude Include="EngineLoop.h">
       <Filter>Core\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshComponent.h">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticMeshComponent.h">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticMesh.h">
+      <Filter>Core\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Core\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Core\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Guid.h">
+      <Filter>Core\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Core\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="Quad.h">
+      <Filter>Rendering\Shapes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

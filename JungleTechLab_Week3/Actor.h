@@ -15,6 +15,11 @@ public:
 	AActor() = default;
 	virtual ~AActor();
 
+	virtual void Destroy()
+	{
+		bPendingKill = true;
+	}
+
 	void Initialize();
 
 	virtual void SerializeClass(json::JSON& outJson) const override;
@@ -22,12 +27,11 @@ public:
 
 	void AddComponent(UActorComponent* actorComponent);
 	void AddRootSceneComponent(USceneComponent* sceneComponent);
-	bool RemoveComponent(uint32 componentUUID);
+	bool RemoveComponent(FGuid TargetComponentGuid);
 
 	FTransform GetTransform() const;
 
-	virtual void Update(TArray<FRenderInfo>* outRenderInfos);
-	//void Render();
+	virtual void Update(TArray<FRenderInfo>* outRenderInfos, float DeltaTime);
 
 	void GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const;
 	bool GetFirstRenderInfo(FRenderInfo& outRenderInfo) const;
@@ -36,14 +40,19 @@ public:
 	void SetRotation(FRotator rotation);
 	void SetScale(FVector scale);
 
+	bool IsPendingKill() const {
+		return bPendingKill;
+	};
+
 private:
-	int32 getComponentIndex(uint32 componentUUID) const;
+	int32 GetComponentIndex(FGuid TargetComponentGuid) const;
 
 private:
 	
-	USceneComponent* mRootComponent = nullptr;
-	TArray<UActorComponent*> mComponents;
-	bool mbPressed = false;
-	bool mbStarted = false;
+	USceneComponent* RootComponent = nullptr;
+	TArray<UActorComponent*> Components;
+	bool bPressed = false;
+	bool bStarted = false;
+	bool bPendingKill = false;
 };
 

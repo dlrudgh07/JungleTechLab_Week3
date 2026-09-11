@@ -131,10 +131,11 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Core.cpp" />
-    <ClCompile Include="EngineStatics.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="Gizmo.cpp" />
+    <ClCompile Include="Guid.cpp" />
     <ClCompile Include="JsonUtil.cpp" />
+    <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="FEditorViewportClient.cpp" />
     <ClCompile Include="GraphicsManager.cpp" />
@@ -145,22 +146,27 @@
     <ClCompile Include="ImGui\imgui_impl_win32.cpp" />
     <ClCompile Include="ImGui\imgui_tables.cpp" />
     <ClCompile Include="ImGui\imgui_widgets.cpp" />
-    <ClCompile Include="LaunchEngineLoop.cpp" />
+    <ClCompile Include="EngineLoop.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
-    <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
-    <ClCompile Include="CubeComponent.cpp" />
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="SphereComponent.cpp" />
     <ClInclude Include="Circle.h" />
+    <ClInclude Include="Guid.h" />
+    <ClInclude Include="Quad.h" />
+    <ClInclude Include="ResourceManager.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="GizmoArrow.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="MeshComponent.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="TSparseArray.inl">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClCompile Include="StaticMeshComponent.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -181,7 +187,7 @@
     <ClInclude Include="InputState.h" />
     <ClInclude Include="Json\json.hpp" />
     <ClInclude Include="SceneData.h" />
-    <ClInclude Include="LaunchEngineLoop.h" />
+    <ClInclude Include="EngineLoop.h" />
     <ClInclude Include="MathUtility.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Console.h" />
@@ -202,14 +208,14 @@
     <ClInclude Include="RenderInfo.h" />
     <ClInclude Include="SceneComponent.h" />
     <ClInclude Include="Sphere.h" />
-    <ClInclude Include="SphereComponent.h" />
     <ClInclude Include="TArray.h" />
     <ClInclude Include="TMap.h" />
     <ClInclude Include="TQueue.h" />
     <ClInclude Include="TSet.h" />
     <ClInclude Include="ActorComponent.h" />
-    <ClInclude Include="CubeComponent.h" />
     <ClInclude Include="TSparseArray.h" />
+    <ClInclude Include="StaticMesh.h" />
+    <ClInclude Include="StaticMeshComponent.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="Transform.h" />

@@ -3,6 +3,8 @@
 #include "Renderer.h"
 #include "Camera.h"
 #include "Console.h"
+#include "StaticMesh.h"
+#include "Texture.h"
 
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
@@ -23,11 +25,6 @@ FGraphicsManager::FGraphicsManager(HWND hWindow)
 
 FGraphicsManager::~FGraphicsManager()
 {
-	for (auto& buffer : mBufferMap)
-	{
-		buffer.second.Buffer->Release();
-	}
-
 	mRenderer->ReleaseLineVertexBuffer();
 	mRenderer->ReleaseConstantBuffer();
 	mRenderer->ReleaseShader();
@@ -94,15 +91,24 @@ void FGraphicsManager::Render(const TArray<FRenderInfo> renderInfos)
 	for (const FRenderInfo& renderInfo : renderInfos)
 	{
 		//mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, mViewProjectionMatrix, renderInfo.Color);
+		// todo: 조명처리할게 아니라면, mvp 처리는 cpu에서 하고 넘기는더 효율적이다
 		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
 
-		FBuffer* vertexBuffer = mBufferMap.Find(renderInfo.ePrimitive);
-		if (vertexBuffer == nullptr)
+		if (renderInfo.VertexBuffer == nullptr || renderInfo.VertexBuffer->VertexBuffer == nullptr)
 		{
-			UE_LOG("Error: Vertex buffer not found for primitive type.");
 			continue;
 		}
-		mRenderer->RenderPrimitive(vertexBuffer->Buffer, vertexBuffer->SourceNum);
+		if (renderInfo.BaseTexture != nullptr && renderInfo.BaseTexture->Resource != nullptr)
+		{
+			mRenderer->BindTexture(renderInfo.BaseTexture->Resource->SRV.Get());
+		}
+		else
+		{
+			// 텍스처가 없으면 렌더러에 내장된 1x1 화이트 텍스처를 꽂아 정점 색상을 보존
+			mRenderer->BindTexture(mRenderer->DefaultWhiteTextureSRV);
+		}
+
+		mRenderer->RenderPrimitive(renderInfo.VertexBuffer->VertexBuffer.Get(), renderInfo.VertexBuffer->NumVertices);
 	}
 }
 void FGraphicsManager::DrawLine(const FVector& start, const FVector& end, const FVector4& color)
@@ -207,15 +213,16 @@ void FGraphicsManager::SetPerspectiveProjection(bool bPerspectiveProjection)
 	mbPerspectiveProjection = bPerspectiveProjection;
 }
 
-void FGraphicsManager::CreateBuffer(EPrimitive ePrimitive, FVertexSimple* vertices, uint32 verticesSize)
+FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize)
 {
-	assert(vertices != nullptr);
+	ID3D11Buffer* rawBuffer = mRenderer->CreateVertexBuffer(InputVertices, InputVerticesSize);
+	UINT numVertices = static_cast<UINT>(InputVerticesSize / sizeof(FVertexSimple));
 
-	UINT numVertices = static_cast<UINT>(verticesSize / sizeof(FVertexSimple));
-	ID3D11Buffer* vertexBuffer = mRenderer->CreateVertexBuffer(vertices, verticesSize);
+	FBuffer* newBuffer = new FBuffer();
+	newBuffer->VertexBuffer = rawBuffer;
+	newBuffer->NumVertices = numVertices;
 
-	FBuffer buffer = { vertexBuffer, numVertices };
-	mBufferMap.Add(ePrimitive, buffer);
+	return newBuffer;
 }
 
 URenderer* FGraphicsManager::GetRenderer() const
@@ -225,15 +232,6 @@ URenderer* FGraphicsManager::GetRenderer() const
 	return mRenderer;
 }
 
-FVector FGraphicsManager::GetPrimitiveCenter(EPrimitive type)
-{
-	switch (type)
-	{
-	case EPrimitive::EP_Sphere:	return FVector(0, 0, 0);
-	case EPrimitive::EP_Cube:	return FVector(0, 0, 0);
-	default:					return FVector(0, 0, 0);
-	}
-}
 
 // 테두리가 화면에서 차지할 두께(픽셀). 물체 크기와 카메라 거리 어느 쪽에도 영향받지 않는다.
 static constexpr float OUTLINE_PIXELS = 3.0f;
@@ -249,35 +247,25 @@ static float GetOutlineAxisScale(float worldHalfExtent, float worldThickness)
 	return 1.0f + worldThickness / worldHalfExtent;
 }
 
-FVector FGraphicsManager::GetPrimitiveHalfExtent(EPrimitive type)
-{
-	switch (type)
-	{
-	case EPrimitive::EP_Sphere:	return FVector(1.0f, 1.0f, 1.0f);
-	case EPrimitive::EP_Cube:	return FVector(0.5f, 0.5f, 0.5f);
-	default:					return FVector(0.5f, 0.5f, 0.5f);
-	}
-}
-
 void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 {
-	const FVector Center = GetPrimitiveCenter(RI.ePrimitive);
-	const FVector HalfExtent = GetPrimitiveHalfExtent(RI.ePrimitive);
+	if (RI.VertexBuffer == nullptr || RI.VertexBuffer->VertexBuffer == nullptr)
+		return;
 
-	// 화면에서 OUTLINE_PIXELS 만큼 보이려면 이 깊이에서 월드로 얼마여야 하는지 환산한다.
-	// 깊이 d에서 뷰포트가 담는 월드 높이가 2*d*tan(fov/2) 이므로, 그걸 픽셀 수로 나누면 픽셀당 월드 크기다.
+	// EPrimitive 하드코딩을 제거하고 RI에서 정보를 가져옴
+	const FVector Center = RI.BoundsCenter;
+	const FVector HalfExtent = RI.BoundsHalfExtent;
+
 	const FVector ObjectLocation = RI.WorldTransformMatrix.TransformPosition(Center);
 	const float Depth = FVector::dot(ObjectLocation - mCameraLocation, mCameraForward);
 	const float TanHalfFov = tanf(FMath::DegreesToRadians(mCameraFovDegree * 0.5f));
 	const float effectiveDepth = FMath::Max(
 		(1.0f - mProjectionRatio) * mCameraOrthoDistance + mProjectionRatio * Depth
 		, 0.01f);
-	//const float H = mbPerspectiveProjection ? 2.0f * Depth * TanHalfFov : 5.774f;
+
 	const float H = 2.0f * effectiveDepth * TanHalfFov;
 	const float WorldThickness = OUTLINE_PIXELS * H / mRenderer->ViewportInfo.Height;
 
-
-	// 축마다 월드 공간에서 WorldThickness 만큼만 자라도록 배율을 따로 구한다.
 	const FVector WorldScale(
 		RI.WorldTransformMatrix.GetUnitAxis(EAxis::X).Length(),
 		RI.WorldTransformMatrix.GetUnitAxis(EAxis::Y).Length(),
@@ -288,22 +276,19 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		GetOutlineAxisScale(HalfExtent.y * WorldScale.y, WorldThickness),
 		GetOutlineAxisScale(HalfExtent.z * WorldScale.z, WorldThickness) };
 
-
 	const FMatrix Outline = FMatrix::Translation(FVector(-Center.x, -Center.y, -Center.z))
 		* FMatrix::Scale(OutlineScale)
 		* FMatrix::Translation(Center)
 		* RI.WorldTransformMatrix;
 
-	FBuffer vertexBuffer = mBufferMap[RI.ePrimitive];
-	//if (mbPerspectiveProjection)
-	//{
-	//	mRenderer->RenderHighlight(vertexBuffer.Buffer, vertexBuffer.SourceNum, mViewProjectionMatrix, Outline, RI);
-	//}
-	//else
-	//{
-	//	mRenderer->RenderHighlight(vertexBuffer.Buffer, vertexBuffer.SourceNum, mViewOrthogonalProjectionMatrix, Outline, RI);
-	//}
-	mRenderer->RenderHighlight(vertexBuffer.Buffer, vertexBuffer.SourceNum, mViewUnifiedProjectionMatrix, Outline, RI);
+	// 맵 캐싱 제거 및 ComPtr의 원시 포인터 전달
+	mRenderer->RenderHighlight(
+		RI.VertexBuffer->VertexBuffer.Get(),
+		RI.VertexBuffer->NumVertices,
+		mViewUnifiedProjectionMatrix,
+		Outline,
+		RI
+	);
 }
 
 

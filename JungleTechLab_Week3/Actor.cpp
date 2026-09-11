@@ -8,9 +8,9 @@
 
 AActor::~AActor()
 {
-	for (UActorComponent* removeComponent : mComponents)
+	for (UActorComponent* CurrentComponent : Components)
 	{
-		delete removeComponent;
+		delete CurrentComponent;
 	}
 }
 
@@ -18,8 +18,8 @@ void AActor::Initialize()
 {
 	UObject::Initialize();
 
-	mbPressed = false;
-	mbStarted = false;
+	bPressed = false;
+	bStarted = false;
 }
 
 void AActor::SerializeClass(json::JSON& outJson) const
@@ -27,14 +27,14 @@ void AActor::SerializeClass(json::JSON& outJson) const
 	UObject::SerializeClass(outJson);
 	json::JSON componentsJson = json::JSON::Make(json::JSON::Class::Array);
 
-	for (const UActorComponent* component : mComponents)
+	for (const UActorComponent* component : Components)
 	{
 		json::JSON componentJson;
 		component->SerializeClass(componentJson);
 		componentsJson.append(std::move(componentJson));
 	}
-	outJson["Properties"]["mComponents"] = componentsJson;
-	outJson["Properties"]["mRootComponentUUID"] = mRootComponent ? mRootComponent->UUID : -1;
+	outJson["Properties"]["Components"] = componentsJson;
+	outJson["Properties"]["RootComponentGUID"] = RootComponent ? RootComponent->ObjectID.GUID.ToString() : std::to_string(-1);
 }
 
 void AActor::DeserializeClass(const json::JSON& inJson)
@@ -43,12 +43,12 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 
 	const json::JSON& propertiesJson = inJson.at("Properties");
 
-	if (!propertiesJson.hasKey("mComponents") || propertiesJson.at("mComponents").JSONType() != json::JSON::Class::Array)
+	if (!propertiesJson.hasKey("Components") || propertiesJson.at("Components").JSONType() != json::JSON::Class::Array)
 	{
-		throw std::runtime_error(std::format("{}: mComponents requires an array", GetRuntimeClass()->Name));
+		throw std::runtime_error(std::format("{}: Components requires an array", GetRuntimeClass()->Name));
 	}
 
-	const json::JSON& componentsJson = propertiesJson.at("mComponents");
+	const json::JSON& componentsJson = propertiesJson.at("Components");
 
 	for (const auto& componentJson : componentsJson.ArrayRange())
 	{
@@ -67,65 +67,64 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 		AddComponent(component);
 	}
 
-	if (!propertiesJson.hasKey("mRootComponentUUID") || propertiesJson.at("mRootComponentUUID").JSONType() != json::JSON::Class::Integral)
+	if (!propertiesJson.hasKey("RootComponentGUID") || propertiesJson.at("RootComponentGUID").JSONType() != json::JSON::Class::String)
 	{
-		throw std::runtime_error(std::format("{}: mRootComponentUUID requires an integral", GetRuntimeClass()->Name));
+		throw std::runtime_error(std::format("{}: RootComponentGUID requires a string", GetRuntimeClass()->Name));
 	}
-	int32 rootComponentUUID = propertiesJson.at("mRootComponentUUID").ToInt();
-	if (rootComponentUUID == -1)
+	FGuid RootComponentGUID;
+	FString GUID{ propertiesJson.at("RootComponentGUID").ToString() };
+	RootComponentGUID.Parse(GUID);
+	if (RootComponentGUID.IsValid() == false)
 	{
-		mRootComponent = nullptr;
+		RootComponent = nullptr;
 	}
 	else
 	{
-		int32 rootComponentIndex = getComponentIndex(rootComponentUUID);
+		int32 rootComponentIndex = GetComponentIndex(RootComponentGUID);
 		if (rootComponentIndex == -1)
 		{
-			throw std::runtime_error(std::format("{}: Invalid root component UUID: {}", GetRuntimeClass()->Name, rootComponentUUID));
+			throw std::runtime_error(std::format("{}: Invalid root component GUID: {}", GetRuntimeClass()->Name, RootComponentGUID.ToString()));
 		}
-		mRootComponent = static_cast<USceneComponent*>(mComponents[rootComponentIndex]);
+		RootComponent = static_cast<USceneComponent*>(Components[rootComponentIndex]);
 	}
-
-
 }
 
 void AActor::AddComponent(UActorComponent* actorComponent)
 {
 	assert(actorComponent);
-	assert(getComponentIndex(actorComponent->UUID) == -1);
+	assert(GetComponentIndex(actorComponent->ObjectID.GUID) == -1);
 
-	mComponents.Add(actorComponent);
+	Components.Add(actorComponent);
 	actorComponent->SetOwner(this);
 }
 
 void AActor::AddRootSceneComponent(USceneComponent* sceneComponent)
 {
 	assert(sceneComponent);
-	assert(getComponentIndex(sceneComponent->UUID) == -1);
+	assert(GetComponentIndex(sceneComponent->ObjectID.GUID) == -1);
 
-	mRootComponent = sceneComponent;
+	RootComponent = sceneComponent;
 	AddComponent(sceneComponent);
 }
 
-bool AActor::RemoveComponent(uint32 componentUUID)
+bool AActor::RemoveComponent(FGuid TargetComponentGuid)
 {
-	int32 componentIndex = getComponentIndex(componentUUID);
+	int32 componentIndex = GetComponentIndex(TargetComponentGuid);
 	if (componentIndex == -1)
 	{
 		return false;
 	}
 
-	//mComponents.RemoveAt(componentIndex, 1);
-	mComponents.RemoveAtSwap(componentIndex);
+	Components.RemoveAtSwap(componentIndex);
 
 	return true;
 }
 
 FTransform AActor::GetTransform() const
 {
-	if (mRootComponent)
+	if (RootComponent)
 	{
-		return mRootComponent->GetTransformMatrix();
+		return RootComponent->GetTransformMatrix();
 	}
 	else
 	{
@@ -134,11 +133,11 @@ FTransform AActor::GetTransform() const
 }
 
 
-void AActor::Update(TArray<FRenderInfo>* outRenderInfos)
+void AActor::Update(TArray<FRenderInfo>* outRenderInfos, float DeltaTime)
 {
-	for (UActorComponent* component : mComponents)
+	for (UActorComponent* component : Components)
 	{
-		component->Update(outRenderInfos);
+		component->Update(outRenderInfos, DeltaTime);
 	}
 }
 
@@ -146,9 +145,9 @@ void AActor::GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
 {
 	assert(outRenderInfos);
 
-	for (const UActorComponent* component : mComponents)
+	for (const UActorComponent* component : Components)
 	{
-		component->GetRenderInfos(outRenderInfos);
+		component->AddRenderInfos(outRenderInfos);
 	}
 }
 
@@ -169,33 +168,33 @@ bool AActor::GetFirstRenderInfo(FRenderInfo &outRenderInfo) const
 
 void AActor::SetLocation(FVector location)
 {
-	if (mRootComponent)
+	if (RootComponent)
 	{
-		mRootComponent->SetRelativeLocation(location);
+		RootComponent->SetRelativeLocation(location);
 	}
 }
 
 void AActor::SetRotation(FRotator rotation)
 {
-	if (mRootComponent)
+	if (RootComponent)
 	{
-		mRootComponent->SetRelativeRotation(rotation);
+		RootComponent->SetRelativeRotation(rotation);
 	}
 }
 
 void AActor::SetScale(FVector scale)
 {
-	if (mRootComponent)
+	if (RootComponent)
 	{
-		mRootComponent->SetRelativeScale3D(scale);
+		RootComponent->SetRelativeScale3D(scale);
 	}
 }
 
-int32 AActor::getComponentIndex(uint32 componentUUID) const
+int32 AActor::GetComponentIndex(FGuid TargetComponentGuid) const
 {
-	for (int32 i = 0; i < mComponents.Num(); ++i)
+	for (int32 i = 0; i < Components.Num(); ++i)
 	{
-		if (mComponents[i]->UUID == componentUUID)
+		if (Components[i]->ObjectID.GUID == TargetComponentGuid)
 		{
 			return i;
 		}

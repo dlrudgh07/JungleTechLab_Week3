@@ -35,9 +35,9 @@ TObject* UObject::Cast()
 
 template<typename TObject>
 	requires std::derived_from<TObject, UObject>
-TObject* UObject::GetObjectByUUID(int32 uuid)
+TObject* UObject::GetObjectByGUID(FGuid TargetGuid)
 {
-	UObject* object = GetObjectByUUID(uuid);
+	UObject* object = GetObjectByGUID(TargetGuid);
 	if (object && object->IsA<TObject>())
 	{
 		return static_cast<TObject*>(object);

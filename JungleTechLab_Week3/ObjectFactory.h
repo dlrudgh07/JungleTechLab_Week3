@@ -30,10 +30,6 @@ struct FObjectFactory
 		requires std::derived_from<TObject, UObject>
 	static TObject* LoadObject(const json::JSON& inJson);
 
-	static AActor* SpawnPrimitiveActor(EPrimitive primitiveType,
-		FVector3 Location, FRotator Rotation, FVector3 Scale
-	);
-
 	static const FClassInfo* GetClassInfoByName(const FString& className);
 
 	static bool RegisterClassInfo(FString className, const FClassInfo* classInfo);

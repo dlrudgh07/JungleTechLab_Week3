@@ -9,15 +9,16 @@ struct FTransform;
 
 class USceneComponent : public UActorComponent
 {
-	REFLECT_CLASS(USceneComponent, UActorComponent)
 public:
 	USceneComponent() = default;
 
-	void Initialize(FVector location, FRotator rotation, FVector scale3D);
+	// factory 에서 필요함
+	void Initialize() {};
+	void Initialize(FVector Location, FRotator Rotation, FVector Scale3D);
 	virtual ~USceneComponent();
 
-	virtual void SerializeClass(json::JSON& outJson) const override;
-	virtual void DeserializeClass(const json::JSON& inJson) override;
+	virtual void SerializeClass(json::JSON& OutJson) const override;
+	virtual void DeserializeClass(const json::JSON& InJson) override;
 
 	FVector GetRelativeLocation() const;
 	void SetRelativeLocation(FVector location);
@@ -30,9 +31,15 @@ public:
 
 	FTransform GetTransformMatrix() const;
 
-private:
-	FVector mRelativeLocation;
-	FRotator mRelativeRotation;
-	FVector mRelativeScale3D;
-};
+	virtual void Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime) override
+	{
+		UActorComponent::Update(OutRenderInfos, DeltaTime);
+	}
 
+	REFLECT_CLASS(USceneComponent, UActorComponent)
+
+private:
+	FVector RelativeLocation;
+	FRotator RelativeRotation;
+	FVector RelativeScale3D;
+};

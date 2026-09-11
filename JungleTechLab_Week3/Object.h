@@ -7,6 +7,8 @@
 #include "TSparseArray.h"
 #include "ObjectFactory.h"
 
+#include "Guid.h"
+
 
 namespace json { class JSON; }
 
@@ -31,16 +33,14 @@ private:
 
 struct FObjectID
 {
-	int32 UUID;
+	FGuid GUID;
 	uint32 InternalIndex;
 };
 
 class UObject
 {
 public:
-	// Todo: Fix
-	int32 UUID;
-	uint32 InternalIndex;
+	FObjectID ObjectID{};
 
 	virtual ~UObject();
 	virtual void Destroy();
@@ -67,12 +67,12 @@ public:
 		requires std::derived_from<TObject, UObject>
 	TObject* Cast();
 
-	static UObject* GetObjectByUUID(int32 uuid);
+	static UObject* GetObjectByGUID(FGuid TargetGuid);
 	static UObject* GetObjectByInternalIndex(uint32 internalIndex);
 
 	template<typename TObject>
 		requires std::derived_from<TObject, UObject>
-	static TObject* GetObjectByUUID(int32 uuid);
+	static TObject* GetObjectByGUID(FGuid TargetGuid);
 
 	template<typename TObject>
 		requires std::derived_from<TObject, UObject>
@@ -91,7 +91,7 @@ protected:
 private:
 
 	friend struct FObjectFactory;
-	const FClassInfo* mClassInfo;
+	const FClassInfo* mClassInfo = nullptr;
 };
 
 

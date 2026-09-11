@@ -1,0 +1,10 @@
+{
+  "Version" : 0,
+  "World" : {
+    "ClassName" : "UWorld",
+    "Properties" : {
+      "Actors" : [],
+      "GUID" : "6EB1AC14-4851-44FA-1EAF-12942C4D6A84"
+    }
+  }
+}

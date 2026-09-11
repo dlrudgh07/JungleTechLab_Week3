@@ -10,12 +10,6 @@
 #include "RenderInfo.h"
 #include "Vector.h"
 
-struct FBuffer
-{
-	ID3D11Buffer* Buffer;
-	uint32 SourceNum;
-};
-
 class FGraphicsManager
 {
 public:
@@ -49,8 +43,7 @@ public:
 	float GetCameraOrthoDistance() const { return mCameraOrthoDistance; }
 	void SetCameraOrthoDistance(float distance) { mCameraOrthoDistance = distance; }
 
-	// Todo: Change name
-	void CreateBuffer(EPrimitive ePrimitive, FVertexSimple* vertices, uint32 verticesSize);
+	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
 	URenderer* GetRenderer() const;
 
 	//Highlight
@@ -83,8 +76,6 @@ private:
 	FVector mCameraForward{};
 	float mCameraFovDegree = 60.0f;
 	float mCameraOrthoDistance = 10.0f;
-
-	TMap<EPrimitive, FBuffer> mBufferMap;
 
 	// Graphics config
 	// 이번 프레임에 쌓인 선분. 정점 2개가 선분 하나
