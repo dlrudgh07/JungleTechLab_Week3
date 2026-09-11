@@ -1,5 +1,21 @@
 ﻿#include "Core.h"
 
+#include <Windows.h>
+std::wstring FString::ToWideString() const
+{
+	std::string CString = CStr();
+	if (CString.empty()) return L"";
+
+	int SizeNeeded = MultiByteToWideChar(CP_UTF8, 0, &CString[0], (int)CString.size(), NULL, 0);
+	std::wstring WideString(SizeNeeded, 0);
+	MultiByteToWideChar(CP_UTF8, 0, &CString[0], (int)CString.size(), &WideString[0], SizeNeeded);
+
+	return WideString;
+}
+
+
+
+
 FString::FString()
 	: mData(std::make_unique<std::string>())
 {

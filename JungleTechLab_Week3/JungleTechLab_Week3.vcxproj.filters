@@ -114,6 +114,9 @@
     <ClCompile Include="Gizmo.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="FTextureManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -269,6 +272,12 @@
     <ClInclude Include="Triangle.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="FTexture.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="FTextureManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderW0.hlsl">
@@ -282,5 +291,6 @@
     <None Include="ObjectFactory.inl">
       <Filter>헤더 파일</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

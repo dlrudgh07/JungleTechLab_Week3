@@ -9,4 +9,6 @@ struct FRenderInfo
 	FMatrix WorldTransformMatrix;
 	FObjectID ObejctID;
 	FVector4 Color;
+
+	class FTexture* Texture = nullptr; // texture mapping
 };

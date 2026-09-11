@@ -1,5 +1,5 @@
 {
-  "NextUUID" : 16,
+  "NextUUID" : 6,
   "Version" : 0,
   "World" : {
     "ClassName" : "UWorld",
@@ -36,54 +36,6 @@
                 }
               }],
             "mRootComponentUUID" : 4
-          }
-        }, {
-          "ClassName" : "AActor",
-          "Properties" : {
-            "UUID" : 6,
-            "mComponents" : [{
-                "ClassName" : "UPrimitiveComponent",
-                "Properties" : {
-                  "UUID" : 7,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
-                }
-              }],
-            "mRootComponentUUID" : 7
-          }
-        }, {
-          "ClassName" : "AActor",
-          "Properties" : {
-            "UUID" : 12,
-            "mComponents" : [{
-                "ClassName" : "UPrimitiveComponent",
-                "Properties" : {
-                  "UUID" : 13,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
-                }
-              }],
-            "mRootComponentUUID" : 13
-          }
-        }, {
-          "ClassName" : "AActor",
-          "Properties" : {
-            "UUID" : 14,
-            "mComponents" : [{
-                "ClassName" : "UPrimitiveComponent",
-                "Properties" : {
-                  "UUID" : 15,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
-                }
-              }],
-            "mRootComponentUUID" : 15
           }
         }]
     }

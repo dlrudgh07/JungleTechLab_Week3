@@ -9,6 +9,8 @@
 #include "Console.h"
 #include "Actor.h"
 
+#include "FTextureManager.h"
+
 UPrimitiveComponent::UPrimitiveComponent()
 {
 }
@@ -72,7 +74,11 @@ void UPrimitiveComponent::GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) co
 {
 	assert(outRenderInfos);
 
-	outRenderInfos->Add({ mePrimitive, GetTransformMatrix().MakeMatrix(), { mOwner->UUID, mOwner->InternalIndex }, FVector4(0, 0, 0, 0) });
+	// texture mapping
+	// todo 경로도 이렇게 하드코딩하지 않고, 제대로 설정해야함
+	FTexture* MyCubeTexture = FTextureManager::GetManager().LoadTexture("C:/Users/JUNGLE/Desktop/GameEngine/Week3/JungleTechLab_Week3/JungleTechLab_Week3/crate.png");
+
+	outRenderInfos->Add({ mePrimitive, GetTransformMatrix().MakeMatrix(), { mOwner->UUID, mOwner->InternalIndex }, FVector4(0, 0, 0, 0), MyCubeTexture });
 }
 
 /*

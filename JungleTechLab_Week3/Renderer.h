@@ -5,6 +5,7 @@
 #include "Matrix.h"
 #include "Vector.h"
 #include "RenderInfo.h"
+#include <wrl/client.h>
 
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
@@ -15,6 +16,7 @@ struct FVertexSimple
 {
     float x, y, z;    // Position
     float r, g, b, a; // Color
+	float u, v; // texture mapping
 
 	FVector GetPosition() const { return FVector(x, y, z); }
 };
@@ -46,6 +48,15 @@ public:
 	ID3D11BlendState* NoColorWriteBlendState = nullptr;		// 스텐실만 찍고 색은 쓰지 않는 상태
 
 
+	// texture mapping
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureSRV = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState = nullptr;
+	ID3D11ShaderResourceView* CurrentSRVCache[8] = { nullptr };		 // size는 변경가능 - todo: 아마 최대 사이즈 체크 해야할듯함
+	ID3D11SamplerState* CurrentSamplerCache[8] = { nullptr };  // size는 변경가능 - todo: 아마 최대 사이즈 체크 해야할듯함
+
+
+
+
     FLOAT ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f };
     D3D11_VIEWPORT ViewportInfo;
     ID3D11VertexShader* SimpleVertexShader;
@@ -70,11 +81,18 @@ public:
 	void CreateRasterizerState();
 	void CreateConstantBuffer();
 	void CreateDepthStencilBuffer(UINT width, UINT height);
-
 	void CreateDepthStencilState();
 	void CreateStencilMarkState();
 	void CreateStencilOutlineState();
 	void CreateNoColorWriteBlendState();
+
+	// texture mapping
+	void CreateSamplerState();
+	void BindTexture(uint32 Slot, ID3D11ShaderResourceView* SRV);
+	void BindSampler(uint32 Slot, ID3D11SamplerState* Sampler);
+
+
+
 
 	//release
 	void Release();

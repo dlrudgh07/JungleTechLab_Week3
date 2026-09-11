@@ -1,5 +1,8 @@
 ﻿#include "Renderer.h"
 
+#include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
+
 void URenderer::Create(HWND hWindow)
 {
 	CreateDeviceAndSwapChain(hWindow);
@@ -206,6 +209,7 @@ void URenderer::CreateShader()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },	// texture mapping
 	};
 
 	Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &SimpleInputLayout);
@@ -272,6 +276,8 @@ void URenderer::PrepareShader()
 	{
 		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
 	}
+
+	BindSampler(0, SamplerState.Get());	// texture mapping
 }
 
 void URenderer::RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices)
@@ -442,6 +448,60 @@ void URenderer::CreateNoColorWriteBlendState()
 
 	Device->CreateBlendState(&desc, &NoColorWriteBlendState);
 }
+
+
+void URenderer::CreateSamplerState()
+{
+	D3D11_SAMPLER_DESC Description = {};
+	Description.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; // Trilinear
+	Description.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;    // UV가 1.0을 넘어가면 반복
+	Description.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	Description.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	Description.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	Description.MinLOD = 0;
+	Description.MaxLOD = D3D11_FLOAT32_MAX;
+
+	Device->CreateSamplerState(&Description, &SamplerState);
+
+	// TODO: 필요하면 여기서 다양한 Sampler들을 만들어주면 됨
+}
+
+void URenderer::BindTexture(uint32 Slot, ID3D11ShaderResourceView* SRV)
+{
+	if (CurrentSRVCache[Slot] == SRV)
+	{
+		return; 
+	}
+
+	// 다를 때만 DX11 API 호출 및 캐시 업데이트
+	DeviceContext->PSSetShaderResources(Slot, 1, &SRV);
+	CurrentSRVCache[Slot] = SRV;
+}
+
+void URenderer::BindSampler(uint32 Slot, ID3D11SamplerState* Sampler)
+{
+	if (CurrentSamplerCache[Slot] == Sampler)
+	{
+		return; 
+	}
+
+	// 다를 때만 DX11 API 호출 및 캐시 업데이트
+	DeviceContext->PSSetSamplers(Slot, 1, &Sampler);
+	CurrentSamplerCache[Slot] = Sampler;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void URenderer::ReleaseBlendState()
 {

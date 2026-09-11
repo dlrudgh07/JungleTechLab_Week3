@@ -4,6 +4,8 @@
 #include "Camera.h"
 #include "Console.h"
 
+#include "FTextureManager.h"
+
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
 
@@ -18,7 +20,13 @@ FGraphicsManager::FGraphicsManager(HWND hWindow)
 	mRenderer->CreateConstantBuffer();
 	mRenderer->CreateLineVertexBuffer(LINE_VERTEX_CAPACITY);
 
+	mRenderer->CreateSamplerState();	// texture mapping
+
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
+
+	// texture mapping
+	// todo 적절한 초기화 지점 찾기
+	FTextureManager::GetManager().Initialize(mRenderer->Device, mRenderer->DeviceContext);
 }
 
 FGraphicsManager::~FGraphicsManager()
@@ -102,6 +110,13 @@ void FGraphicsManager::Render(const TArray<FRenderInfo> renderInfos)
 			UE_LOG("Error: Vertex buffer not found for primitive type.");
 			continue;
 		}
+
+		// texture mapping
+		if (renderInfo.Texture != nullptr)
+		{
+			mRenderer->BindTexture(0, renderInfo.Texture->SRV.Get());
+		}
+
 		mRenderer->RenderPrimitive(vertexBuffer->Buffer, vertexBuffer->SourceNum);
 	}
 }

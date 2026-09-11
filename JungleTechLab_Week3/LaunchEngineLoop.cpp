@@ -22,6 +22,12 @@
 
 void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 {
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	if (FAILED(hr)) {
+		// 초기화 실패 시 에러 처리
+		return;
+	}
+
 	// Initialize window infos
 	WCHAR WindowClass[] = L"JungleWindowClass";
 	WCHAR Title[] = L"Game Tech Lab";
