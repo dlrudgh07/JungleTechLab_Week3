@@ -134,11 +134,11 @@ FTransform AActor::GetTransform() const
 }
 
 
-void AActor::Update(TArray<FRenderInfo>* outRenderInfos)
+void AActor::Update(TArray<FRenderInfo>* outRenderInfos, float DeltaTime)
 {
 	for (UActorComponent* component : mComponents)
 	{
-		component->Update(outRenderInfos);
+		component->Update(outRenderInfos, DeltaTime);
 	}
 }
 

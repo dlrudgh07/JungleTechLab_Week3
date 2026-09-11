@@ -151,15 +151,19 @@
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ActorComponent.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
+    <ClCompile Include="QuadComponent.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SphereComponent.cpp" />
     <ClInclude Include="Circle.h" />
+    <ClInclude Include="FSubUVAnimator.h" />
     <ClInclude Include="FTexture.h" />
     <ClInclude Include="FTextureManager.h" />
     <ClInclude Include="GizmoArrow.h" />
+    <ClInclude Include="Quad.h" />
+    <ClInclude Include="QuadComponent.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="TSparseArray.inl">
       <FileType>Document</FileType>

@@ -49,14 +49,14 @@ FSceneManager::~FSceneManager()
 	delete mCurrentWorld;
 }
 
-void FSceneManager::Update(float delaTime)
+void FSceneManager::Update(float DeltaTime)
 {
 	// Todo: Save / Load
 	{
 
 	}
 
-	mCurrentWorld->Update();
+	mCurrentWorld->Update(DeltaTime);
 }
 
 void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
@@ -98,7 +98,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	// NOTE: This name array must be edited when adding new primitive types to EPrimitive enum.
 	ImGui::SeparatorText("Spawn Actor");
 
-	const char* primitiveTypeNames[] = { "Sphere", "Cube", "Triangle", "GizmoArrow", "Circle" };
+	const char* primitiveTypeNames[] = { "Sphere", "Cube", "Triangle", "GizmoArrow", "Circle", "Quad", "Text"};  // todo: 없어져야함
 	int32 primitiveTypeIndex = static_cast<int32>(mGuiInputField.PrimitiveType);
 	int32 spawnCount = mGuiInputField.SpawnCount;
 

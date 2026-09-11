@@ -1,5 +1,13 @@
 ﻿#include "FTextureManager.h"
 
+void FTextureManager::Initialize(ID3D11Device* InputDevice, ID3D11DeviceContext* InputDeviceContext)
+{
+	Device = InputDevice;
+	DeviceContext = InputDeviceContext;
+
+	CreateDefaultWhiteTexture();
+}
+
 FTexture* FTextureManager::LoadTexture(const FString& FilePath)
 {
 	// 1. 이미 로드된 텍스처인지 캐시에서 검색
@@ -74,4 +82,41 @@ FTexture* FTextureManager::LoadTexture(const FString& FilePath)
 	TextureMap[Key] = std::move(NewTexture);
 
 	return TextureMap[Key].get();
+}
+
+void FTextureManager::CreateDefaultWhiteTexture()
+{
+	// 1. 1x1 크기의 하얀색 픽셀 데이터 준비
+	uint32 WhitePixel = 0xFFFFFFFF; // RGBA 모두 255
+
+	D3D11_TEXTURE2D_DESC Desc = {};
+	Desc.Width = 1;
+	Desc.Height = 1;
+	Desc.MipLevels = 1;
+	Desc.ArraySize = 1;
+	Desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	Desc.SampleDesc.Count = 1;
+	Desc.Usage = D3D11_USAGE_DEFAULT;
+	Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+	D3D11_SUBRESOURCE_DATA InitData = {};
+	InitData.pSysMem = &WhitePixel;
+	InitData.SysMemPitch = sizeof(uint32); // 1줄의 바이트 크기 (4바이트)
+
+	// 2. DX11 리소스 및 SRV 생성
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> DefaultTexture2D;
+	Device->CreateTexture2D(&Desc, &InitData, DefaultTexture2D.GetAddressOf());
+
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> DefaultSRV;
+	Device->CreateShaderResourceView(DefaultTexture2D.Get(), nullptr, DefaultSRV.GetAddressOf());
+
+	// 3. FTexture 객체 조립
+	auto DefaultTexture = std::make_unique<FTexture>();
+	DefaultTexture->Resource = DefaultTexture2D;
+	DefaultTexture->SRV = DefaultSRV;
+	DefaultTexture->Width = 1;
+	DefaultTexture->Height = 1;
+
+	// 4. 캐시 맵에 "DefaultWhite"라는 예약된 키값으로 등록
+	TextureMap["DefaultWhite"] = std::move(DefaultTexture);
 }

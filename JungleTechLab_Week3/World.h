@@ -22,7 +22,7 @@ public:
 	const TArray<FRenderInfo> GetRenderInfos();
 	TArray<AActor*>& GetActors() { return mActors; }
 
-	void Update();
+	void Update(float DeltaTime);
 	//void Render();
 	void ClearRenderInfos();
 

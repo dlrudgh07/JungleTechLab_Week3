@@ -102,7 +102,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo> renderInfos)
 	for (const FRenderInfo& renderInfo : renderInfos)
 	{
 		//mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, mViewProjectionMatrix, renderInfo.Color);
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.UVScaleOffset);
 
 		FBuffer* vertexBuffer = mBufferMap.Find(renderInfo.ePrimitive);
 		if (vertexBuffer == nullptr)
@@ -115,6 +115,12 @@ void FGraphicsManager::Render(const TArray<FRenderInfo> renderInfos)
 		if (renderInfo.Texture != nullptr)
 		{
 			mRenderer->BindTexture(0, renderInfo.Texture->SRV.Get());
+		}
+		else
+		{
+			// 텍스처가 없으면 만들어둔 Default White 텍스처를 바인딩
+			FTexture* DefaultTex = FTextureManager::GetManager().GetDefaultWhiteTexture();
+			mRenderer->BindTexture(0, DefaultTex->SRV.Get());
 		}
 
 		mRenderer->RenderPrimitive(vertexBuffer->Buffer, vertexBuffer->SourceNum);

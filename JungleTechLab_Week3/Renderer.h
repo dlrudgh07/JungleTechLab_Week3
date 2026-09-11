@@ -26,6 +26,7 @@ struct FConstants
 	FMatrix World; //Model
 	FMatrix ViewProjection;
 	FVector4 Tint;          // rgb = 색, a = 섞는 비율
+	FVector4 UVScaleOffset;		// sub uv
 };
 
 
@@ -48,9 +49,10 @@ public:
 	ID3D11BlendState* NoColorWriteBlendState = nullptr;		// 스텐실만 찍고 색은 쓰지 않는 상태
 
 
-	// texture mapping
+	// texture mapping & sub uv
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureSRV = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11BlendState> AlphaBlendState = nullptr;
 	ID3D11ShaderResourceView* CurrentSRVCache[8] = { nullptr };		 // size는 변경가능 - todo: 아마 최대 사이즈 체크 해야할듯함
 	ID3D11SamplerState* CurrentSamplerCache[8] = { nullptr };  // size는 변경가능 - todo: 아마 최대 사이즈 체크 해야할듯함
 
@@ -90,7 +92,7 @@ public:
 	void CreateSamplerState();
 	void BindTexture(uint32 Slot, ID3D11ShaderResourceView* SRV);
 	void BindSampler(uint32 Slot, ID3D11SamplerState* Sampler);
-
+	void CreateAlphaBlendState();
 
 
 
@@ -113,7 +115,7 @@ public:
 	//Rendering
 	void Prepare(bool bWireFrame);
 	void PrepareShader();
-	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
+	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0), FVector4 InputUVScaleOffset = {1,1,0,0});
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
 	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
 	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);

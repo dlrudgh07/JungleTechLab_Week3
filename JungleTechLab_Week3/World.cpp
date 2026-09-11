@@ -86,13 +86,13 @@ const TArray<FRenderInfo> UWorld::GetRenderInfos()
 	return mRenderInfos;
 }
 
-void UWorld::Update()
+void UWorld::Update(float DeltaTime)
 {
 	mRenderInfos.Reset(DEFAULT_RESERVE_MEM);
 
 	for (AActor* actor : mActors)
 	{
-		actor->Update(&mRenderInfos);
+		actor->Update(&mRenderInfos, DeltaTime);
 	}
 }
 

@@ -26,7 +26,9 @@ public:
 	void Prepare(const FCamera* mCamera);
 	void GizmoPrepare();
 
-	//void Render(FTransform worldTransformMatrix, EPrimitive ePrimitive); // FRenderInfo
+	//void Render(FTransform worldTransformMatrix,
+	//
+	// ePrimitive); // FRenderInfo
 	//void Render(const TArray<FRenderInfo> renderInfos);
 	void Render(const TArray<FRenderInfo> renderInfos);
 	void RenderOverlay(const TArray<FRenderInfo> renderInfos);

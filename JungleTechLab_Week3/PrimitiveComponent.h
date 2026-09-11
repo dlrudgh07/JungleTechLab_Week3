@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "SceneComponent.h"
+#include "FSubUVAnimator.h"
 
 class UPrimitiveComponent : public USceneComponent
 {
@@ -20,12 +21,14 @@ public:
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
 	//virtual void Render();
-	void Update(TArray<FRenderInfo>* outRenderInfos) override final;
+	void Update(TArray<FRenderInfo>* outRenderInfos, float DeltaTime) override final;
 	void GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const override final;
 
 protected:
 	//GraphicsManager* mGraphicsManager;
 	EPrimitive mePrimitive;
-};
 
+private:
+	FSubUVAnimator SubUVAnimator;
+};
 

@@ -44,7 +44,7 @@ public:
 	FSceneManager();
 	~FSceneManager();
 
-	void Update(float delaTime);
+	void Update(float DelaTime);
 	void UpdateGUI(const FGuiReference& guiReference);
 
 	const TArray<FRenderInfo> GetRenderInfos() const;

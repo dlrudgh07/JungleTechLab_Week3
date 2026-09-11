@@ -9,6 +9,7 @@
 #include "CubeComponent.h"
 #include "ObjectFactory.h"
 #include "Cube.h"
+#include "Quad.h"
 #include "Sphere.h"
 #include "Circle.h"
 #include "Triangle.h"
@@ -22,12 +23,6 @@
 
 void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 {
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-	if (FAILED(hr)) {
-		// 초기화 실패 시 에러 처리
-		return;
-	}
-
 	// Initialize window infos
 	WCHAR WindowClass[] = L"JungleWindowClass";
 	WCHAR Title[] = L"Game Tech Lab";
@@ -72,10 +67,13 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	console.Init("Jungle Console Window", clientWidth);
 
 	mGraphicsManager->CreateBuffer(EPrimitive::EP_Cube, Cube_vertices, sizeof(Cube_vertices));
+	mGraphicsManager->CreateBuffer(EPrimitive::EP_Quad, Quad_vertices, sizeof(Quad_vertices));		
 	mGraphicsManager->CreateBuffer(EPrimitive::EP_Sphere, Sphere_vertices, sizeof(Sphere_vertices));
 	mGraphicsManager->CreateBuffer(EPrimitive::EP_GizmoArrow, GizmoArrow_vertices, sizeof(GizmoArrow_vertices));
 	mGraphicsManager->CreateBuffer(EPrimitive::EP_Circle, Circle_vertices, sizeof(Circle_vertices));
 	mGraphicsManager->CreateBuffer(EPrimitive::EP_Triangle, Triangle_vertices, sizeof(Triangle_vertices));
+	mGraphicsManager->CreateBuffer(EPrimitive::EP_Text, Quad_vertices, sizeof(Quad_vertices)); // text rendering  / todo: this needs to be removed
+
 
 	FrameTimer = new FFrameTimer(120);
 	ViewportClient = new FEditorViewportClient(); // Todo: cChange to class

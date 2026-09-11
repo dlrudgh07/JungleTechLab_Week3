@@ -1,5 +1,6 @@
 ﻿#include "FEditorViewportClient.h"
 
+#include "Quad.h"
 #include "Cube.h"
 #include "Sphere.h"
 #include "Triangle.h"
@@ -37,6 +38,10 @@ static bool GetPrimitiveMesh(EPrimitive ePrimitive, const FVertexSimple*& OutVer
 	case EPrimitive::EP_Circle:
 		OutVertices = Circle_vertices;
 		OutCount = static_cast<uint32>(sizeof(Circle_vertices) / sizeof(FVertexSimple));
+		return true;
+	case EPrimitive::EP_Quad:
+		OutVertices = Quad_vertices;
+		OutCount = static_cast<uint32>(sizeof(Quad_vertices) / sizeof(FVertexSimple));
 		return true;
 	}
 

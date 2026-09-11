@@ -218,6 +218,9 @@ void URenderer::CreateShader()
 
 	vertexshaderCSO->Release();
 	pixelshaderCSO->Release();
+
+	// sub uv
+	CreateAlphaBlendState();
 }
 
 void URenderer::ReleaseShader()
@@ -278,6 +281,7 @@ void URenderer::PrepareShader()
 	}
 
 	BindSampler(0, SamplerState.Get());	// texture mapping
+	DeviceContext->OMSetBlendState(AlphaBlendState.Get(), nullptr, 0xFFFFFFFF);  // sub uv
 }
 
 void URenderer::RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices)
@@ -465,6 +469,24 @@ void URenderer::CreateSamplerState()
 
 	// TODO: 필요하면 여기서 다양한 Sampler들을 만들어주면 됨
 }
+void URenderer::CreateAlphaBlendState()
+{
+	D3D11_BLEND_DESC Description = {};
+	Description.RenderTarget[0].BlendEnable = TRUE; // 섞기(Blending) 켜기!
+
+	// 일반적인 알파 블렌딩 (PNG 투명도 적용 공식)
+	Description.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;       // 새로 그릴 픽셀의 Alpha만큼 섞음
+	Description.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;  // 기존 배경 픽셀은 (1 - Alpha)만큼 남김
+	Description.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	Description.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	Description.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	Description.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	Description.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	Device->CreateBlendState(&Description, &AlphaBlendState);
+}
+
 
 void URenderer::BindTexture(uint32 Slot, ID3D11ShaderResourceView* SRV)
 {
@@ -521,7 +543,7 @@ void URenderer::ReleaseDepthStencilState()
 	if (StencilOutlineState) { StencilOutlineState->Release();  StencilOutlineState = nullptr; }
 }
 
-void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint)
+void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint, FVector4 InputUVScaleOffset)
 {
 	if (ConstantBuffer)
 	{
@@ -533,6 +555,7 @@ void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 t
 			constants->World = world;
 			constants->ViewProjection = viewProjection;
 			constants->Tint = tint;
+			constants->UVScaleOffset = InputUVScaleOffset;		// sub uv
 		}
 		DeviceContext->Unmap(ConstantBuffer, 0);
 	}

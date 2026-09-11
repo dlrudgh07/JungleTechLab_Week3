@@ -22,7 +22,7 @@ AActor* UActorComponent::GetOwner() const
 	return mOwner;
 }
 
-void UActorComponent::Update(TArray<FRenderInfo>* outRenderInfos)
+void UActorComponent::Update(TArray<FRenderInfo>* outRenderInfos, float DeltaTime)
 {
 	// Todo: Do nothing, must override, some components may not call Update()
 	// assert(false);

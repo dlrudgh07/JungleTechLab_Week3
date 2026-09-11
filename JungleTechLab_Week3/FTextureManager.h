@@ -23,11 +23,7 @@ public:
 	}
 	FTextureManager(const FTextureManager&) = delete;
 	FTextureManager& operator=(const FTextureManager&) = delete;
-	void Initialize(ID3D11Device* InputDevice, ID3D11DeviceContext* InputDeviceContext)
-	{
-		Device = InputDevice;
-		DeviceContext = InputDeviceContext;
-	}
+	void Initialize(ID3D11Device* InputDevice, ID3D11DeviceContext* InputDeviceContext);
 private:
 	FTextureManager() = default;
 	~FTextureManager() = default;
@@ -48,6 +44,15 @@ private:
 	// 이걸 Fstring으로 쓰려면 Fstring용 hash 코드 짜면 됨
 	// TODO -> 일단 이대로 진행
 	std::unordered_map<std::string, std::unique_ptr<FTexture>> TextureMap;
+
+
+	void CreateDefaultWhiteTexture();
+
 public:
 	FTexture* LoadTexture(const FString& FilePath);
+	FTexture* GetDefaultWhiteTexture()
+	{
+		// LoadTexture에 하드코딩된 키값을 넘겨서 캐시에서 바로 가져옴
+		return LoadTexture("DefaultWhite");
+	}
 };
