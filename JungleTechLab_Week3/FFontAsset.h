@@ -2,6 +2,7 @@
 #include "Core.h"
 #include "TMap.h"
 #include "TArray.h"
+#include "Vector.h"
 
 class FTexture;
 
@@ -28,10 +29,8 @@ struct FCharacterInfo
 	//Kerning 데이터는 추후 추가할 것. 한글에는 없지만 영어에는 있다.
 };
 
-struct FFontUV
-{
-	float U0, V0, U1, V1;
-};
+
+
 
 class FFontAsset
 {
@@ -40,7 +39,7 @@ public:
 	bool LoadFromFile(const FString& FilePath);
 
 	//문자 Id에 따라 CharacterInfo를 반환
-	const FCharacterInfo* FindCharInfo(uint32 CharId)const;
+	const FCharacterInfo* FindCharInfo(int32 CharId)const;
 
 	//Page Index에 따라 해당하는 FTexture를 반환
 	const FTexture* GetPageTexture(int32 PageIndex)const;
@@ -49,10 +48,12 @@ public:
 	TMap<FString, FString> ParseKeyValueLine(const FString& line);
 
 	//UV 계산하여 반환
-	FFontUV GetUV(const FCharacterInfo& Info)const;
+	//FVector2 GetUVData(const FCharacterInfo& Info)const;
 
 	int32 GetLineHeight()const;
 	int32 GetBase()const;
+	int32 GetAtlasWidth()const;
+	int32 GetAtlasHeight()const;
 
 private:
 	//Key : 문자 아스키 코드

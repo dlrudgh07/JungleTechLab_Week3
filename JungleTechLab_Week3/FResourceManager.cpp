@@ -48,7 +48,7 @@ FTexture* FResourceManager::FindTexture(const int32 Key) const
 
 FFontAsset* FResourceManager::FindFont(const int32& Key) const
 {
-	return nullptr;
+	return Fonts[0];
 }
 
 void FResourceManager::SetDevice(ID3D11Device* device)

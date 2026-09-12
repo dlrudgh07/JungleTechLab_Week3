@@ -1,6 +1,9 @@
 ﻿#pragma once
 
 #include "SceneComponent.h"
+#include <d3d11.h>
+
+class FCharDataInfo;
 
 class UPrimitiveComponent : public USceneComponent
 {
@@ -12,7 +15,8 @@ public:
 	//void Initialize(GraphicsManager* graphicsManager, EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D);
 
 	void Initialize(EPrimitive ePrimitive);
-	void Initialize(EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D);
+	void Initialize(EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D,
+					FCharDataInfo pmCharInfo, ID3D11ShaderResourceView* pSRV = nullptr); 
 
 	virtual ~UPrimitiveComponent();
 
@@ -26,6 +30,8 @@ public:
 protected:
 	//GraphicsManager* mGraphicsManager;
 	EPrimitive mePrimitive;
+	FCharDataInfo mCharInfo;
+	ID3D11ShaderResourceView* SRV;
 };
 
 

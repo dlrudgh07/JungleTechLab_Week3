@@ -1,5 +1,5 @@
 {
-  "NextUUID" : 16,
+  "NextUUID" : 10,
   "Version" : 0,
   "World" : {
     "ClassName" : "UWorld",
@@ -13,7 +13,7 @@
                 "ClassName" : "UCubeComponent",
                 "Properties" : {
                   "UUID" : 2,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
+                  "mRelativeLocation" : [0.000000, -2.379942, 0.000000],
                   "mRelativeRotation" : [30.000000, 1.000000, 0.000000],
                   "mRelativeScale3D" : [2.000000, 1.000000, 1.000000],
                   "mePrimitiveType" : "Cube"
@@ -45,10 +45,10 @@
                 "ClassName" : "UPrimitiveComponent",
                 "Properties" : {
                   "UUID" : 7,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
+                  "mRelativeLocation" : [0.000000, 1.562336, 0.000000],
                   "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
                   "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
+                  "mePrimitiveType" : "Quad"
                 }
               }],
             "mRootComponentUUID" : 7
@@ -56,34 +56,18 @@
         }, {
           "ClassName" : "AActor",
           "Properties" : {
-            "UUID" : 12,
+            "UUID" : 8,
             "mComponents" : [{
                 "ClassName" : "UPrimitiveComponent",
                 "Properties" : {
-                  "UUID" : 13,
+                  "UUID" : 9,
                   "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
                   "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
                   "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
+                  "mePrimitiveType" : "Quad"
                 }
               }],
-            "mRootComponentUUID" : 13
-          }
-        }, {
-          "ClassName" : "AActor",
-          "Properties" : {
-            "UUID" : 14,
-            "mComponents" : [{
-                "ClassName" : "UPrimitiveComponent",
-                "Properties" : {
-                  "UUID" : 15,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
-                }
-              }],
-            "mRootComponentUUID" : 15
+            "mRootComponentUUID" : 9
           }
         }]
     }

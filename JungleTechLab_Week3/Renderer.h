@@ -15,6 +15,7 @@ struct FVertexSimple
 {
     float x, y, z;    // Position
     float r, g, b, a; // Color
+	float u, v;		  // UV
 
 	FVector GetPosition() const { return FVector(x, y, z); }
 };
@@ -24,6 +25,17 @@ struct FConstants
 	FMatrix World; //Model
 	FMatrix ViewProjection;
 	FVector4 Tint;          // rgb = 색, a = 섞는 비율
+
+	//텍스처 내 글자 위치
+	int32 CharX, CharY;
+	//글자의 크기
+	int32 CharWidth, CharHeight;
+
+	//아틀라스 Width, Height
+	int32 AtlasWidth = 0;
+	int32 AtlasHeight = 0;
+
+	int32 pad[2];
 };
 
 
@@ -44,19 +56,24 @@ public:
 	ID3D11DepthStencilState* StencilMarkState = nullptr;	// 스텐실에 1 마킹용 상태
 	ID3D11DepthStencilState* StencilOutlineState = nullptr; // 아웃라인 그리기용
 	ID3D11BlendState* NoColorWriteBlendState = nullptr;		// 스텐실만 찍고 색은 쓰지 않는 상태
+	ID3D11BlendState* ColorWriteBlendState = nullptr;		// 스텐실만 찍고 색은 쓰지 않는 상태
 
 
-    FLOAT ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f };
+    //FLOAT ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f };
+    FLOAT ClearColor[4] = { 0.025f, 0.025f, 0.8f, 1.0f };
     D3D11_VIEWPORT ViewportInfo;
     ID3D11VertexShader* SimpleVertexShader;
     ID3D11PixelShader* SimplePixelShader;
     ID3D11InputLayout* SimpleInputLayout;
+    ID3D11PixelShader* TexturePixelShader;
 
 	// 매 프레임 내용이 바뀌는 선분용. 메시 버퍼와 달리 IMMUTABLE이 아니라 DYNAMIC이다
 	ID3D11Buffer* LineVertexBuffer = nullptr;
 	uint32 LineVertexCapacity = 0;
 
     unsigned int Stride;
+
+	ID3D11SamplerState* Sampler = nullptr;
 
 public:
 
@@ -75,6 +92,9 @@ public:
 	void CreateStencilMarkState();
 	void CreateStencilOutlineState();
 	void CreateNoColorWriteBlendState();
+	void CreateColorWriteBlendState();
+
+	void CreateSampler();
 
 	//release
 	void Release();
@@ -91,11 +111,15 @@ public:
 
 	//Update
 	void RSUpdateState();
+	void SRVUpdate(ID3D11ShaderResourceView* pSRV);
+	void PSUpdate(bool IsTexture);
+	void PSSetSampler(bool IsTexture);
+	void SetBlendState(bool IsTexture);
 
 	//Rendering
 	void Prepare(bool bWireFrame);
 	void PrepareShader();
-	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
+	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0), FCharDataInfo CInfo = {});
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
 	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
 	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);

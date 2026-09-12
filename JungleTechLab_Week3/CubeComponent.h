@@ -14,7 +14,7 @@ public:
 	*/
 
 	void Initialize();
-	void Initialize(FVector location, FRotator rotation, FVector scale3D);
+	void Initialize(FVector location, FRotator rotation, FVector scale3D, FCharDataInfo CInfo);
 
 	virtual ~UCubeComponent();
 

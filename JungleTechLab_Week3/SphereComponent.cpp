@@ -22,10 +22,10 @@ USphereComponent::~USphereComponent()
 
 void USphereComponent::Initialize()
 {
-	Initialize(FVector(0.f, 0.f, 0.f), FRotator(0.f, 0.f, 0.f), FVector(0.f, 0.f, 0.f));
+	Initialize(FVector(0.f, 0.f, 0.f), FRotator(0.f, 0.f, 0.f), FVector(0.f, 0.f, 0.f), mCharInfo);
 }
 
-void USphereComponent::Initialize(FVector location, FRotator rotation, FVector scale3D)
+void USphereComponent::Initialize(FVector location, FRotator rotation, FVector scale3D, FCharDataInfo CInfo)
 {
-	UPrimitiveComponent::Initialize(EPrimitive::EP_Sphere, location, rotation, scale3D);
+	UPrimitiveComponent::Initialize(EPrimitive::EP_Sphere, location, rotation, scale3D, CInfo);
 }

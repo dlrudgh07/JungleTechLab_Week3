@@ -94,15 +94,25 @@ void FGraphicsManager::Render(const TArray<FRenderInfo> renderInfos)
 	for (const FRenderInfo& renderInfo : renderInfos)
 	{
 		//mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, mViewProjectionMatrix, renderInfo.Color);
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.CharData);
 
 		FBuffer* vertexBuffer = mBufferMap.Find(renderInfo.ePrimitive);
 		if (vertexBuffer == nullptr)
 		{
-			UE_LOG("Error: Vertex buffer not found for primitive type.");
+			UE_LOG("Error: Vertex buffer not found for primitive type."); 
 			continue;
 		}
+		mRenderer->SRVUpdate(renderInfo.SRV);
+		mRenderer->PSSetSampler(renderInfo.SRV != nullptr);
+		mRenderer->SetBlendState(renderInfo.SRV != nullptr);
+		mRenderer->PSUpdate(renderInfo.SRV != nullptr);
 		mRenderer->RenderPrimitive(vertexBuffer->Buffer, vertexBuffer->SourceNum);
+
+		//원복
+		if (renderInfo.SRV) 
+		{
+			mRenderer->PSUpdate(false);
+		}
 	}
 }
 void FGraphicsManager::DrawLine(const FVector& start, const FVector& end, const FVector4& color)

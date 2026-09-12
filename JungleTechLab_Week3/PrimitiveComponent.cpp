@@ -25,14 +25,18 @@ void UPrimitiveComponent::Initialize(GraphicsManager* graphicsManager, EPrimitiv
 
 void UPrimitiveComponent::Initialize(EPrimitive ePrimitive)
 {
-	Initialize(ePrimitive, FVector(0.f, 0.f, 0.f), FRotator(0.f, 0.f, 0.f), FVector(0.f, 0.f, 0.f));
+	FCharDataInfo CInfo = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+	Initialize(ePrimitive, FVector(0.f, 0.f, 0.f), FRotator(0.f, 0.f, 0.f), FVector(0.f, 0.f, 0.f), CInfo);
 }
 
-void UPrimitiveComponent::Initialize(EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D)
+void UPrimitiveComponent::Initialize(EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D,
+									 FCharDataInfo pmCharInfo, ID3D11ShaderResourceView* pSRV)
 {
 	USceneComponent::Initialize(location, rotation, scale3D);
 
 	mePrimitive = ePrimitive;
+	mCharInfo = pmCharInfo;   
+	SRV = pSRV;
 }
 
 UPrimitiveComponent::~UPrimitiveComponent()
@@ -41,7 +45,7 @@ UPrimitiveComponent::~UPrimitiveComponent()
 
 void UPrimitiveComponent::SerializeClass(json::JSON& outJson) const
 {
-	USceneComponent::SerializeClass(outJson);
+	USceneComponent::SerializeClass(outJson); 
 	outJson["Properties"]["mePrimitiveType"] = EPrimitiveToJson(mePrimitive);
 }
 
@@ -62,17 +66,18 @@ void UPrimitiveComponent::Update(TArray<FRenderInfo>* outRenderInfos)
 {
 	// Todo: Update coordinates here
 	{
-		//UE_LOG("Primitive selected");
+		//UE_LOG("Primitive selected");  
 	}
 	
 	GetRenderInfos(outRenderInfos);
 }
 
-void UPrimitiveComponent::GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
+void UPrimitiveComponent::GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const   
 {
 	assert(outRenderInfos);
 
-	outRenderInfos->Add({ mePrimitive, GetTransformMatrix().MakeMatrix(), { mOwner->UUID, mOwner->InternalIndex }, FVector4(0, 0, 0, 0) });
+	outRenderInfos->Add({ mePrimitive, GetTransformMatrix().MakeMatrix(), { mOwner->UUID, mOwner->InternalIndex },
+						FVector4(0, 0, 0, 0), mCharInfo, SRV }); 
 }
 
 /*

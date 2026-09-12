@@ -114,7 +114,7 @@ bool FFontAsset::LoadFromFile(const FString& FilePath)
 	return true;
 }
 
-const FCharacterInfo* FFontAsset::FindCharInfo(uint32 CharId) const
+const FCharacterInfo* FFontAsset::FindCharInfo(int32 CharId) const
 {
 	const FCharacterInfo* info = CharInfoMap.Find(CharId);
 	if (!info) return nullptr;
@@ -168,16 +168,16 @@ TMap<FString, FString> FFontAsset::ParseKeyValueLine(const FString& line)
 	return Result;
 }
 
-FFontUV FFontAsset::GetUV(const FCharacterInfo& Info) const
-{
-	FFontUV uv;
-	uv.U0 = (float)Info.X / (float)AtlasWidth;
-	uv.V0 = (float)Info.Y / (float)AtlasHeight;
-	uv.U0 = (float)(Info.X + Info.Width) / (float)AtlasWidth;
-	uv.U0 = (float)(Info.X + Info.Width) / (float)AtlasWidth;
-
-	return uv;
-}
+//FVector2 FFontAsset::GetUV(const FCharacterInfo& Info) const
+//{
+//	FFontUV uv;
+//	uv.U0 = (float)Info.X / (float)AtlasWidth;
+//	uv.V0 = (float)Info.Y / (float)AtlasHeight;
+//	uv.U1 = (float)(Info.X + Info.Width) / (float)AtlasWidth;
+//	uv.V1 = (float)(Info.Y + Info.Height) / (float)AtlasHeight;
+//
+//	return uv;
+//}
 
 int32 FFontAsset::GetLineHeight() const
 {
@@ -187,5 +187,15 @@ int32 FFontAsset::GetLineHeight() const
 int32 FFontAsset::GetBase() const
 {
 	return Base;
+}
+
+int32 FFontAsset::GetAtlasWidth() const
+{
+	return AtlasWidth;
+}
+
+int32 FFontAsset::GetAtlasHeight() const
+{
+	return AtlasHeight;
 }
 

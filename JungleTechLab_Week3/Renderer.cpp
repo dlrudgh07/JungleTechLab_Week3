@@ -1,4 +1,5 @@
 ﻿#include "Renderer.h"
+#include "Console.h"
 
 void URenderer::Create(HWND hWindow)
 {
@@ -10,7 +11,9 @@ void URenderer::Create(HWND hWindow)
 	CreateStencilMarkState();
 	CreateStencilOutlineState();
 	CreateNoColorWriteBlendState();
+	CreateColorWriteBlendState();
 	CreateRasterizerState();
+	CreateSampler();
 }
 
 void URenderer::CreateDeviceAndSwapChain(HWND hWindow)
@@ -182,6 +185,11 @@ void URenderer::Release()
 	ReleaseBlendState();
 	ReleaseFrameBuffer();
 	ReleaseDeviceAndSwapChain();
+	if (Sampler)
+	{
+		Sampler->Release();
+		Sampler = nullptr;
+	}
 }
 
 void URenderer::SwapBuffer()
@@ -202,10 +210,15 @@ void URenderer::CreateShader()
 
 	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &SimplePixelShader);
 
+	D3DCompileFromFile(L"TexturePixelShader.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
+
+	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &TexturePixelShader);
+
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &SimpleInputLayout);
@@ -247,7 +260,7 @@ void URenderer::Prepare(bool bWireFrame)
 
 	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	DeviceContext->RSSetViewports(1, &ViewportInfo);
+	DeviceContext->RSSetViewports(1, &ViewportInfo); 
 
 	DeviceContext->RSSetState(RasterizerState[bWireFrame ? 1 : 0]);
 
@@ -260,6 +273,40 @@ void URenderer::Prepare(bool bWireFrame)
 void URenderer::RSUpdateState()
 {
 	DeviceContext->RSSetState(RasterizerState[0]);
+}
+
+void URenderer::SRVUpdate(ID3D11ShaderResourceView* pSRV)
+{
+	DeviceContext->PSSetShaderResources(0, 1, &pSRV);
+}
+
+void URenderer::PSUpdate(bool IsTexture)
+{
+	if (IsTexture)
+	{
+		DeviceContext->PSSetShader(TexturePixelShader, nullptr, 0);
+	}
+	else
+	{
+		DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
+	}
+}
+
+void URenderer::PSSetSampler(bool IsTexture)
+{
+	DeviceContext->PSSetSamplers(0, 1, &Sampler);
+}
+
+void URenderer::SetBlendState(bool IsTexture)
+{
+	if (IsTexture)
+	{
+		DeviceContext->OMSetBlendState(ColorWriteBlendState, nullptr, 0xffffffff);
+	}
+	else
+	{
+		DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+	}
 }
 
 void URenderer::PrepareShader()
@@ -424,7 +471,7 @@ void URenderer::CreateStencilOutlineState()
 	desc.StencilWriteMask = 0x00;						// 읽기만, 쓰지 않는다
 
 	// 마킹된 곳(=원본 실루엣)은 통과 못 함 -> 바깥 테두리만 남는다
-	desc.FrontFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;
+	desc.FrontFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL; 
 	desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
@@ -443,9 +490,56 @@ void URenderer::CreateNoColorWriteBlendState()
 	Device->CreateBlendState(&desc, &NoColorWriteBlendState);
 }
 
+void URenderer::CreateColorWriteBlendState()
+{
+	D3D11_BLEND_DESC AlphaDesc = {};
+	AlphaDesc.RenderTarget[0].BlendEnable = TRUE;
+	AlphaDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	AlphaDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;  // 기존 화면색 * (1-알파)
+	AlphaDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;         // 둘을 더함
+	AlphaDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	AlphaDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	AlphaDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	AlphaDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	HRESULT hr = Device->CreateBlendState(&AlphaDesc, &ColorWriteBlendState);
+	if (FAILED(hr))
+	{
+		assert(false);
+	}
+}
+
+void URenderer::CreateSampler()
+{
+	D3D11_SAMPLER_DESC samplerDesc = {};
+
+	// Filter: 텍스트 아틀라스는 확대/축소 시 부드럽게 보간하는 게 보통 자연스러움
+	// (픽셀 폰트처럼 각진 느낌을 원하면 D3D11_FILTER_MIN_MAG_MIP_POINT로 바꿈)
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+
+	// AddressU/V: 아틀라스 밖 UV로 나갈 일이 거의 없지만, 혹시 계산 오차로
+	// 살짝 벗어나도 인접 글자를 침범해서 샘플링하지 않도록 Clamp로 고정
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	HRESULT hr = Device->CreateSamplerState(&samplerDesc, &Sampler);
+	if (FAILED(hr))
+	{
+		// 로그: 샘플러 생성 실패
+		UE_LOG("Failed Create Sampler");
+	}
+}
+
 void URenderer::ReleaseBlendState()
 {
 	if (NoColorWriteBlendState) { NoColorWriteBlendState->Release(); NoColorWriteBlendState = nullptr; }
+	if (ColorWriteBlendState) { ColorWriteBlendState->Release(); ColorWriteBlendState = nullptr; }
+	
 }
 
 void URenderer::ReleaseDepthStencilBuffer()
@@ -461,7 +555,7 @@ void URenderer::ReleaseDepthStencilState()
 	if (StencilOutlineState) { StencilOutlineState->Release();  StencilOutlineState = nullptr; }
 }
 
-void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint)
+void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint, FCharDataInfo CInfo)
 {
 	if (ConstantBuffer)
 	{
@@ -473,6 +567,12 @@ void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 t
 			constants->World = world;
 			constants->ViewProjection = viewProjection;
 			constants->Tint = tint;
+			constants->CharX = CInfo.CharX;
+			constants->CharY = CInfo.CharY;
+			constants->CharWidth = CInfo.CharWidth;
+			constants->CharHeight = CInfo.CharHeight;
+			constants->AtlasWidth = CInfo.AtlasWidth;
+			constants->AtlasHeight = CInfo.AtlasHeight;
 		}
 		DeviceContext->Unmap(ConstantBuffer, 0);
 	}

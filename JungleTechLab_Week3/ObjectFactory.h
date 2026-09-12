@@ -12,6 +12,7 @@ namespace json { class JSON; }
 class UObject;
 class AActor;
 class FClassInfo;
+class FCharDataInfo;
 
 struct FObjectFactory
 {
@@ -31,7 +32,7 @@ struct FObjectFactory
 	static TObject* LoadObject(const json::JSON& inJson);
 
 	static AActor* SpawnPrimitiveActor(EPrimitive primitiveType,
-		FVector3 Location, FRotator Rotation, FVector3 Scale
+		FVector3 Location, FRotator Rotation, FVector3 Scale, FCharDataInfo CharInfo
 	);
 
 	static const FClassInfo* GetClassInfoByName(const FString& className);

@@ -4,6 +4,10 @@
 
 #include "Actor.h"
 #include "PrimitiveComponent.h"
+#include "FResourceManager.h"
+#include "FFontAsset.h"
+#include "FTexture.h"
+#include <d3d11.h>
 
 UObject* FObjectFactory::ConstructUnInitializedObject(const FClassInfo* classInfo)
 {
@@ -33,13 +37,29 @@ UObject* FObjectFactory::LoadObject(const FClassInfo* classInfo, const json::JSO
 
 AActor* FObjectFactory::SpawnPrimitiveActor(
 	EPrimitive primitiveType,
-	FVector3 Location, FRotator Rotation, FVector3 Scale)
+	FVector3 Location, FRotator Rotation, FVector3 Scale, FCharDataInfo CharInfo)
 {
+	ID3D11ShaderResourceView* TempSRV = nullptr;
+	const FCharacterInfo* TempInfo = nullptr;
+	FCharDataInfo TempDataInfo;
+	if (primitiveType == EPrimitive::EP_Quad)
+	{
+		FFontAsset* TempAsset = FResourceManager::Get().FindFont(0);
+		//TempSRV = TempAsset->GetPageTexture(TempAsset->FindCharInfo(uint32("가"))->Page)->GetSRV();
+		TempSRV = TempAsset->GetPageTexture(TempAsset->FindCharInfo(static_cast<int32>('A'))->Page)->GetSRV();
+		TempInfo = TempAsset->FindCharInfo(97);
+		TempDataInfo.CharX = TempInfo->X;
+		TempDataInfo.CharY = TempInfo->Y;
+		TempDataInfo.AtlasWidth = TempAsset->GetAtlasWidth();
+		TempDataInfo.AtlasHeight = TempAsset->GetAtlasHeight();
+		TempDataInfo.CharHeight = TempInfo->Height;
+		TempDataInfo.CharWidth = TempInfo->Width;
+	}
 	// Create a new actor
 	AActor* actor = ConstructObject<AActor>();
-
+	
 	UPrimitiveComponent* component = ConstructObject<UPrimitiveComponent>(
-		primitiveType, Location, Rotation, Scale);
+		primitiveType, Location, Rotation, Scale, TempDataInfo, TempSRV);
 
 	actor->AddRootSceneComponent(component);
 

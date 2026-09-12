@@ -51,7 +51,7 @@ public:
 	static const FClassInfo* GetClass();
 
 	// GetClass() in Unreal Engine
-	inline const FClassInfo* GetRuntimeClass() const { return mClassInfo; }
+	inline const FClassInfo* GetRuntimeClass() const { return mClassInfo; } 
 
 	// TODO?: Replace json type with a more generic type, such as a variant or a map
 	virtual void SerializeClass(json::JSON& outJson) const;

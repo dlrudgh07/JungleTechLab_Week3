@@ -19,7 +19,7 @@ json::JSON FRotatorToJson(const FRotator& Rotator)
 	rotatorJson[2] = Rotator.Roll;
 	return rotatorJson;
 }
-
+ 
 json::JSON EPrimitiveToJson(const EPrimitive& Primitive)
 {
 	switch (Primitive)
@@ -34,6 +34,8 @@ json::JSON EPrimitiveToJson(const EPrimitive& Primitive)
 		return json::JSON("GizmoArrow");
 	case EPrimitive::EP_Circle:
 		return json::JSON("Circle");
+	case EPrimitive::EP_Quad:
+		return json::JSON("Quad");
 	default:
 		throw std::runtime_error("Unknown EPrimitive value");
 	}
@@ -85,6 +87,10 @@ EPrimitive EPrimitiveFromJson(const json::JSON& json)
 	else if (primitiveStr == "Circle")
 	{
 		return EPrimitive::EP_Circle;
+	}
+	else if (primitiveStr == "Quad")
+	{
+		return EPrimitive::EP_Quad;
 	}
 	else
 	{
