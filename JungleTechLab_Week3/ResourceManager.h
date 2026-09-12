@@ -34,7 +34,7 @@ public:
 	UTexture* GetTexture(const std::string& Name) const;
 
 	// todo : 나중에 FStirng으로 변환 필요
-	UTexture* LoadTextureFromFile(const std::string& AssetName, const std::string& FilePath);
+	void LoadTextureFromFile(const std::string& AssetName, const std::string& FilePath);
 	UTexture* GetDefaultWhiteTexture() const;
 
 	void ClearAll();

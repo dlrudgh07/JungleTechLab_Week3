@@ -112,12 +112,12 @@ void FResourceManager::ClearAll()
 }
 
 
-UTexture* FResourceManager::LoadTextureFromFile(const std::string& AssetName, const std::string& FilePath)
+void FResourceManager::LoadTextureFromFile(const std::string& AssetName, const std::string& FilePath)
 {
-	// 1. 이미 등록된 이름이면 로드하지 않고 바로 캐시 반환
+	// 1. 이미 등록된 이름이면 로드하지 않음
 	if (TextureMap.find(AssetName) != TextureMap.end())
 	{
-		return TextureMap[AssetName];
+		return;
 	}
 
 	// 2. 새로운 UTexture 껍데기 생성
@@ -145,7 +145,7 @@ UTexture* FResourceManager::LoadTextureFromFile(const std::string& AssetName, co
 	{
 		UE_LOG("Failed to load texture: %s", FilePath.c_str());
 		delete NewTexture;
-		return nullptr;
+		return;
 	}
 
 	// 4. GPU 데이터(SRV)를 FTextureResource 래퍼로 묶어서 UTexture에 연결
@@ -161,9 +161,8 @@ UTexture* FResourceManager::LoadTextureFromFile(const std::string& AssetName, co
 		NewTexture->Height = Desc.Height;
 	}
 
-	// 6. 캐시에 등록하고 반환
+	// 6. 캐시에 등록
 	RegisterTexture(AssetName, NewTexture);
-	return NewTexture;
 }
 
 

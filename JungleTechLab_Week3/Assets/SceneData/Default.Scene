@@ -9,17 +9,17 @@
             "Components" : [{
                 "ClassName" : "UStaticMeshComponent",
                 "Properties" : {
-                  "GUID" : "E13A55A4-4B95-9DC2-F2AF-5BAF06929478",
-                  "RelativeLocation" : [0.000000, 0.000000, 0.000000],
+                  "GUID" : "48EB935B-4D49-6047-6BBE-228913645109",
+                  "RelativeLocation" : [0.000000, 1.695349, 0.000000],
                   "RelativeRotation" : [0.000000, 0.000000, 0.000000],
                   "RelativeScale3D" : [1.000000, 1.000000, 1.000000]
                 }
               }],
-            "GUID" : "1A466E8D-4443-BE9C-2434-0D96F6E5642E",
-            "RootComponentGUID" : "E13A55A4-4B95-9DC2-F2AF-5BAF06929478"
+            "GUID" : "99EE2A9B-4818-0A5F-010B-FF8CB9B56EF5",
+            "RootComponentGUID" : "48EB935B-4D49-6047-6BBE-228913645109"
           }
         }],
-      "GUID" : "68AB84C9-4049-CD14-7722-62BFED06D564"
+      "GUID" : "C7538CDA-4AC3-82A7-0BF8-A6A124DD4E88"
     }
   }
 }

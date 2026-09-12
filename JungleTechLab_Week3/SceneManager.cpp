@@ -467,6 +467,10 @@ void FSceneManager::DeleteScene()
 	ResetSelectedActor();
 }
 
+
+
+// todo
+// seriailze 부분 다시짜야함
 void FSceneManager::SaveScene(
 	std::string_view sceneName,
 	const FFileManager& fileManager)
@@ -546,6 +550,11 @@ void FSceneManager::ExecuteLoadScene()
 
 	ResetSelectedActor();
 }
+
+
+
+
+
 
 void  FSceneManager::SetSelectedActor(AActor* actor)
 {
