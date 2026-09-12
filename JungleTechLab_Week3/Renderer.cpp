@@ -312,7 +312,6 @@ void URenderer::PrepareShader()
 
 void URenderer::PrepareTextureShader()
 {
-	DeviceContext->PSSetSamplers(0, 1, &UUIDSamplerState);
 	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
 
 	if (ConstantBuffer)

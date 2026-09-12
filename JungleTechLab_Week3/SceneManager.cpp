@@ -268,6 +268,25 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		guiReference.ViewportClient->mGizmo.CycleGizmoType();
 	}
 
+	float Offset = guiReference.GraphicsManager->GetGridOffset();
+	int Range = guiReference.GraphicsManager->GetGridRange();
+
+	ImGui::SeparatorText("Grid Controll");
+	ImGui::Text("Offset ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(150);
+	ImGui::DragFloat("##OFFSET", &Offset, 0.01f, 0.1f, 20.0f);
+
+	guiReference.GraphicsManager->SetGridOffset(Offset);
+
+
+	ImGui::Text("Range  ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(150);
+	ImGui::DragInt("##RANGE", &Range, 0.1, 20, 100);
+
+	guiReference.GraphicsManager->SetGridRange(Range);
+
 
 	ImGui::End();
 }

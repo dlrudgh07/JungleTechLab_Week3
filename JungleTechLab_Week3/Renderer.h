@@ -7,7 +7,6 @@
 #include "RenderInfo.h"
 #include <wrl/client.h>
 #include "Console.h"
-#include "DDSTextureLoader.h"
 
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
