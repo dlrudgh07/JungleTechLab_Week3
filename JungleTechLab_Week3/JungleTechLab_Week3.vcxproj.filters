@@ -323,6 +323,9 @@
     <ClInclude Include="Quad.h">
       <Filter>Rendering\Shapes</Filter>
     </ClInclude>
+    <ClInclude Include="FPath.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderW0.hlsl">
@@ -336,5 +339,6 @@
     <None Include="ObjectFactory.inl">
       <Filter>Core\UObject</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

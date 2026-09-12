@@ -20,11 +20,14 @@ public:
 	void AddActor(AActor* actor);
 	bool RemoveActor(FGuid TargetComponentGuid);
 
-	const TArray<FRenderInfo> GetRenderInfos();
+	const TArray<FRenderInfo>& GetRenderInfos() const;
 	TArray<AActor*>& GetActors() { return Actors; }
 
 	void Update(float DeltaTime);
-	void ClearRenderInfos();
+	//void ClearRenderInfos();
+
+	void RequestDestroyActor(AActor* actor);
+	void ProcessPendingKills();
 
 	AActor* SpawnStaticMeshActor(const std::string& AssetName, struct FTransform Transform, const FResourceManager& ResourceManager);
 
@@ -39,6 +42,7 @@ private:
 	
 	// Todo: Must reserve
 	TArray<AActor*> Actors;
+	TArray<AActor*> PendingKillList;
 
 	// Todo: Maybe, move to FSceneManager
 	TArray<FRenderInfo> RenderInfos;

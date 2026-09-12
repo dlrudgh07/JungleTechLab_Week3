@@ -175,7 +175,6 @@ void URenderer::ReleaseRasterizerState()
 }
 void URenderer::Release()
 {
-	ReleaseSamplerState();
 	ReleaseRasterizerState();
 
 	DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
@@ -268,20 +267,18 @@ void URenderer::RSUpdateState()
 
 void URenderer::PrepareShader()
 {
+	ClearTextureCache(); // 프레임 렌더링 시작 전 캐시 초기화
+
 	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
 	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
 	DeviceContext->IASetInputLayout(SimpleInputLayout);
-	CurrentBoundSRV = nullptr;
 
 	if (ConstantBuffer)
 	{
 		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
 	}
 
-	if (SamplerState)
-	{
-		DeviceContext->PSSetSamplers(0, 1, &SamplerState);
-	}
+	BindSampler(0, SamplerState.Get());	// texture mapping
 }
 
 
@@ -298,23 +295,31 @@ void URenderer::CreateSamplerState()
 
 	Device->CreateSamplerState(&Description, &SamplerState);
 }
-void URenderer::ReleaseSamplerState()
+
+void URenderer::BindTexture(uint32 Slot, ID3D11ShaderResourceView* SRV)
 {
-	if (SamplerState)
+	if (CurrentSRVCache[Slot] == SRV)
 	{
-		SamplerState->Release();
-		SamplerState = nullptr;
+		return;
 	}
+
+	// 다를 때만 DX11 API 호출 및 캐시 업데이트
+	DeviceContext->PSSetShaderResources(Slot, 1, &SRV);
+	CurrentSRVCache[Slot] = SRV;
 }
 
-void URenderer::BindTexture(ID3D11ShaderResourceView* InputTextureSRV)
+void URenderer::BindSampler(uint32 Slot, ID3D11SamplerState* Sampler)
 {
-	if (CurrentBoundSRV != InputTextureSRV)
+	if (CurrentSamplerCache[Slot] == Sampler)
 	{
-		DeviceContext->PSSetShaderResources(0, 1, &InputTextureSRV);
-		CurrentBoundSRV = InputTextureSRV;
+		return;
 	}
+
+	// 다를 때만 DX11 API 호출 및 캐시 업데이트
+	DeviceContext->PSSetSamplers(Slot, 1, &Sampler);
+	CurrentSamplerCache[Slot] = Sampler;
 }
+
 void URenderer::CreateDefaultWhiteTexture()
 {
 	// 1x1 픽셀짜리 하얀색 텍스처(R:255, G:255, B:255, A:255) 데이터
@@ -339,10 +344,12 @@ void URenderer::CreateDefaultWhiteTexture()
 	Device->CreateTexture2D(&desc, &initData, &tex);
 
 	// SRV(Shader Resource View) 생성
-	Device->CreateShaderResourceView(tex, nullptr, &DefaultWhiteTextureSRV);
+	Device->CreateShaderResourceView(tex, nullptr, DefaultWhiteTextureSRV.GetAddressOf());
 
 	tex->Release();
 }
+
+
 
 void URenderer::RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices)
 {
@@ -574,4 +581,14 @@ void URenderer::OnResize(UINT width, UINT height, float viewportWidth, float vie
 void URenderer::ClearDepth()
 {
 	DeviceContext->ClearDepthStencilView(DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+}
+
+void URenderer::ClearTextureCache()
+{
+	// 매 프레임 SRV 캐시를 초기화하여, 댕글링 포인터로 인한 바인딩 무시 버그를 막음
+	for (int i = 0; i < 8; ++i)
+	{
+		CurrentSRVCache[i] = nullptr;
+		CurrentSamplerCache[i] = nullptr;
+	}
 }

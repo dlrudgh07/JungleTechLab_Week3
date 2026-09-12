@@ -1,5 +1,4 @@
 ﻿#pragma once
-
 #include <Windows.h>
 #include "FrameTimer.h"
 #include "FEditorViewportClient.h"
@@ -8,19 +7,15 @@
 #include "FileManager.h"
 #include "Renderer.h"
 #include "World.h"
-
 #include <d3d11.h>
 
-class Sphere;
 class FGraphicsManager;
 class FResourceManager;
 
 class FEngineLoop
 {
 public:
-	FEngineLoop()
-	{
-	}
+	FEngineLoop() {}
 	~FEngineLoop() {};
 
 	void Init(HINSTANCE hInstance, WNDPROC WndProc);

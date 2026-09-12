@@ -47,6 +47,8 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 {
 	bMouseHit = false;
 
+	if (World == nullptr) return;
+
 	// 투영 방식에 따라 광선을 만드는 법만 다르다. 두 점을 구하고 나면 이후 판정은 완전히 같다
 	FVector NearPoint, FarPoint;
 	//if (bPerspectiveProjection)
@@ -87,7 +89,7 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 	}
 
 	// Object 탐색
-	const TArray<FRenderInfo> RenderInfos = World->GetRenderInfos();
+	const TArray<FRenderInfo>& RenderInfos = World->GetRenderInfos();
 	for (const FRenderInfo& RI : RenderInfos)
 	{
 		// RI 안에 CPU 데이터가 없으면 레이캐스트 통과 (예: 빈 렌더인포)
