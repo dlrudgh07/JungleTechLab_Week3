@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <string_view>
+#include <string>
 
 #include "SceneData.h"
 #include "TArray.h"
@@ -29,7 +30,7 @@ struct FGuiReference
 struct FGuiInputField
 {
 	/* Spawn Actor */
-	int32 SelectedMeshIndex = 0;		// 더 이상 primitive type 쓰지 않음
+	int32 SelectedMeshIndex = 0;
 	int32 SpawnCount = 1;
 
 	/* Scene Control */
@@ -49,15 +50,15 @@ public:
 	void Update(float delaTime);
 	void UpdateGUI(const FGuiReference& guiReference);
 
-	const TArray<FRenderInfo> GetRenderInfos() const;
+	const TArray<FRenderInfo>& GetRenderInfos() const;
 	const TArray<FRenderInfo> GetAxisRenderInfos();
 
-	void NewScene();
-	void DeleteScene();
+	// 즉시 실행이 아닌 Request(예약) 함수로 변경
+	void RequestNewScene();
+	void RequestLoadScene(std::string_view sceneName, const FFileManager& fileManager);
 
-	void LoadScene(std::string_view sceneName, const FFileManager& fileManager);
 	void SaveScene(std::string_view sceneName, const FFileManager& fileManager);
-
+	void DeleteScene();
 	void ProcessPendingKills();
 
 	UWorld* GetCurrentWorld() const { return mCurrentWorld; }
@@ -70,9 +71,19 @@ public:
 	float GetPanelWidth() const;
 
 private:
+	// 예약된 씬 작업을 저장할 변수들
+	bool bPendingNewScene = false;
+	bool bPendingLoadScene = false;
+	std::string PendingSceneName;
+	const FFileManager* PendingFileManager = nullptr;
+
+	void ExecuteNewScene();
+	void ExecuteLoadScene();
+
+
+
 	static constexpr float MIN_WIDTH_RATIO = 0.2f;
 	static constexpr float MAX_WIDTH_RATIO = 0.6f;
-
 	static constexpr float CONTROL_PANEL_HEIGHT_RATIO = 0.4f;
 	static constexpr float WINDOW_PROPERTY_HEIGHT_RATIO = 0.3f;
 

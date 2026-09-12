@@ -5,6 +5,7 @@
 #include "Matrix.h"
 #include "Vector.h"
 #include "RenderInfo.h"
+#include <wrl/client.h>
 
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
@@ -31,6 +32,7 @@ struct FConstants
 class URenderer
 {
 public:
+	// todo 이거 comptr로 다 변경해야함
     ID3D11Device* Device = nullptr;
     ID3D11DeviceContext* DeviceContext = nullptr;
     IDXGISwapChain* SwapChain = nullptr;
@@ -59,14 +61,15 @@ public:
 
 
 	// texture mapping
-	// todo 이거 comptr로 다 변경해야함
-	ID3D11SamplerState* SamplerState = nullptr;
-	ID3D11ShaderResourceView* CurrentBoundSRV = nullptr;
-	ID3D11ShaderResourceView* DefaultWhiteTextureSRV = nullptr;
-	void CreateDefaultWhiteTexture();
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureSRV = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerState = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> DefaultWhiteTextureSRV = nullptr;
+	ID3D11ShaderResourceView* CurrentSRVCache[8] = { nullptr };		 // size는 변경가능 - todo: 아마 최대 사이즈 체크 해야할듯함
+	ID3D11SamplerState* CurrentSamplerCache[8] = { nullptr };			// size는 변경가능 - todo: 아마 최대 사이즈 체크 해야할듯함
 	void CreateSamplerState();
-	void ReleaseSamplerState();
-	void BindTexture(ID3D11ShaderResourceView* InputTextureSRV);
+	void BindTexture(uint32 Slot, ID3D11ShaderResourceView* SRV);
+	void BindSampler(uint32 Slot, ID3D11SamplerState* Sampler);
+	void CreateDefaultWhiteTexture();
 
 
     unsigned int Stride;
@@ -117,6 +120,7 @@ public:
 
 	//Initialize
 	void ClearDepth();
+	void ClearTextureCache();
     //=============================================
 	//해상도 변경 시 호출
 	//void OnResize(UINT Width, UINT Height);

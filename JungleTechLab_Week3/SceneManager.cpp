@@ -28,7 +28,7 @@ FSceneManager::FSceneManager()
 	ImGuiIO& io = ImGui::GetIO();
 	mPanelWidth = io.DisplaySize.x * MIN_WIDTH_RATIO;
 
-	//mCurrentWorld = FObjectFactory::ConstructObject<UWorld>();
+	mCurrentWorld = FObjectFactory::ConstructObject<UWorld>();
 
 	// Todo: Test code, move to other function
 	//{
@@ -49,10 +49,24 @@ FSceneManager::~FSceneManager()
 	delete mCurrentWorld;
 }
 
-void FSceneManager::Update(float DelaTime)
+void FSceneManager::Update(float DeltaTime)
 {
-	mCurrentWorld->Update(DelaTime);
+	// 프레임의 가장 안전한 시점(Update 시작 전)에 씬 교체 진행
+	if (bPendingNewScene)
+	{
+		ExecuteNewScene();
+		bPendingNewScene = false;
+	}
+	if (bPendingLoadScene && PendingFileManager)
+	{
+		ExecuteLoadScene();
+		bPendingLoadScene = false;
+	}
 
+	if (mCurrentWorld)
+	{
+		mCurrentWorld->Update(DeltaTime);
+	}
 }
 
 void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
@@ -71,22 +85,14 @@ void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
 
 void FSceneManager::ProcessPendingKills()
 {
-	auto& Actors = mCurrentWorld->GetActors();
-
-	for (int32 i = static_cast<int32>(Actors.Num()) - 1; i >= 0; --i)
+	if (mSelectedActor && mSelectedActor->IsPendingKill())
 	{
-		AActor* Actor = Actors[i];
+		mSelectedActor = nullptr; 
+	}
 
-		if (Actor->IsPendingKill())
-		{
-			// 선택된 액터가 죽는다면 포인터도 안전하게 해제
-			if (mSelectedActor == Actor)
-				mSelectedActor = nullptr;
-
-			delete Actor; 
-
-			Actors.RemoveAt(i, 1);
-		}
+	if (mCurrentWorld)
+	{
+		mCurrentWorld->ProcessPendingKills();
 	}
 }
 
@@ -116,7 +122,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
 	// todo : 이건 추후 자동화해야할듯함
-	const char* AssetNames[] = { "Cube", "Sphere", "Quad" };
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate"};
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
 	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
@@ -135,8 +141,6 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			AActor* newActor = mCurrentWorld->SpawnStaticMeshActor(SelectedName, { FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			if (newActor == nullptr)
 				UE_LOG("Error: Asset not found in ResourceManager!");
-			else
-				mCurrentWorld->AddActor(newActor);
 		}
 	}
 
@@ -152,14 +156,12 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	/* Scene Control */
 	ImGui::SeparatorText("Scene Control");
-
 	ImGui::InputText("Scene Name", mGuiInputField.SceneName, IM_ARRAYSIZE(mGuiInputField.SceneName));
+
 	if (ImGui::Button("New scene"))
 	{
-		// TODO: add clear depth buffer function in renderer
-		//guiReference.GraphicsManager->GetRenderer()->ClearDepthBuffer();
 		guiReference.ViewportClient->Reset();
-		NewScene();
+		RequestNewScene(); 
 	}
 	if (ImGui::Button("Save scene"))
 	{
@@ -168,8 +170,10 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	if (ImGui::Button("Load scene"))
 	{
 		guiReference.ViewportClient->Reset();
-		LoadScene(mGuiInputField.SceneName, *guiReference.FileManager);
+		RequestLoadScene(mGuiInputField.SceneName, *guiReference.FileManager);
 	}
+
+
 	/* Camera Control */
 	ImGui::SeparatorText("Camera Control");
 
@@ -434,8 +438,17 @@ void FSceneManager::updateObjectListPanelGUI(const FGuiReference& guiReference)
 	}
 	ImGui::End();
 }
-
-void FSceneManager::NewScene()
+void FSceneManager::RequestNewScene()
+{
+	bPendingNewScene = true;
+}
+void FSceneManager::RequestLoadScene(std::string_view sceneName, const FFileManager& fileManager)
+{
+	bPendingLoadScene = true;
+	PendingSceneName = sceneName;
+	PendingFileManager = &fileManager;
+}
+void FSceneManager::ExecuteNewScene()
 {
 	ResetSelectedActor();
 	if (mCurrentWorld != nullptr)
@@ -444,7 +457,6 @@ void FSceneManager::NewScene()
 	}
 	mCurrentWorld = FObjectFactory::ConstructObject<UWorld>();
 }
-
 void FSceneManager::DeleteScene()
 {
 	if (mCurrentWorld != nullptr)
@@ -499,24 +511,22 @@ void FSceneManager::SaveScene(
 	fileManager.WriteStringToFile(fileName, jsonString);
 }
 
-void FSceneManager::LoadScene(
-	std::string_view sceneName,
-	const FFileManager& fileManager)
+void FSceneManager::ExecuteLoadScene()
 {
 	FString fileName = kSceneDataDir;
 	fileName += FString("/");
-	fileName += sceneName;
+	fileName += PendingSceneName;
 	fileName += kSceneDataSuffix;
 
 	FString jsonString;
 
 	try
 	{
-		jsonString = fileManager.ReadFileToString(fileName);
+		jsonString = PendingFileManager->ReadFileToString(fileName);
 	}
 	catch (...)
 	{
-		UE_LOG_F("Failed to load scene {}: file not found.", sceneName);
+		UE_LOG_F("Failed to load scene {}: file not found.", PendingSceneName);
 		return;
 	}
 
@@ -527,7 +537,7 @@ void FSceneManager::LoadScene(
 	UWorld* newWorld = FObjectFactory::LoadObject<UWorld>(worldJson);
 	if (!newWorld)
 	{
-		throw std::runtime_error(std::format("Failed to load world from scene: {}", sceneName));
+		throw std::runtime_error(std::format("Failed to load world from scene: {}", PendingSceneName));
 	}
 
 	// Replace the contents of mCurrentWorld with newWorld
@@ -560,14 +570,15 @@ float FSceneManager::GetPanelWidth() const
 	return mPanelWidth;
 }
 
-const TArray<FRenderInfo> FSceneManager::GetRenderInfos() const
+const TArray<FRenderInfo>& FSceneManager::GetRenderInfos() const
 {
 	if (mCurrentWorld)
 	{
 		return mCurrentWorld->GetRenderInfos();
 	}
 
-	return TArray<FRenderInfo>();
+	static const TArray<FRenderInfo> EmptyInfos;
+	return EmptyInfos;
 }
 
 const TArray<FRenderInfo> FSceneManager::GetAxisRenderInfos()
