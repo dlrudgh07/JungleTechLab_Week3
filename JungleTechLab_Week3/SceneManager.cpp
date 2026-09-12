@@ -183,12 +183,13 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	//ImGui::SliderFloat("Speed", &Camera.Speed, -10.0f, 10.0f);
 	if (ImGui::BeginCombo("##ShowFlags", "Show Flags"))
 	{
-		bool bWireFrame = guiReference.GraphicsManager->GetWireFrame();
-		if (ImGui::Checkbox("Wire frame", &bWireFrame))
+		/* -------------사용법--------------------
+		bool b시각화대상 = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_시각화대상);
+		if (ImGui::Checkbox("BillBoard", &b시각화대상))
 		{
-			guiReference.GraphicsManager->SetWireFrame(bWireFrame);
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, b시각화대상);
 		}
-
+		*/
 		bool bShowWorldAxis = guiReference.GraphicsManager->GetShowWorldAxis();
 		if (ImGui::Checkbox("World axis", &bShowWorldAxis))
 		{
@@ -207,8 +208,34 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 			guiReference.GraphicsManager->StartProjectionTransition(bOrthographic);
 		}
+		bool bShowPrimitive = HasFlag(guiReference.ViewportClient->GetShowFlags(),EEngineShowFlags::SF_Primitives);
+		if (ImGui::Checkbox("Show Primitives", &bShowPrimitive))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bShowPrimitive);
+		}
+
+		bool bShowGizmo = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Gizmo);
+		if (ImGui::Checkbox("Gizmo", &bShowGizmo))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bShowGizmo);
+		}
+
+		bool bBillBoard = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BillboardText);
+		if (ImGui::Checkbox("BillBoard", &bBillBoard))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bBillBoard);
+		}
+
 
 		ImGui::EndCombo();
+	}
+
+	// viewMode UI. 배열 순서는 EViewModeIndex 선언 순서(Lit, Unlit, Wireframe)와 맞아야 한다
+	const char* viewModeNames[] = { "Lit", "Unlit", "Wireframe" };
+	int32 viewModeIndex = static_cast<int32>(guiReference.ViewportClient->GetViewMode());
+	if (ImGui::Combo("View Mode", &viewModeIndex, viewModeNames, IM_ARRAYSIZE(viewModeNames)))
+	{
+		guiReference.ViewportClient->SetViewMode(static_cast<EViewModeIndex>(viewModeIndex));
 	}
 
 	ImGui::Text("FOV     ");
