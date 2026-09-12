@@ -566,11 +566,11 @@ void  FSceneManager::SetSelectedActor(AActor* actor)
 
 	if (actor == mSelectedActor)
 	{
-		UE_LOG("SetSelectedActor: Actor with GUID {} is already selected.", actor->ObjectID.GUID.ToString());
+		UE_LOG("SetSelectedActor: Actor with GUID {%s} is already selected.", actor->ObjectID.GUID.ToString().CStr());
 		return; // No change
 	}
 
-	UE_LOG("SetSelectedActor: Actor with GUID {} is now selected.", actor->ObjectID.GUID.ToString());
+	UE_LOG("SetSelectedActor: Actor with GUID {%s} is now selected.", actor->ObjectID.GUID.ToString().CStr());
 	mSelectedActor = actor;
 }
 
