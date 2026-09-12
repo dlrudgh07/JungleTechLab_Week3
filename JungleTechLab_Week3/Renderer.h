@@ -82,10 +82,6 @@ public:
 	void BindSampler(uint32 Slot, ID3D11SamplerState* Sampler);
 	ID3D11ShaderResourceView* FontTextureSRV;
 	void CreateDefaultWhiteTexture();
-	void CreateSamplerState();
-	void CreateUUIDSampleState();
-	void ReleaseSamplerState(); //check
-	void BindTexture(ID3D11ShaderResourceView* InputTextureSRV); //check
 	
 
 

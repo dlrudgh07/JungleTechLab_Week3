@@ -3,8 +3,7 @@
 void URenderer::Create(HWND hWindow)
 {
 	CreateDeviceAndSwapChain(hWindow);
-	CreateFrameBuffer();
-	//CreateDepthStencilBuffer();
+	CreateFrameBuffer();	
 
 	CreateDepthStencilState();
 	CreateStencilMarkState();
@@ -212,7 +211,7 @@ void URenderer::Release()
 	ReleaseDepthStencilState();
 	ReleaseBlendState();
 	ReleaseFrameBuffer();
-	ReleaseUUIDSampleState();
+	//ReleaseUUIDSampleState();
 	ReleaseDeviceAndSwapChain();
 }
 
@@ -313,10 +312,6 @@ void URenderer::PrepareShader()
 
 void URenderer::PrepareTextureShader()
 {
-	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
-	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
-	DeviceContext->IASetInputLayout(SimpleInputLayout);
-	DeviceContext->PSSetShaderResources(0, 1, &UUIDTextureView);
 	DeviceContext->PSSetSamplers(0, 1, &UUIDSamplerState);
 	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
 
@@ -340,29 +335,6 @@ void URenderer::CreateSamplerState()
 
 	Device->CreateSamplerState(&Description, &SamplerState);
 }
-
-void URenderer::CreateUUIDSampleState()
-{
-	HRESULT hr = DirectX::CreateDDSTextureFromFile(Device, L"Assets/DDS/FontAtlas.dds", nullptr, &UUIDTextureView);
-	if (!(SUCCEEDED(hr)))
-	{
-		UE_LOG_F("Not Fild DDS Texture : %s", "Assets / DDS / FontAtlas.dds");
-	}
-
-	UUIDSamplerInfo.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	UUIDSamplerInfo.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	UUIDSamplerInfo.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	UUIDSamplerInfo.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	UUIDSamplerInfo.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	UUIDSamplerInfo.MinLOD = 0;
-	UUIDSamplerInfo.MaxLOD = D3D11_FLOAT32_MAX;
-	UUIDSamplerInfo.MipLODBias = 0;
-	UUIDSamplerInfo.MaxAnisotropy = 0;
-
-
-	Device->CreateSamplerState(&UUIDSamplerInfo, &UUIDSamplerState);
-}
-
 
 void URenderer::BindTexture(uint32 Slot, ID3D11ShaderResourceView* SRV)
 {
@@ -474,10 +446,8 @@ bool URenderer::ReAllocateUUIDVertexBuffer(uint32 RequestSize)
 		UUIDVertexCapacity = NextVertexCapacity;
 		ReleaseUUIDVertexBuffer();
 		UUIDVertexBuffer = NewUUIDVertexBuffer;
-		UE_LOG("realooc true");
 		return (true);
 	}
-	UE_LOG("realooc false");
 	return(false);
 
 }
@@ -658,14 +628,14 @@ void URenderer::CreateAlphaBlendState()
 }
 
 
-void URenderer::ReleaseUUIDSampleState()
-{
-	if (SamplerState)
-	{
-		SamplerState->Release();
-		SamplerState = nullptr;
-	}
-}
+//void URenderer::ReleaseUUIDSampleState()
+//{
+//	if (SamplerState)
+//	{
+//		SamplerState->Release();
+//		SamplerState = nullptr;
+//	}
+//}
 
 void URenderer::ReleaseBlendState()
 {

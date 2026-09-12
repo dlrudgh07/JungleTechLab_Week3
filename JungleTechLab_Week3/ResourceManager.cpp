@@ -188,6 +188,8 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)
 	LoadTextureFromFile("CrateTexture", "C:/Users/JUNGLE/Desktop/GameEngine/Week3/JungleTechLab_Week3/JungleTechLab_Week3/crate.jpg");
 
+	LoadTextureFromFile("FontTexture", "Assets/DDS/FontAtlas.dds");
+
 	// ==========================================
 	// [3] 머티리얼 에셋 생성 및 등록
 	// ==========================================
@@ -202,6 +204,12 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	CrateMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	CrateMaterial->BaseTexture = GetTexture("CrateTexture");
 	RegisterMaterial("CrateMaterial", CrateMaterial);
+
+	// 3-3. Ascii 아틀라스 폰트 머티리얼
+	UMaterial* FotnMaterial = FObjectFactory::ConstructObject<UMaterial>();
+	FotnMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	FotnMaterial->BaseTexture = GetTexture("FontTexture");
+	RegisterMaterial("FotnMaterial", FotnMaterial);
 
 
 	// ==========================================

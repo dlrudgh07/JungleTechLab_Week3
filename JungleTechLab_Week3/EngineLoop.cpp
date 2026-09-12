@@ -158,7 +158,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		// UUID 텍스쳐 랜더링
 		GraphicsManager->DrawAllUUID(SceneManager->GetRenderInfos(),
 			ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
-		GraphicsManager->FlushUUID();
+		GraphicsManager->FlushUUID(ResourceManager->GetTexture("FontTexture"));
 
 		//ImGui
 		{
