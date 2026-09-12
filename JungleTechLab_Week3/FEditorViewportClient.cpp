@@ -59,7 +59,7 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 	//	DeprojectScreenToWorldForOrtho(WindowApplication.Input.CursorX - ViewportInfo.TopLeftX, WindowApplication.Input.CursorY - ViewportInfo.TopLeftY,
 	//		ViewportInfo.Width, ViewportInfo.Height, 0.1f, 100.f, NearPoint, FarPoint);
 	//}
-	DeprojectScreenToWorldForUnified(WindowApplication.Input.CursorX - ViewportInfo.TopLeftX, WindowApplication.Input.CursorY - ViewportInfo.TopLeftY,
+	DeprojectScreenToWorldForUnified(WindowApplication.Input.CursorX - static_cast<int32>(ViewportInfo.TopLeftX), WindowApplication.Input.CursorY - static_cast<int32>(ViewportInfo.TopLeftY),
 		ViewportInfo.Width, ViewportInfo.Height, 0.1f, 100.f, mCamera.mOrthoDistance, perspectiveRatio, NearPoint, FarPoint);
 
 	mRayNear = NearPoint;
@@ -90,22 +90,22 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 	const TArray<FRenderInfo> RenderInfos = World->GetRenderInfos();
 	for (const FRenderInfo& RI : RenderInfos)
 	{
-		const FVertexSimple* vertices = nullptr;
-		uint32 length = 0;
-		if (!GetPrimitiveMesh(RI.ePrimitive, vertices, length))
+		// RI 안에 CPU 데이터가 없으면 레이캐스트 통과 (예: 빈 렌더인포)
+		if (RI.CollisionVertices == nullptr || RI.CollisionVertexCount == 0)
 		{
-			continue;   // 모르는 프리미티브는 건너뛴다
+			continue;
 		}
 
-		const FMatrix WorldToLocal = RI.WorldTransformMatrix.Inverse();
+		// 2. RI에서 꺼내 쓰기만 하면 끝
+		const FVertexSimple* vertices = RI.CollisionVertices;
+		uint32 length = RI.CollisionVertexCount;
 
-		//역행렬이 존재하지 않으면(스케일이 작아 det이 0에 가까운 경우) Racast 대상에서 제외
+		const FMatrix WorldToLocal = RI.WorldTransformMatrix.Inverse();
 		if (WorldToLocal == FMatrix::Zero) continue;
 
 		const FVector LocalNear = WorldToLocal.TransformPosition(NearPoint);
 		const FVector LocalFar = WorldToLocal.TransformPosition(FarPoint);
 
-		// 삼각형 리스트라 정점 3개씩 묶인다
 		for (uint32 i = 0; i + 2 < length; i += 3)
 		{
 			const FVector V0 = vertices[i].GetPosition();
@@ -116,7 +116,6 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 			if (RayIntersectsTriangle(LocalNear, LocalFar, V0, V1, V2, OutT, OutU, OutV)
 				&& OutT < NearlistT)
 			{
-				// 같은 메시 안에서도 더 가까운 삼각형이 뒤에 나올 수 있으므로 break 하지 않는다
 				NearlistT = OutT;
 				bMouseHit = true;
 				mHoveredRenderInfo = RI;

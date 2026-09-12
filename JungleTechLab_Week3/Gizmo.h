@@ -9,21 +9,21 @@
 class AActor;
 
 struct FGizmo {
-	FVector mLocation; // 기즈모의 위치
+	FVector mLocation{}; // 기즈모의 위치
 
 	// 드래그 기준값. 기즈모는 액터를 따라 움직이므로, 기준선을 시작 시점에 고정해 두지 않으면
 	// 결과가 기준을 다시 움직여서 발산한다.
-	FTransform mDragStartTransform;       // 드래그 시작 시점의 액터 트랜스폼
-	FVector mDragStartGizmoLocation;  // 드래그 시작 시점의 기즈모 위치 = 축 직선의 원점
+	FTransform mDragStartTransform{};       // 드래그 시작 시점의 액터 트랜스폼
+	FVector mDragStartGizmoLocation{};  // 드래그 시작 시점의 기즈모 위치 = 축 직선의 원점
 	float mDragStartAxisS = 0.0f;     // 그 직선 위에서 처음 잡은 지점
 	float mDragStartAxisLength = 1.0f; // 그 시점의 막대 길이. 스케일 비율의 분모라 같이 고정해야 한다
 
 	// 회전용. 링 평면 안에 시작 시점 기준으로 2D 기저를 박아두고 그 기준으로 각도를 잰다.
-	FVector mDragStartRingDir;         // 잡은 방향. 이게 0도
+	FVector mDragStartRingDir{};         // 잡은 방향. 이게 0도
 	float mDragAccumAngle = 0.0f;      // 시작 이후 누적 회전각(도)
 	float mDragLastAngle = 0.0f;       // 직전 프레임 각도. ±180 넘김을 잇는 데 쓴다
 
-	FMatrix TargetObjectTransformMatrix;
+	FMatrix TargetObjectTransformMatrix{};
 	bool mbVisible = false;
 	bool mbHovered = false;
 	float mGizmoScale=1.0f;
@@ -33,7 +33,7 @@ struct FGizmo {
 	float mRingHitRadius = 0.08f; // Rotate마우스 판정보정 (+0.08배)
 	float mRingRadiusRatio = 0.4f;
 	float mScaleBarThickness = mAxisLength * 0.035f;
-	float mScaleHandleSize = mAxisLength * 0.13;
+	float mScaleHandleSize = mAxisLength * 0.13f;
 	float mGizmoSizeRatio = 0.3f;
 	FRotator UpdateRotation = {};
 	
@@ -78,15 +78,16 @@ struct FGizmo {
 	bool IsRayInGizmo(FVector nearPoint, FVector farPoint);
 	void Reset();
 
-	EPrimitive GetAxisPrimitive() const;
 	FMatrix GetAxisMatrix(EGIZMO_AXIS axis) const; // 축모양 도형을 반환
+
+	class UStaticMesh* GetAxisMesh(class FResourceManager* RM) const;
+	TArray<FRenderInfo> GetGizmoRenderInfo(class FResourceManager* RM) const;
 	
 
 	FVector4 GetAxisColor(EGIZMO_AXIS axis) const;
 
 	FMatrix GetScaleHandleMatrix(EGIZMO_AXIS axis) const;
 
-	TArray<FRenderInfo> GetGizmoRenderInfo() const; // Gizmo 모형 렌더정보
 
 	void SetGizmoType(EGIZMO_TYPE type) { eType = type; }
 	void CycleGizmoType() { eType = static_cast<EGIZMO_TYPE>((static_cast<int>(eType) + 1) % 3); }

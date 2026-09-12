@@ -10,12 +10,6 @@
 #include "RenderInfo.h"
 #include "Vector.h"
 
-struct FBuffer
-{
-	ID3D11Buffer* Buffer;
-	uint32 SourceNum;
-};
-
 class FGraphicsManager
 {
 public:
@@ -49,8 +43,7 @@ public:
 	float GetCameraOrthoDistance() const { return mCameraOrthoDistance; }
 	void SetCameraOrthoDistance(float distance) { mCameraOrthoDistance = distance; }
 
-	// Todo: Change name
-	void CreateBuffer(EPrimitive ePrimitive, FVertexSimple* vertices, uint32 verticesSize);
+	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
 	URenderer* GetRenderer() const;
 
 	//Highlight
@@ -73,28 +66,26 @@ public:
 	void UpdateProjectionTransition(float deltaTime);
 
 private:
-	URenderer* mRenderer;
-	FMatrix mViewProjectionMatrix;
-	FMatrix mViewOrthogonalProjectionMatrix;
-	FMatrix mViewUnifiedProjectionMatrix;
+	URenderer* mRenderer = nullptr;
+	FMatrix mViewProjectionMatrix{};
+	FMatrix mViewOrthogonalProjectionMatrix{};
+	FMatrix mViewUnifiedProjectionMatrix{};
 
 	// Prepare에서 갱신. 하이라이트 두께의 픽셀 → 월드 환산에 쓴다
-	FVector mCameraLocation;
-	FVector mCameraForward;
+	FVector mCameraLocation{};
+	FVector mCameraForward{};
 	float mCameraFovDegree = 60.0f;
 	float mCameraOrthoDistance = 10.0f;
-
-	TMap<EPrimitive, FBuffer> mBufferMap;
 
 	// Graphics config
 	// 이번 프레임에 쌓인 선분. 정점 2개가 선분 하나
 	TArray<FVertexSimple> mLineVertices;
 
-	bool mbWireFrame;
-	bool mbPerspectiveProjection;
+	bool mbWireFrame = false;
+	bool mbPerspectiveProjection = false;
 	bool mbShowWorldAxis = true;
-	float mAspect;
-	float mProjectionRatio; // 0.0f ~ 1.0f, 0이면 직교, 1이면 원근, 그 사이면 혼합
+	float mAspect = 0;
+	float mProjectionRatio = 0; // 0.0f ~ 1.0f, 0이면 직교, 1이면 원근, 그 사이면 혼합
 
 	// Projection ratio smoothing
 	float mProjectionStartRatio = 1.0f;

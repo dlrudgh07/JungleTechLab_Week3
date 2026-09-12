@@ -46,7 +46,7 @@ FVector FVectorFromJson(const json::JSON& json)
 		throw std::runtime_error("Json Array expected for FVector");
 	}
 
-	return FVector(json.at(0).ToFloat(), json.at(1).ToFloat(), json.at(2).ToFloat());
+	return FVector(static_cast<float>(json.at(0).ToFloat()), static_cast<float>(json.at(1).ToFloat()), static_cast<float>(json.at(2).ToFloat()));
 }
 
 FRotator FRotatorFromJson(const json::JSON& json)
@@ -56,7 +56,7 @@ FRotator FRotatorFromJson(const json::JSON& json)
 		throw std::runtime_error("Json Array expected for FRotator");
 	}
 
-	return FRotator(json.at(0).ToFloat(), json.at(1).ToFloat(), json.at(2).ToFloat());
+	return FRotator(static_cast<float>(json.at(0).ToFloat()), static_cast<float>(json.at(1).ToFloat()), static_cast<float>(json.at(2).ToFloat()));
 }
 
 EPrimitive EPrimitiveFromJson(const json::JSON& json)

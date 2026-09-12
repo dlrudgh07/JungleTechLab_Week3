@@ -6,11 +6,17 @@
 #include "JsonUtil.h"
 #include "Console.h"
 
+#include "ResourceManager.h"
+#include "StaticMesh.h"
+#include "StaticMeshComponent.h"
+
 UWorld::~UWorld()
 {
-	for (AActor* removeActor : mActors)
+	for (AActor* CurrentActor : Actors)
 	{
-		delete removeActor;
+		// todo
+		// 이거 고쳐야함
+		CurrentActor->Destroy();
 	}
 }
 
@@ -19,13 +25,13 @@ void UWorld::SerializeClass(json::JSON& outJson) const
 	UObject::SerializeClass(outJson);
 	json::JSON actorsJson = json::JSON::Make(json::JSON::Class::Array);
 
-	for (const AActor* actor : mActors)
+	for (const AActor* actor : Actors)
 	{
 		json::JSON actorJson;
 		actor->SerializeClass(actorJson);
 		actorsJson.append(std::move(actorJson));
 	}
-	outJson["Properties"]["mActors"] = actorsJson;
+	outJson["Properties"]["Actors"] = actorsJson;
 }
 
 void UWorld::DeserializeClass(const json::JSON& inJson)
@@ -34,12 +40,12 @@ void UWorld::DeserializeClass(const json::JSON& inJson)
 
 	const json::JSON& propertiesJson = inJson.at("Properties");
 
-	if (!propertiesJson.hasKey("mActors") || propertiesJson.at("mActors").JSONType() != json::JSON::Class::Array)
+	if (!propertiesJson.hasKey("Actors") || propertiesJson.at("Actors").JSONType() != json::JSON::Class::Array)
 	{
-		throw std::runtime_error(std::format("{}: mActors requires an array", GetRuntimeClass()->Name));
+		throw std::runtime_error(std::format("{}: Actors requires an array", GetRuntimeClass()->Name));
 	}
 
-	const json::JSON& actorsJson = propertiesJson.at("mActors");
+	const json::JSON& actorsJson = propertiesJson.at("Actors");
 
 	for (const auto& actorJson : actorsJson.ArrayRange())
 	{
@@ -62,59 +68,79 @@ void UWorld::DeserializeClass(const json::JSON& inJson)
 void UWorld::AddActor(AActor* actor)
 {
 	assert(actor != nullptr);
-	assert(getActorIndex(actor->UUID) == -1);
+	// todo : 이거 왜 안되는지 확인해야함
+	//assert(GetActorIndex(actor->ObjectID.GUID) == -1);
 
-	mActors.Add(actor);
+	Actors.Add(actor);
 }
 
-bool UWorld::RemoveActor(uint32 componentUUID)
+bool UWorld::RemoveActor(FGuid TargetComponentGuid)
 {
-	int32 componentIndex = getActorIndex(componentUUID);
-	if (componentIndex == -1)
+	int32 index = GetActorIndex(TargetComponentGuid);
+	if (index != -1)
 	{
-		return false;
+		Actors[index]->Destroy(); // 배열에서 빼지 말고 플래그만 세움
+		return true;
 	}
-
-	//mActors.RemoveAt(componentIndex, 1);
-	mActors.RemoveAtSwap(componentIndex);
-
-	return true;
+	return false;
 }
 
 const TArray<FRenderInfo> UWorld::GetRenderInfos()
 {
-	return mRenderInfos;
+	return RenderInfos;
 }
 
-void UWorld::Update()
+void UWorld::Update(float DeltaTime)
 {
-	mRenderInfos.Reset(DEFAULT_RESERVE_MEM);
+	RenderInfos.Reset(DEFAULT_RESERVE_MEM);
 
-	for (AActor* actor : mActors)
+	for (AActor* CurrentActor : Actors)
 	{
-		actor->Update(&mRenderInfos);
+		if (!CurrentActor->IsPendingKill())
+		{
+			CurrentActor->Update(&RenderInfos, DeltaTime);
+		}
 	}
 }
 
-/*
-void UWorld::Render()
-{
-	for (AActor* actor : mActors)
-	{
-		actor->Render();
-	}
-}
-*/
 
-int32 UWorld::getActorIndex(uint32 actorUUID) const
+int32 UWorld::GetActorIndex(FGuid TargetGuid) const
 {
-	for (uint32 i = 0; i < mActors.Num(); ++i)
+	for (int32 i = 0; i < Actors.Num(); ++i)
 	{
-		if (mActors[i]->UUID == actorUUID)
+		if (Actors[i]->ObjectID.GUID == TargetGuid)
 		{
 			return i;
 		}
 	}
 
 	return -1;
+}
+
+AActor* UWorld::SpawnStaticMeshActor(const std::string& AssetName, FTransform Transform, const FResourceManager &ResourceManager)
+{
+	// 1. 리소스 매니저에서 에셋(UStaticMesh) 검색
+	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh(AssetName);
+	if (LoadedMesh == nullptr)
+	{
+		// 에셋을 못 찾았을 경우 에러 처리
+		return nullptr;
+	}
+
+	// 2. 팩토리를 통해 빈 액터와 컴포넌트 생성 후 에셋 할당
+	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+	UStaticMeshComponent* MeshComponent = FObjectFactory::ConstructObject<UStaticMeshComponent>();
+
+	MeshComponent->SetStaticMesh(LoadedMesh); // 컴포넌트에 에셋 장착
+
+	MeshComponent->SetRelativeLocation(Transform.Location);
+	MeshComponent->SetRelativeRotation(Transform.Rotation);
+	MeshComponent->SetRelativeScale3D(Transform.Scale);
+
+	NewActor->AddRootSceneComponent(MeshComponent); // 액터의 루트로 등록
+
+	// 3. 씬의 액터 목록(Level 배열)에 추가
+	Actors.Add(NewActor);
+
+	return NewActor;
 }

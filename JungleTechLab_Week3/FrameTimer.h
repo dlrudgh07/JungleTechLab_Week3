@@ -4,7 +4,7 @@
 class FFrameTimer
 {
 public:
-	FFrameTimer(int TargetFPS) : targetFrameTime(1000.0 / TargetFPS), elapsedTime(1000.0 / TargetFPS)
+	FFrameTimer(int TargetFPS) : targetFrameTime(1000.0 / TargetFPS), elapsedTime(1000.0 / TargetFPS), StartTime{}, EndTime{}
 	{
 		QueryPerformanceFrequency(&Frequency);
 	}

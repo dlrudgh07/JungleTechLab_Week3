@@ -12,8 +12,9 @@ inline constexpr std::string_view kSceneDataSuffix = ".Scene";
 
 class FFileManager;
 class FFrameTimer;
-class FEditorViewportClient;
+struct FEditorViewportClient;
 class FGraphicsManager;
+class FResourceManager;
 class UWorld;
 
 struct FGuiReference
@@ -21,13 +22,14 @@ struct FGuiReference
 	const FFrameTimer& FrameTimer;
 	FGraphicsManager* GraphicsManager;
 	FEditorViewportClient* ViewportClient;
+	FResourceManager* ResourceManager;
 	const FFileManager* FileManager;
 };
 
 struct FGuiInputField
 {
 	/* Spawn Actor */
-	EPrimitive PrimitiveType = EPrimitive::EP_Cube;
+	int32 SelectedMeshIndex = 0;		// 더 이상 primitive type 쓰지 않음
 	int32 SpawnCount = 1;
 
 	/* Scene Control */
@@ -50,12 +52,13 @@ public:
 	const TArray<FRenderInfo> GetRenderInfos() const;
 	const TArray<FRenderInfo> GetAxisRenderInfos();
 
-	// Clear world
 	void NewScene();
 	void DeleteScene();
 
-	void SaveScene(std::string_view sceneName, const FFileManager& fileManager);
 	void LoadScene(std::string_view sceneName, const FFileManager& fileManager);
+	void SaveScene(std::string_view sceneName, const FFileManager& fileManager);
+
+	void ProcessPendingKills();
 
 	UWorld* GetCurrentWorld() const { return mCurrentWorld; }
 

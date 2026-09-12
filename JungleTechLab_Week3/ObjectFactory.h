@@ -11,7 +11,7 @@ namespace json { class JSON; }
 
 class UObject;
 class AActor;
-class FClassInfo;
+struct FClassInfo;
 
 struct FObjectFactory
 {
@@ -29,10 +29,6 @@ struct FObjectFactory
 	template<typename TObject>
 		requires std::derived_from<TObject, UObject>
 	static TObject* LoadObject(const json::JSON& inJson);
-
-	static AActor* SpawnPrimitiveActor(EPrimitive primitiveType,
-		FVector3 Location, FRotator Rotation, FVector3 Scale
-	);
 
 	static const FClassInfo* GetClassInfoByName(const FString& className);
 

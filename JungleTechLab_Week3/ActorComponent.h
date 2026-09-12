@@ -8,17 +8,32 @@ class UActorComponent : public UObject
 {
 	REFLECT_CLASS(UActorComponent, UObject)
 public:
-	UActorComponent();
-	virtual ~UActorComponent();
+	UActorComponent()
+		: Owner(nullptr)
+	{
+	}
 
-	void SetOwner(AActor* owner);
-	AActor* GetOwner() const;
+	~UActorComponent()
+	{
+	}
 
-	// Todo: Make as pure class
-	virtual void Update(TArray<FRenderInfo>* outRenderInfos);
-	virtual void GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const;
+	void SetOwner(AActor* owner)
+	{
+		assert(Owner == nullptr);
+
+		Owner = owner;
+	}
+
+	AActor* GetOwner() const
+	{
+		return Owner;
+	}
+
+	virtual void Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime) 
+	{
+	}
+	virtual void AddRenderInfos(TArray<FRenderInfo>* OutRenderInfos) const {};
 
 protected:
-	AActor* mOwner;
+	AActor* Owner;
 };
-

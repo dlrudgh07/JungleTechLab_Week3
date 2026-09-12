@@ -11,6 +11,8 @@ void URenderer::Create(HWND hWindow)
 	CreateStencilOutlineState();
 	CreateNoColorWriteBlendState();
 	CreateRasterizerState();
+	CreateSamplerState();
+	CreateDefaultWhiteTexture();
 }
 
 void URenderer::CreateDeviceAndSwapChain(HWND hWindow)
@@ -173,6 +175,7 @@ void URenderer::ReleaseRasterizerState()
 }
 void URenderer::Release()
 {
+	ReleaseSamplerState();
 	ReleaseRasterizerState();
 
 	DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
@@ -206,6 +209,7 @@ void URenderer::CreateShader()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &SimpleInputLayout);
@@ -267,11 +271,77 @@ void URenderer::PrepareShader()
 	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
 	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
 	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	CurrentBoundSRV = nullptr;
 
 	if (ConstantBuffer)
 	{
 		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
 	}
+
+	if (SamplerState)
+	{
+		DeviceContext->PSSetSamplers(0, 1, &SamplerState);
+	}
+}
+
+
+void URenderer::CreateSamplerState()
+{
+	D3D11_SAMPLER_DESC Description = {};
+	Description.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	Description.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;    // UV가 1.0을 넘어가면 반복
+	Description.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	Description.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	Description.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	Description.MinLOD = 0;
+	Description.MaxLOD = D3D11_FLOAT32_MAX;
+
+	Device->CreateSamplerState(&Description, &SamplerState);
+}
+void URenderer::ReleaseSamplerState()
+{
+	if (SamplerState)
+	{
+		SamplerState->Release();
+		SamplerState = nullptr;
+	}
+}
+
+void URenderer::BindTexture(ID3D11ShaderResourceView* InputTextureSRV)
+{
+	if (CurrentBoundSRV != InputTextureSRV)
+	{
+		DeviceContext->PSSetShaderResources(0, 1, &InputTextureSRV);
+		CurrentBoundSRV = InputTextureSRV;
+	}
+}
+void URenderer::CreateDefaultWhiteTexture()
+{
+	// 1x1 픽셀짜리 하얀색 텍스처(R:255, G:255, B:255, A:255) 데이터
+	uint32_t whitePixel = 0xFFFFFFFF;
+
+	D3D11_SUBRESOURCE_DATA initData = {};
+	initData.pSysMem = &whitePixel;
+	initData.SysMemPitch = sizeof(uint32_t);
+	initData.SysMemSlicePitch = 0;
+
+	D3D11_TEXTURE2D_DESC desc = {};
+	desc.Width = 1;
+	desc.Height = 1;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.SampleDesc.Count = 1;
+	desc.Usage = D3D11_USAGE_IMMUTABLE;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+	ID3D11Texture2D* tex = nullptr;
+	Device->CreateTexture2D(&desc, &initData, &tex);
+
+	// SRV(Shader Resource View) 생성
+	Device->CreateShaderResourceView(tex, nullptr, &DefaultWhiteTextureSRV);
+
+	tex->Release();
 }
 
 void URenderer::RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices)

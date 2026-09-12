@@ -31,20 +31,6 @@ UObject* FObjectFactory::LoadObject(const FClassInfo* classInfo, const json::JSO
 	return instance;
 }
 
-AActor* FObjectFactory::SpawnPrimitiveActor(
-	EPrimitive primitiveType,
-	FVector3 Location, FRotator Rotation, FVector3 Scale)
-{
-	// Create a new actor
-	AActor* actor = ConstructObject<AActor>();
-
-	UPrimitiveComponent* component = ConstructObject<UPrimitiveComponent>(
-		primitiveType, Location, Rotation, Scale);
-
-	actor->AddRootSceneComponent(component);
-
-	return actor;
-}
 
 const FClassInfo* FObjectFactory::GetClassInfoByName(const FString& className)
 {
@@ -68,8 +54,6 @@ bool FObjectFactory::RegisterClassInfo(FString className, const FClassInfo* clas
 
 #include "SceneComponent.h"
 #include "PrimitiveComponent.h"
-#include "CubeComponent.h"
-#include "SphereComponent.h"
 #include "World.h"
 
 TMap<FString, std::function<const FClassInfo* ()>> FObjectFactory::mClassInfoMap = {
@@ -78,7 +62,5 @@ TMap<FString, std::function<const FClassInfo* ()>> FObjectFactory::mClassInfoMap
 	{"UActorComponent", &UActorComponent::GetClass },
 	{"USceneComponent", &USceneComponent::GetClass },
 	{"UPrimitiveComponent", &UPrimitiveComponent::GetClass },
-	{"UCubeComponent", &UCubeComponent::GetClass },
-	{"USphereComponent", &USphereComponent::GetClass },
 	{"UWorld", &UWorld::GetClass }
 };

@@ -3,7 +3,7 @@
 #include "Sphere.h"
 #include "Renderer.h"
 #include "WindowApplication.h"
-#include "LaunchEngineLoop.h"
+#include "EngineLoop.h"
 #include "Object.h"
 #include "EngineStatics.h"
 
@@ -148,5 +148,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	GEngineLoop.End();
+
 	return 0;
 }

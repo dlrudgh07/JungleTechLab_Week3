@@ -13,8 +13,9 @@
 // 1. Define the triangle vertices
 struct FVertexSimple
 {
-    float x, y, z;    // Position
-    float r, g, b, a; // Color
+	float x, y, z;    // Position (12 byte)
+	float r, g, b, a; // Color    (16 byte)
+	float u, v;       //  UV 좌표 (8 byte)
 
 	FVector GetPosition() const { return FVector(x, y, z); }
 };
@@ -55,6 +56,18 @@ public:
 	// 매 프레임 내용이 바뀌는 선분용. 메시 버퍼와 달리 IMMUTABLE이 아니라 DYNAMIC이다
 	ID3D11Buffer* LineVertexBuffer = nullptr;
 	uint32 LineVertexCapacity = 0;
+
+
+	// texture mapping
+	// todo 이거 comptr로 다 변경해야함
+	ID3D11SamplerState* SamplerState = nullptr;
+	ID3D11ShaderResourceView* CurrentBoundSRV = nullptr;
+	ID3D11ShaderResourceView* DefaultWhiteTextureSRV = nullptr;
+	void CreateDefaultWhiteTexture();
+	void CreateSamplerState();
+	void ReleaseSamplerState();
+	void BindTexture(ID3D11ShaderResourceView* InputTextureSRV);
+
 
     unsigned int Stride;
 

@@ -2,6 +2,9 @@
 
 #include "Actor.h"
 
+#include "ResourceManager.h"
+#include "StaticMesh.h"
+
 FVector FGizmo::AxisDirection(EGIZMO_AXIS axis) const {
 	const FMatrix Result_yaw = FMatrix::RotateZ(UpdateRotation.Yaw);
 	const FMatrix Result_pitch = FMatrix::RotateY(UpdateRotation.Pitch);
@@ -302,16 +305,58 @@ void FGizmo::Reset()
 	mDraggingAxis = NONE;
 }
 
-EPrimitive FGizmo::GetAxisPrimitive() const
+UStaticMesh* FGizmo::GetAxisMesh(FResourceManager* RM) const
 {
+	if (!RM) return nullptr;
+
 	switch (eType)
 	{
-	case TRANSLATE: return EPrimitive::EP_GizmoArrow;
-	case ROTATE: return EPrimitive::EP_Circle; //EP_Rotate
-	case SCALE: return EPrimitive::EP_Cube;
-	default: return EPrimitive::EP_GizmoArrow;
+	case TRANSLATE: return RM->GetStaticMesh("GizmoArrow");
+	case ROTATE:    return RM->GetStaticMesh("Circle");
+	case SCALE:     return RM->GetStaticMesh("Cube");
+	default:        return RM->GetStaticMesh("GizmoArrow");
 	}
 }
+
+TArray<FRenderInfo> FGizmo::GetGizmoRenderInfo(FResourceManager* RM) const
+{
+	TArray<FRenderInfo> RenderInfos;
+	if (!mbVisible || !RM) return RenderInfos;
+
+	const EGIZMO_AXIS AXIS[3] = { X, Y, Z };
+
+	for (int i = 0; i < 3; ++i)
+	{
+		// 1. 스케일(Scale) 기즈모일 경우 끝에 달린 네모 상자(Cube) 추가 렌더링
+		if (eType == EGIZMO_TYPE::SCALE)
+		{
+			UStaticMesh* ScaleHandleMesh = RM->GetStaticMesh("Cube");
+			if (ScaleHandleMesh && ScaleHandleMesh->VertexBuffer)
+			{
+				FRenderInfo ScaleInfo;
+				ScaleInfo.VertexBuffer = ScaleHandleMesh->VertexBuffer;
+				ScaleInfo.WorldTransformMatrix = GetScaleHandleMatrix(AXIS[i]);
+				ScaleInfo.Color = GetAxisColor(AXIS[i]);
+				// Gizmo는 하이라이트를 안하므로 Bounds는 기본값 그대로 둠
+				RenderInfos.Add(ScaleInfo);
+			}
+		}
+
+		// 2. 공통 축 렌더링 (화살표, 링, 막대)
+		UStaticMesh* AxisMesh = GetAxisMesh(RM);
+		if (AxisMesh && AxisMesh->VertexBuffer)
+		{
+			FRenderInfo Info;
+			Info.VertexBuffer = AxisMesh->VertexBuffer;
+			Info.WorldTransformMatrix = GetAxisMatrix(AXIS[i]);
+			Info.Color = GetAxisColor(AXIS[i]);
+			RenderInfos.Add(Info);
+		}
+	}
+	return RenderInfos;
+}
+
+
 
 FMatrix FGizmo::GetAxisMatrix(EGIZMO_AXIS axis) const // 축모양 도형을 반환
 {
@@ -336,13 +381,10 @@ FMatrix FGizmo::GetAxisMatrix(EGIZMO_AXIS axis) const // 축모양 도형을 반
 			* FMatrix::Translation(mLocation);
 	}
 
-	else { // eType == SCALE
-		return FMatrix::Scale(FVector(length, ScaleBarthickness, ScaleBarthickness))
-			* FMatrix::Translation(FVector(length * 0.5f, 0.0f, 0.0f))
-			* FMatrix::Rotate(rotation)
-			* FMatrix::Translation(mLocation);
-	}
-
+	return FMatrix::Scale(FVector(length, ScaleBarthickness, ScaleBarthickness))
+		* FMatrix::Translation(FVector(length * 0.5f, 0.0f, 0.0f))
+		* FMatrix::Rotate(rotation)
+		* FMatrix::Translation(mLocation);
 }
 
 
@@ -371,28 +413,6 @@ FMatrix FGizmo::GetScaleHandleMatrix(EGIZMO_AXIS axis) const
 		* FMatrix::Translation(mLocation);
 }
 
-TArray<FRenderInfo>	FGizmo::GetGizmoRenderInfo() const // Gizmo 모형 렌더정보
-{
-	TArray<FRenderInfo> renderInfos;
-
-	if (!mbVisible) return renderInfos;
-	const EGIZMO_AXIS axis[3] = { X, Y, Z };
-	//기즈모타입을 확인후 타입에 맞는 모양을 리턴
-
-	for (int i = 0; i < 3; ++i)
-	{
-		if (eType == EGIZMO_TYPE::SCALE)
-		{
-			renderInfos.Add({ GetAxisPrimitive(), GetScaleHandleMatrix(axis[i]),FObjectID{},GetAxisColor(axis[i]) });
-		}
-		else if (eType == EGIZMO_TYPE::ROTATE)
-		{
-
-		}
-		renderInfos.Add({ GetAxisPrimitive(), GetAxisMatrix(axis[i]),FObjectID{},GetAxisColor(axis[i]) });
-	}
-	return renderInfos;
-}
 
 void FGizmo::Update(
 	const AActor* targetActor,

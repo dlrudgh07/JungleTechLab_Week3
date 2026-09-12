@@ -1,91 +1,100 @@
 {
-  "NextUUID" : 16,
   "Version" : 0,
   "World" : {
     "ClassName" : "UWorld",
     "Properties" : {
-      "UUID" : 1,
-      "mActors" : [{
+      "Actors" : [{
           "ClassName" : "AActor",
           "Properties" : {
-            "UUID" : 3,
-            "mComponents" : [{
-                "ClassName" : "UCubeComponent",
+            "Components" : [{
+                "ClassName" : "UStaticMeshComponent",
                 "Properties" : {
-                  "UUID" : 2,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeRotation" : [30.000000, 1.000000, 0.000000],
-                  "mRelativeScale3D" : [2.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
+                  "GUID" : "0B8B8722-47E2-01E6-05D6-51804DE0AC49",
+                  "RelativeLocation" : [0.000000, -1.147281, 0.000000],
+                  "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "RelativeScale3D" : [1.000000, 1.000000, 1.000000]
                 }
               }],
-            "mRootComponentUUID" : 2
+            "GUID" : "83DBFA49-47BC-CA92-7098-1892AFE10610",
+            "RootComponentGUID" : "0B8B8722-47E2-01E6-05D6-51804DE0AC49"
           }
         }, {
           "ClassName" : "AActor",
           "Properties" : {
-            "UUID" : 5,
-            "mComponents" : [{
-                "ClassName" : "UCubeComponent",
+            "Components" : [{
+                "ClassName" : "UStaticMeshComponent",
                 "Properties" : {
-                  "UUID" : 4,
-                  "mRelativeLocation" : [2.200000, 0.900000, 1.000000],
-                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeScale3D" : [0.500000, 0.500000, 0.500000],
-                  "mePrimitiveType" : "Cube"
+                  "GUID" : "0B8B8722-47E2-01E6-05D6-51804DE0AC49",
+                  "RelativeLocation" : [0.000000, -1.147281, 0.000000],
+                  "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "RelativeScale3D" : [1.000000, 1.000000, 1.000000]
                 }
               }],
-            "mRootComponentUUID" : 4
+            "GUID" : "83DBFA49-47BC-CA92-7098-1892AFE10610",
+            "RootComponentGUID" : "0B8B8722-47E2-01E6-05D6-51804DE0AC49"
           }
         }, {
           "ClassName" : "AActor",
           "Properties" : {
-            "UUID" : 6,
-            "mComponents" : [{
-                "ClassName" : "UPrimitiveComponent",
+            "Components" : [{
+                "ClassName" : "UStaticMeshComponent",
                 "Properties" : {
-                  "UUID" : 7,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
+                  "GUID" : "1AF0C3F2-4188-BF94-FC5C-A49FE7D6B6B1",
+                  "RelativeLocation" : [2.296169, 0.000000, 0.000000],
+                  "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "RelativeScale3D" : [1.000000, 1.000000, 1.000000]
                 }
               }],
-            "mRootComponentUUID" : 7
+            "GUID" : "D6B210C7-46D7-3C8A-0E48-D5B2D9A29BEC",
+            "RootComponentGUID" : "1AF0C3F2-4188-BF94-FC5C-A49FE7D6B6B1"
           }
         }, {
           "ClassName" : "AActor",
           "Properties" : {
-            "UUID" : 12,
-            "mComponents" : [{
-                "ClassName" : "UPrimitiveComponent",
+            "Components" : [{
+                "ClassName" : "UStaticMeshComponent",
                 "Properties" : {
-                  "UUID" : 13,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
+                  "GUID" : "1AF0C3F2-4188-BF94-FC5C-A49FE7D6B6B1",
+                  "RelativeLocation" : [2.296169, 0.000000, 0.000000],
+                  "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "RelativeScale3D" : [1.000000, 1.000000, 1.000000]
                 }
               }],
-            "mRootComponentUUID" : 13
+            "GUID" : "D6B210C7-46D7-3C8A-0E48-D5B2D9A29BEC",
+            "RootComponentGUID" : "1AF0C3F2-4188-BF94-FC5C-A49FE7D6B6B1"
           }
         }, {
           "ClassName" : "AActor",
           "Properties" : {
-            "UUID" : 14,
-            "mComponents" : [{
-                "ClassName" : "UPrimitiveComponent",
+            "Components" : [{
+                "ClassName" : "UStaticMeshComponent",
                 "Properties" : {
-                  "UUID" : 15,
-                  "mRelativeLocation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
-                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
-                  "mePrimitiveType" : "Cube"
+                  "GUID" : "2582575F-4F32-6469-EA8D-3DA3D39137A5",
+                  "RelativeLocation" : [-2.580379, 0.000000, 0.000000],
+                  "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "RelativeScale3D" : [1.000000, 1.000000, 1.000000]
                 }
               }],
-            "mRootComponentUUID" : 15
+            "GUID" : "21C28388-424B-C842-F807-BD85365F1BA6",
+            "RootComponentGUID" : "2582575F-4F32-6469-EA8D-3DA3D39137A5"
           }
-        }]
+        }, {
+          "ClassName" : "AActor",
+          "Properties" : {
+            "Components" : [{
+                "ClassName" : "UStaticMeshComponent",
+                "Properties" : {
+                  "GUID" : "2582575F-4F32-6469-EA8D-3DA3D39137A5",
+                  "RelativeLocation" : [-2.580379, 0.000000, 0.000000],
+                  "RelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "RelativeScale3D" : [1.000000, 1.000000, 1.000000]
+                }
+              }],
+            "GUID" : "21C28388-424B-C842-F807-BD85365F1BA6",
+            "RootComponentGUID" : "2582575F-4F32-6469-EA8D-3DA3D39137A5"
+          }
+        }],
+      "GUID" : "B5D285B9-474A-3BE7-E998-CEB808049F33"
     }
   }
 }

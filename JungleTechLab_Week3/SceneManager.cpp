@@ -5,6 +5,7 @@
 #include <format>
 
 #include "FileManager.h"
+#include "ResourceManager.h"
 #include "EngineStatics.h"
 #include "JsonUtil.h"
 #include "ObjectFactory.h"
@@ -20,7 +21,6 @@
 #include "imGui/imgui_impl_win32.h"
 
 #include "FrameTimer.h"
-#include "CubeComponent.h"
 #include "ActorComponent.h"
 
 FSceneManager::FSceneManager()
@@ -49,14 +49,10 @@ FSceneManager::~FSceneManager()
 	delete mCurrentWorld;
 }
 
-void FSceneManager::Update(float delaTime)
+void FSceneManager::Update(float DelaTime)
 {
-	// Todo: Save / Load
-	{
+	mCurrentWorld->Update(DelaTime);
 
-	}
-
-	mCurrentWorld->Update();
 }
 
 void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
@@ -71,6 +67,27 @@ void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
 	updateObjectListPanelGUI(guiReference);
 
 	ConsoleWindow::GetInstance().Draw(mPanelWidth);
+}
+
+void FSceneManager::ProcessPendingKills()
+{
+	auto& Actors = mCurrentWorld->GetActors();
+
+	for (int32 i = static_cast<int32>(Actors.Num()) - 1; i >= 0; --i)
+	{
+		AActor* Actor = Actors[i];
+
+		if (Actor->IsPendingKill())
+		{
+			// 선택된 액터가 죽는다면 포인터도 안전하게 해제
+			if (mSelectedActor == Actor)
+				mSelectedActor = nullptr;
+
+			delete Actor; 
+
+			Actors.RemoveAt(i, 1);
+		}
+	}
 }
 
 void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
@@ -95,28 +112,34 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	ImGui::Text("FPS: %.1f  dt: %.4f", guiReference.FrameTimer.GetFPS(), guiReference.FrameTimer.GetDeltaTime());
 
 	/* Spawn Actor */
-	// NOTE: This name array must be edited when adding new primitive types to EPrimitive enum.
 	ImGui::SeparatorText("Spawn Actor");
 
-	const char* primitiveTypeNames[] = { "Sphere", "Cube", "Triangle", "GizmoArrow", "Circle" };
-	int32 primitiveTypeIndex = static_cast<int32>(mGuiInputField.PrimitiveType);
+	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
+	// todo : 이건 추후 자동화해야할듯함
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad" };
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
-	if (ImGui::Combo("Primitive Type", &primitiveTypeIndex, primitiveTypeNames, IM_ARRAYSIZE(primitiveTypeNames)))
+	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
+	if (ImGui::Combo("Mesh Asset", &mGuiInputField.SelectedMeshIndex, AssetNames, IM_ARRAYSIZE(AssetNames)))
 	{
-		mGuiInputField.PrimitiveType = static_cast<EPrimitive>(primitiveTypeIndex);
 	}
+
 	if (ImGui::Button("Spawn"))
 	{
 		for (int32 i = 0; i < mGuiInputField.SpawnCount; ++i)
 		{
-			AActor* newActor = FObjectFactory::SpawnPrimitiveActor(
-				mGuiInputField.PrimitiveType,
-				FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1)
-			);
-			mCurrentWorld->AddActor(newActor);
+			// 3. 선택된 인덱스를 문자열 이름으로 변환 ("Cube", "Sphere" 등)
+			std::string SelectedName = AssetNames[mGuiInputField.SelectedMeshIndex];
+
+			// Factory를 통해 UStaticMeshComponent를 가진 진짜 액터를 스폰
+			AActor* newActor = mCurrentWorld->SpawnStaticMeshActor(SelectedName, { FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+			if (newActor == nullptr)
+				UE_LOG("Error: Asset not found in ResourceManager!");
+			else
+				mCurrentWorld->AddActor(newActor);
 		}
 	}
+
 	ImGui::SameLine();
 	if (ImGui::InputInt("Number of spawn", &spawnCount))
 	{
@@ -183,26 +206,6 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 		ImGui::EndCombo();
 	}
-	// Debug perspective ratio slider
-
-	//float perspectiveRatio = guiReference.GraphicsManager->GetPerspectiveRatio();
-	//const float previousPerspectiveRatio = perspectiveRatio;
-	//if (ImGui::SliderFloat("Perspective Ratio", &perspectiveRatio, 0.0f, 1.0f))
-	//{
-	//	guiReference.GraphicsManager->SetPerspectiveRatio(perspectiveRatio);
-	//	// Update camera ortho distance as the distance between camera and selected actor
-	//	if (mSelectedActor && previousPerspectiveRatio == 1.0f)
-	//	{
-	//		FCamera& camera = guiReference.ViewportClient->GetCamera();
-	//		FVector cameraToActor =
-	//			mSelectedActor->GetTransform().Location -
-	//			camera.Transform.Location;
-
-	//		const float depth = FVector::dot(cameraToActor, camera.GetForwardVector());
-	//		camera.mOrthoDistance = FMath::Max(depth, 0.1f);
-	//	}
-	//}
-	//ImGui::Text("Camera Ortho Distance: %.2f", guiReference.ViewportClient->GetCamera().mOrthoDistance);
 
 	ImGui::Text("FOV     ");
 	ImGui::SameLine();
@@ -351,28 +354,29 @@ void FSceneManager::updateObjectListPanelGUI(const FGuiReference& guiReference)
 				mGuiInputField.SortedObjectLists = UObject::GetGObjectArray().ToTArray();
 				mGuiInputField.LastGUObjectRevision = UObject::GetGObjectRevision();
 
-				// Sort the objects by UUID
+				// Sort the objects by index
 				std::sort(mGuiInputField.SortedObjectLists.begin(), mGuiInputField.SortedObjectLists.end(),
-					[](UObject* a, UObject* b) { return a->UUID < b->UUID; });
+					[](UObject* a, UObject* b) { return a->ObjectID.InternalIndex < b->ObjectID.InternalIndex; });
 			}
 
-			int32 selectedActorUUID = mSelectedActor
-				? mSelectedActor->UUID
-				: -1;
+			FGuid selectedActorGUID;
+			if (mSelectedActor)
+				selectedActorGUID = mSelectedActor->ObjectID.GUID;
 
 			// Todo: rbegin()
 			//for (UObject* object : mGuiInputField.SortedObjectLists)
 
 			UObject* bDeleteActorOrNull = nullptr;
-			for (unsigned int objectsIndex = 0; objectsIndex < mGuiInputField.SortedObjectLists.Num(); ++objectsIndex)
+			for (int32 objectsIndex = 0; objectsIndex < mGuiInputField.SortedObjectLists.Num(); ++objectsIndex)
 			{
 				UObject* object = mGuiInputField.SortedObjectLists[objectsIndex];
 
 				bool bSelected = false;
-				ImGui::PushID(object->UUID); // Ensure unique ID for each child
+				// todo: 이 인덱스는 유니크하지 않을 수 있음
+				ImGui::PushID(object->ObjectID.InternalIndex); // Ensure unique ID for each child
 
 				// Highlight the frame if this object is the clicked actor
-				if (object->UUID == selectedActorUUID)
+				if (object->ObjectID.GUID == selectedActorGUID)
 				{
 					bSelected = true;
 					ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(255, 255, 0, 50)); // Light yellow background
@@ -382,7 +386,7 @@ void FSceneManager::updateObjectListPanelGUI(const FGuiReference& guiReference)
 					ImGuiChildFlags_FrameStyle | ImGuiChildFlags_AutoResizeY))
 				{
 					ImGui::Text("Class: %s", object->GetRuntimeClass()->Name.CStr());
-					ImGui::Text("UUID: %d", object->UUID);
+					ImGui::Text("GUID: %s", object->ObjectID.GUID.ToString().CStr());
 
 					// TODO: Move implement delete to where?
 					if (object->IsA<AActor>())
@@ -418,15 +422,12 @@ void FSceneManager::updateObjectListPanelGUI(const FGuiReference& guiReference)
 			{
 				AActor* deleteActor = bDeleteActorOrNull->Cast<AActor>();
 
-				if (mSelectedActor != nullptr && mSelectedActor->UUID == deleteActor->UUID)
+				if (mSelectedActor != nullptr && mSelectedActor->ObjectID.GUID == deleteActor->ObjectID.GUID)
 				{
 					mSelectedActor = nullptr;
 				}
 
-				assert(mCurrentWorld != nullptr);
-				mCurrentWorld->RemoveActor(deleteActor->UUID);
-
-				delete deleteActor;
+				deleteActor->Destroy();
 			}
 		}
 		ImGui::EndChild();
@@ -434,16 +435,13 @@ void FSceneManager::updateObjectListPanelGUI(const FGuiReference& guiReference)
 	ImGui::End();
 }
 
-
 void FSceneManager::NewScene()
 {
+	ResetSelectedActor();
 	if (mCurrentWorld != nullptr)
 	{
 		delete mCurrentWorld;
 	}
-
-	UEngineStatics::SetNextUUID(0);
-	ResetSelectedActor();
 	mCurrentWorld = FObjectFactory::ConstructObject<UWorld>();
 }
 
@@ -486,6 +484,7 @@ void FSceneManager::SaveScene(
 	catch (const std::exception& e)
 	{
 		// If the file does not exist or cannot be read, we can assume it's a new scene and set version to 0
+		assert(e.what());
 		version = 0;
 	}
 
@@ -494,7 +493,6 @@ void FSceneManager::SaveScene(
 	mCurrentWorld->SerializeClass(worldJson);
 
 	writeSceneJson["Version"] = version;
-	writeSceneJson["NextUUID"] = UEngineStatics::GetNextUUID();
 	writeSceneJson["World"] = worldJson;
 
 	FString jsonString = FString(writeSceneJson.dump(1, "  "));
@@ -516,7 +514,7 @@ void FSceneManager::LoadScene(
 	{
 		jsonString = fileManager.ReadFileToString(fileName);
 	}
-	catch (const std::exception& e)
+	catch (...)
 	{
 		UE_LOG_F("Failed to load scene {}: file not found.", sceneName);
 		return;
@@ -524,11 +522,6 @@ void FSceneManager::LoadScene(
 
 	json::JSON readSceneJson = json::JSON::Load(jsonString);
 
-	if (!readSceneJson.hasKey("NextUUID") || readSceneJson.at("NextUUID").JSONType() != json::JSON::Class::Integral)
-	{
-		throw std::runtime_error(std::format("Scene file {} does not contain a valid NextUUID field.", fileName));
-	}
-	uint32 nextUUID = readSceneJson.at("NextUUID").ToInt();
 	json::JSON worldJson = readSceneJson.at("World");
 
 	UWorld* newWorld = FObjectFactory::LoadObject<UWorld>(worldJson);
@@ -536,7 +529,6 @@ void FSceneManager::LoadScene(
 	{
 		throw std::runtime_error(std::format("Failed to load world from scene: {}", sceneName));
 	}
-	UEngineStatics::SetNextUUID(nextUUID);
 
 	// Replace the contents of mCurrentWorld with newWorld
 	delete mCurrentWorld;
@@ -555,11 +547,11 @@ void  FSceneManager::SetSelectedActor(AActor* actor)
 
 	if (actor == mSelectedActor)
 	{
-		UE_LOG_F("SetSelectedActor: Actor with UUID {} is already selected.", actor->UUID);
+		UE_LOG("SetSelectedActor: Actor with GUID {} is already selected.", actor->ObjectID.GUID.ToString());
 		return; // No change
 	}
 
-	UE_LOG_F("SetSelectedActor: Actor with UUID {} is now selected.", actor->UUID);
+	UE_LOG("SetSelectedActor: Actor with GUID {} is now selected.", actor->ObjectID.GUID.ToString());
 	mSelectedActor = actor;
 }
 
@@ -585,33 +577,3 @@ const TArray<FRenderInfo> FSceneManager::GetAxisRenderInfos()
 }
 
 
-//
-//FSceneData FSceneManager::ReadSceneData(
-//	std::string_view sceneName,
-//	const FFileManager& fileManager)
-//{
-//	FString fileName = sceneName;
-//	fileName += kSceneDataSuffix;
-//
-//	json::JSON jsonData = json::JSON::Load(fileManager.ReadFileToString(fileName));
-//	FSceneData sceneData = FSceneData(jsonData);
-//	return sceneData;
-//}
-//
-//UWorld* FSceneManager::BuildWorldFromSceneData(const FSceneData& sceneData)
-//{
-//	//UWorld* newWorld = FObjectFactory::ConstructObject<UWorld>();
-//
-//	//for (const auto& [UUID, primitiveData] : sceneData.Primitives) 
-//	//{
-//	//	// TODO: Replace AActor creation logic later
-//	//	AActor* newActor = FObjectFactory::ConstructObject<AActor>();
-//	//	UPrimitiveComponent* newPrimitiveComponent =
-//	//		FObjectFactory::ConstructObject<UPrimitiveComponent>(
-//	//			);
-//	//}
-//
-//	//UEngineStatics::SetNextUUID(sceneData.NextUUID);
-//	throw std::logic_error("BuildWorldFromSceneData is not implemented yet.");
-//	return nullptr;
-//}

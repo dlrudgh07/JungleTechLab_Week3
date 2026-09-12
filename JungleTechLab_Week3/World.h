@@ -4,7 +4,8 @@
 #include "Actor.h"
 
 #include "RenderInfo.h"
-//struct FRenderInfo;
+
+class FResourceManager;
 
 class UWorld final : public UObject
 {
@@ -17,17 +18,18 @@ public:
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
 	void AddActor(AActor* actor);
-	bool RemoveActor(uint32 componentUUID);
+	bool RemoveActor(FGuid TargetComponentGuid);
 
 	const TArray<FRenderInfo> GetRenderInfos();
-	TArray<AActor*>& GetActors() { return mActors; }
+	TArray<AActor*>& GetActors() { return Actors; }
 
-	void Update();
-	//void Render();
+	void Update(float DeltaTime);
 	void ClearRenderInfos();
 
+	AActor* SpawnStaticMeshActor(const std::string& AssetName, struct FTransform Transform, const FResourceManager& ResourceManager);
+
 private:
-	int32 getActorIndex(uint32 actorUUID) const;
+	int32 GetActorIndex(FGuid TargetGuid) const;
 
 private:
 	enum
@@ -36,8 +38,8 @@ private:
 	};
 	
 	// Todo: Must reserve
-	TArray<AActor*> mActors;
+	TArray<AActor*> Actors;
 
 	// Todo: Maybe, move to FSceneManager
-	TArray<FRenderInfo> mRenderInfos;
+	TArray<FRenderInfo> RenderInfos;
 };

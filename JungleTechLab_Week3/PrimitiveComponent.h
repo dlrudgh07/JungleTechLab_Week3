@@ -6,26 +6,18 @@ class UPrimitiveComponent : public USceneComponent
 {
 	REFLECT_CLASS(UPrimitiveComponent, USceneComponent)
 public:
-	UPrimitiveComponent();
+	UPrimitiveComponent() {};
 
-	//void Initialize(GraphicsManager* graphicsManager, EPrimitive ePrimitive);
-	//void Initialize(GraphicsManager* graphicsManager, EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D);
+	// factory 에서 필요함
+	void Initialize() {};
 
-	void Initialize(EPrimitive ePrimitive);
-	void Initialize(EPrimitive ePrimitive, FVector location, FRotator rotation, FVector scale3D);
+	virtual ~UPrimitiveComponent() {};
 
-	virtual ~UPrimitiveComponent();
+	virtual void Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime) override
+	{
+		USceneComponent::Update(OutRenderInfos, DeltaTime);
+	}
 
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
-
-	//virtual void Render();
-	void Update(TArray<FRenderInfo>* outRenderInfos) override final;
-	void GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const override final;
-
-protected:
-	//GraphicsManager* mGraphicsManager;
-	EPrimitive mePrimitive;
 };
-
-

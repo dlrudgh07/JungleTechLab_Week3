@@ -13,6 +13,8 @@
 
 class Sphere;
 class FGraphicsManager;
+class FResourceManager;
+
 class FEngineLoop
 {
 public:
@@ -25,14 +27,14 @@ public:
 	void Tick(bool bPumpMessages);
 	void End();
 private:
-	// Todo: Make as pointer
-	FFrameTimer* FrameTimer;
-	bool GInTick = false;
-	FEditorViewportClient* ViewportClient;
+	FGraphicsManager* GraphicsManager = nullptr;
+	FSceneManager* SceneManager = nullptr;
+	FFileManager* FileManager = nullptr;
+	FResourceManager* ResourceManager = nullptr;
 
-	FGraphicsManager* mGraphicsManager;
-	FSceneManager* mSceneManager;
-	FFileManager* mFileManager;
+	FFrameTimer* FrameTimer = nullptr;
+	bool GInTick = false;
+	FEditorViewportClient* ViewportClient = nullptr;
 };
 
 inline FEngineLoop GEngineLoop;
