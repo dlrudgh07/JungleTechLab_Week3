@@ -6,6 +6,8 @@
 #include "Vector.h"
 #include "RenderInfo.h"
 #include <wrl/client.h>
+#include "Console.h"
+#include "DDSTextureLoader.h"
 
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
@@ -46,8 +48,9 @@ public:
 	ID3D11DepthStencilState* DepthStencilState = nullptr;	// 깊이 테스트용 상태
 	ID3D11DepthStencilState* StencilMarkState = nullptr;	// 스텐실에 1 마킹용 상태
 	ID3D11DepthStencilState* StencilOutlineState = nullptr; // 아웃라인 그리기용
-	ID3D11BlendState* NoColorWriteBlendState = nullptr;		// 스텐실만 찍고 색은 쓰지 않는 상태
 
+	ID3D11BlendState* NoColorWriteBlendState = nullptr;		// 스텐실만 찍고 색은 쓰지 않는 상태
+	ID3D11BlendState* AlphaBlendState; //텍스쳐 알파값 제거용
 
     FLOAT ClearColor[4] = { 0.025f, 0.025f, 0.025f, 1.0f };
     D3D11_VIEWPORT ViewportInfo;
@@ -55,9 +58,17 @@ public:
     ID3D11PixelShader* SimplePixelShader;
     ID3D11InputLayout* SimpleInputLayout;
 
+	ID3D11ShaderResourceView* UUIDTextureView;
+	D3D11_SAMPLER_DESC UUIDSamplerInfo;
+	ID3D11SamplerState* UUIDSamplerState;
+
 	// 매 프레임 내용이 바뀌는 선분용. 메시 버퍼와 달리 IMMUTABLE이 아니라 DYNAMIC이다
 	ID3D11Buffer* LineVertexBuffer = nullptr;
 	uint32 LineVertexCapacity = 0;
+
+	// 매 프레임 갯수가 바뀌는 UUID용. 메시 버퍼와 달리 IMMUTABLE이 아니라 DYNAMIC이다
+	ID3D11Buffer* UUIDVertexBuffer = nullptr;
+	uint32 UUIDVertexCapacity = 0;
 
 
 	// texture mapping
@@ -69,7 +80,9 @@ public:
 	void CreateSamplerState();
 	void BindTexture(uint32 Slot, ID3D11ShaderResourceView* SRV);
 	void BindSampler(uint32 Slot, ID3D11SamplerState* Sampler);
+	ID3D11ShaderResourceView* FontTextureSRV;
 	void CreateDefaultWhiteTexture();
+	
 
 
     unsigned int Stride;
@@ -83,6 +96,7 @@ public:
 	void CreateFrameBuffer();
 	ID3D11Buffer* CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
 	void CreateLineVertexBuffer(uint32 maxVertices);
+	void CreateUUIDVertexBuffer(uint32 maxVertices);
 	void CreateRasterizerState();
 	void CreateConstantBuffer();
 	void CreateDepthStencilBuffer(UINT width, UINT height);
@@ -91,6 +105,7 @@ public:
 	void CreateStencilMarkState();
 	void CreateStencilOutlineState();
 	void CreateNoColorWriteBlendState();
+	void CreateAlphaBlendState();
 
 	//release
 	void Release();
@@ -99,11 +114,13 @@ public:
 	void ReleaseFrameBuffer();
 	void ReleaseVertexBuffer(ID3D11Buffer* vertexBuffer);
 	void ReleaseLineVertexBuffer();
+	void ReleaseUUIDVertexBuffer();
 	void ReleaseRasterizerState();
 	void ReleaseConstantBuffer();
 	void ReleaseDepthStencilBuffer();
 	void ReleaseDepthStencilState();
 	void ReleaseBlendState();
+	void ReleaseUUIDSampleState();
 
 	//Update
 	void RSUpdateState();
@@ -111,9 +128,12 @@ public:
 	//Rendering
 	void Prepare(bool bWireFrame);
 	void PrepareShader();
+	void PrepareTextureShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
 	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
+	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);
+	bool ReAllocateUUIDVertexBuffer(uint32 RequestSize);
 	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
 	void SwapBuffer();
 

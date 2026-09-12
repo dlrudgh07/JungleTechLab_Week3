@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "RenderInfo.h"
 #include "Vector.h"
+#include "FQuad.h"
 
 class FGraphicsManager
 {
@@ -22,8 +23,8 @@ public:
 
 
 	void Render(const TArray<FRenderInfo>& renderInfos);
-	void RenderOverlay(const TArray<FRenderInfo>& renderInfos);
-	//void RenderOverlay(const TArray<FRenderInfo> renderInfos); //깊이버퍼 초기화
+	//void RenderOverlay(const TArray<FRenderInfo>& renderInfos);
+	void RenderOverlay(const TArray<FRenderInfo> renderInfos); //깊이버퍼 초기화
 	// FRenderInfo
 
 	void Display();
@@ -52,6 +53,13 @@ public:
 	void DrawWorldAxis();
 	void FlushLines();
 
+
+	//UUID
+	// 호출 즉시 그리지 않고 배열에 쌓는다. FlushUUID()에서 한 번에 그린다.
+	void DrawUUID(const FQuad& quad);
+	void DrawAllUUID(const TArray<FRenderInfo> renderInfos, FVector UpVector, FVector RightVector);
+	void FlushUUID(UTexture* FontTexture);
+
 	bool GetShowWorldAxis() const { return mbShowWorldAxis; }
 	void SetShowWorldAxis(bool bShow) { mbShowWorldAxis = bShow; }
 
@@ -79,6 +87,7 @@ private:
 	// Graphics config
 	// 이번 프레임에 쌓인 선분. 정점 2개가 선분 하나
 	TArray<FVertexSimple> mLineVertices;
+	TArray<FVertexSimple> mUUIDVertices;
 
 	bool mbWireFrame = false;
 	bool mbPerspectiveProjection = false;

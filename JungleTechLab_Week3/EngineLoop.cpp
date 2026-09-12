@@ -155,6 +155,11 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		GraphicsManager->GizmoPrepare();
 		GraphicsManager->RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(ResourceManager));
 
+		// UUID 텍스쳐 랜더링
+		GraphicsManager->DrawAllUUID(SceneManager->GetRenderInfos(),
+			ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
+		GraphicsManager->FlushUUID(ResourceManager->GetTexture("FontTexture"));
+
 		//ImGui
 		{
 			ImGui::Render();

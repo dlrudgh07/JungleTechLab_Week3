@@ -327,6 +327,11 @@ FString FString::ToUpper() const
 	return result;
 }
 
+unsigned char FString::At(uint32 Index) const
+{
+	return (mData->at(Index));
+}
+
 FString& FString::operator+=(std::string_view str)
 {
 	mData->append(str);
