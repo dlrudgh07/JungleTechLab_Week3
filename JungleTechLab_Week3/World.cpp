@@ -14,10 +14,9 @@ UWorld::~UWorld()
 {
 	for (AActor* CurrentActor : Actors)
 	{
-		// todo
-		// 이거 고쳐야함
-		CurrentActor->Destroy();
+		delete CurrentActor;
 	}
+	Actors.Reset(0);
 }
 
 void UWorld::SerializeClass(json::JSON& outJson) const
@@ -65,13 +64,14 @@ void UWorld::DeserializeClass(const json::JSON& inJson)
 	}
 }
 
-void UWorld::AddActor(AActor* actor)
+void UWorld::AddActor(AActor* Actor)
 {
-	assert(actor != nullptr);
+	assert(Actor != nullptr);
 	// todo : 이거 왜 안되는지 확인해야함
 	//assert(GetActorIndex(actor->ObjectID.GUID) == -1);
 
-	Actors.Add(actor);
+	Actors.Add(Actor);
+	Actor->Initialize(this);
 }
 
 bool UWorld::RemoveActor(FGuid TargetComponentGuid)
@@ -85,7 +85,7 @@ bool UWorld::RemoveActor(FGuid TargetComponentGuid)
 	return false;
 }
 
-const TArray<FRenderInfo> UWorld::GetRenderInfos()
+const TArray<FRenderInfo>& UWorld::GetRenderInfos() const
 {
 	return RenderInfos;
 }
@@ -96,11 +96,31 @@ void UWorld::Update(float DeltaTime)
 
 	for (AActor* CurrentActor : Actors)
 	{
-		if (!CurrentActor->IsPendingKill())
-		{
-			CurrentActor->Update(&RenderInfos, DeltaTime);
-		}
+		CurrentActor->Update(&RenderInfos, DeltaTime);
 	}
+}
+
+void UWorld::RequestDestroyActor(AActor* Actor)
+{
+	PendingKillList.Add(Actor);
+}
+
+void UWorld::ProcessPendingKills()
+{
+	if (PendingKillList.Num() == 0) return; 
+
+	for (AActor* DeadActor : PendingKillList)
+	{
+		int32 index = GetActorIndex(DeadActor->ObjectID.GUID);
+		if (index != -1)
+		{
+			Actors.RemoveAtSwap(index);
+		}
+
+		delete DeadActor;
+	}
+
+	PendingKillList.Reset(0);
 }
 
 
@@ -140,7 +160,7 @@ AActor* UWorld::SpawnStaticMeshActor(const std::string& AssetName, FTransform Tr
 	NewActor->AddRootSceneComponent(MeshComponent); // 액터의 루트로 등록
 
 	// 3. 씬의 액터 목록(Level 배열)에 추가
-	Actors.Add(NewActor);
+	AddActor(NewActor);
 
 	return NewActor;
 }

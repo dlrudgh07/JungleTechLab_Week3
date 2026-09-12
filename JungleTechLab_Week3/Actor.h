@@ -15,13 +15,11 @@ public:
 	AActor() = default;
 	virtual ~AActor();
 
-	virtual void Destroy()
-	{
-		bPendingKill = true;
-	}
+	virtual void Destroy();
 
 	void Initialize();
-
+	void Initialize(UWorld* InputWorld) { World = InputWorld; }
+	UWorld* GetWorld() const { return World; }
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
@@ -51,6 +49,9 @@ private:
 	
 	USceneComponent* RootComponent = nullptr;
 	TArray<UActorComponent*> Components;
+
+	UWorld* World = nullptr;
+
 	bool bPressed = false;
 	bool bStarted = false;
 	bool bPendingKill = false;

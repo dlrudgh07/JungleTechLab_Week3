@@ -8,13 +8,8 @@
 #include "GraphicsManager.h"
 #include "ResourceManager.h"
 #include "ObjectFactory.h"
-#include "Cube.h"
-#include "Sphere.h"
-#include "Circle.h"
-#include "Quad.h"
-#include "Triangle.h"
+
 #include "Object.h"
-#include "GizmoArrow.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
 #include "imGui/imgui_impl_win32.h"
@@ -25,8 +20,17 @@
 #include "Material.h"
 #include "StaticMesh.h"
 
+#include <objbase.h>
+
+
+
+
 void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 {
+	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	if (FAILED(hr)) { UE_LOG("Failed to initialize COM library."); }
+
+
 	// Initialize window infos
 	WCHAR WindowClass[] = L"JungleWindowClass";
 	WCHAR Title[] = L"Game Tech Lab";
@@ -34,28 +38,23 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	RegisterClassW(&wndclass);
 
 	HWND hWnd = CreateWindowExW(
-		0,
-		WindowClass,
-		Title,
-		WS_VISIBLE | WS_OVERLAPPEDWINDOW,
+		0, WindowClass, Title, WS_VISIBLE | WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, 600, 1024,
 		nullptr, nullptr, hInstance, nullptr
 	);
 
-	// 창을 화면 크기에 맞게 최대화하여 표시
 	ShowWindow(hWnd, SW_SHOWMAXIMIZED);
 	UpdateWindow(hWnd);
 
-	// 최대화된 후의 실제 클라이언트 크기를 구해 콘솔에 전달
 	RECT clientRect;
 	GetClientRect(hWnd, &clientRect);
 	int clientWidth = clientRect.right - clientRect.left;
 	int clientHeight = clientRect.bottom - clientRect.top;
 
 	RAWINPUTDEVICE rid = {};
-	rid.usUsagePage = 0x01;		// Generic Desktop
-	rid.usUsage = 0x02;			// Mouse
-	rid.dwFlags = 0;		// 포커스 있을 때만 수신
+	rid.usUsagePage = 0x01;
+	rid.usUsage = 0x02;
+	rid.dwFlags = 0;
 	rid.hwndTarget = hWnd;
 	RegisterRawInputDevices(&rid, 1, sizeof(rid));
 
@@ -66,110 +65,26 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	ImGui_ImplWin32_Init((void*)hWnd);
 	ImGui_ImplDX11_Init(GraphicsManager->GetRenderer()->Device, GraphicsManager->GetRenderer()->DeviceContext);
 
-	/* Console Window */
 	ConsoleWindow& console = ConsoleWindow::GetInstance();
 	console.Init("Jungle Console Window", clientWidth);
 
-
+	// 매니저 할당 및 디바이스 주입
 	ResourceManager = new FResourceManager();
+	ResourceManager->Initialize(GraphicsManager->GetRenderer()->Device, GraphicsManager->GetRenderer()->DeviceContext);
 	FileManager = new FFileManager();
 
-	// ==========================================
-	// [1] 그래픽스 버퍼 생성 
-	// ==========================================
-	FBuffer* CubeBuffer = GraphicsManager->CreateBuffer(Cube_vertices, sizeof(Cube_vertices));
-	FBuffer* QuadBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices));
-	FBuffer* SphereBuffer = GraphicsManager->CreateBuffer(Sphere_vertices, sizeof(Sphere_vertices));
-	FBuffer* GizmoArrowBuffer = GraphicsManager->CreateBuffer(GizmoArrow_vertices, sizeof(GizmoArrow_vertices));
-	FBuffer* CircleBuffer = GraphicsManager->CreateBuffer(Circle_vertices, sizeof(Circle_vertices));
-	// GraphicsManager->CreateBuffer(EPrimitive::EP_Triangle, Triangle_vertices, sizeof(Triangle_vertices));
-
-
-	// ==========================================
-	// [2] 텍스처 에셋 생성 및 등록
-	// ==========================================
-	UTexture* CrateTexture = FObjectFactory::ConstructObject<UTexture>();
-
-	/*
-	FTexture* LoadedTex = FTextureManager::GetManager().LoadTexture("crate.png");
-	if (LoadedTex != nullptr)
-	{
-		// 로드된 GPU 리소스를 UTexture 껍데기에 연결
-		CrateTexture->Resource = new FTextureResource{ LoadedTex->SRV };
-		CrateTexture->Width = LoadedTex->Width;
-		CrateTexture->Height = LoadedTex->Height;
-	}
-
-	// 카탈로그에 "CrateTexture"라는 이름으로 등록
-	ResourceManager->RegisterTexture("CrateTexture", CrateTexture);
-	*/
-
-	// ==========================================
-	// [3] 머티리얼 에셋 생성 및 등록
-	// ==========================================
-	UMaterial* DefaultMaterial = FObjectFactory::ConstructObject<UMaterial>();
-	DefaultMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 0.0f);
-	DefaultMaterial->BaseTexture = ResourceManager->GetTexture("DefaultTexture");	// todo : 이게 없으니 이걸 white texture로 가야함
-	ResourceManager->RegisterMaterial("DefaultMaterial", DefaultMaterial);
-
-	// ==========================================
-	// [4] 스태틱 메쉬 에셋 생성 및 등록
-	// ==========================================
-	UStaticMesh* CubeMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	CubeMesh->VertexBuffer = CubeBuffer;
-	CubeMesh->StaticMaterials.Add(ResourceManager->GetMaterial("DefaultMaterial"));
-	// CPU 정점 복사 (배열 크기만큼)
-	uint32 VertCount = sizeof(Cube_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i)
-		CubeMesh->CPUVertices.emplace_back(Cube_vertices[i]);
-	ResourceManager->RegisterStaticMesh("Cube", CubeMesh);
-
-	UStaticMesh* QuadMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	QuadMesh->VertexBuffer = QuadBuffer;
-	QuadMesh->StaticMaterials.Add(ResourceManager->GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(Quad_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i)
-		QuadMesh->CPUVertices.emplace_back(Quad_vertices[i]);
-	ResourceManager->RegisterStaticMesh("Quad", QuadMesh);
-
-	UStaticMesh* SphereMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	SphereMesh->VertexBuffer = SphereBuffer;
-	SphereMesh->StaticMaterials.Add(ResourceManager->GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(Sphere_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i)
-		SphereMesh->CPUVertices.emplace_back(Sphere_vertices[i]);
-	ResourceManager->RegisterStaticMesh("Sphere", SphereMesh);
-
-	UStaticMesh* GizmoArrowMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	GizmoArrowMesh->VertexBuffer = GizmoArrowBuffer;
-	VertCount = sizeof(GizmoArrow_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i)
-		GizmoArrowMesh->CPUVertices.emplace_back(GizmoArrow_vertices[i]);
-	ResourceManager->RegisterStaticMesh("GizmoArrow", GizmoArrowMesh);
-
-
-	UStaticMesh* CircleMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	CircleMesh->VertexBuffer = CircleBuffer;
-	VertCount = sizeof(Circle_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i)
-		CircleMesh->CPUVertices.emplace_back(Circle_vertices[i]);
-	ResourceManager->RegisterStaticMesh("Circle", CircleMesh);
-
-
-
+	// 에셋 생성 로직을 ResourceManager에서만 처리
+	ResourceManager->InitializeDefaultAssets(GraphicsManager);
 
 	FrameTimer = new FFrameTimer(120);
-	ViewportClient = new FEditorViewportClient(); // Todo: cChange to class
-
-	const FVector4 NearTint(1.0f, 0.65f, 0.15f, 0.85f); // 주황 = 가까운 쪽
-	const FVector4 FarTint(0.25f, 0.55f, 1.0f, 0.85f); // 파랑 = 먼 쪽
+	ViewportClient = new FEditorViewportClient();
 
 	SceneManager = new FSceneManager();
-	FileManager = new FFileManager();
-
-	SceneManager->NewScene();
-	//SceneManager->LoadScene("TestScene", *FileManager);
+	//SceneManager->RequestNewScene();
+	SceneManager->RequestNewScene();
 }
+
+
 
 void FEngineLoop::Tick(bool bPumpMessages)
 {
@@ -229,8 +144,11 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		if (SceneManager->GetSelectedActor())
 		{
 			FRenderInfo clickedRenderInfo;
-			SceneManager->GetSelectedActor()->GetFirstRenderInfo(clickedRenderInfo);
-			GraphicsManager->RenderHighLight(clickedRenderInfo);
+
+			if (SceneManager->GetSelectedActor()->GetFirstRenderInfo(clickedRenderInfo))
+			{
+				GraphicsManager->RenderHighLight(clickedRenderInfo);
+			}
 		}
 
 		// Gizmo

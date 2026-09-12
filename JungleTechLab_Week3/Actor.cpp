@@ -2,6 +2,7 @@
 
 #include <format>
 
+#include "World.h"
 #include "JsonUtil.h"
 #include "RenderInfo.h"
 #include "SceneComponent.h"
@@ -20,6 +21,20 @@ void AActor::Initialize()
 
 	bPressed = false;
 	bStarted = false;
+}
+
+void AActor::Destroy()
+{
+	// 이미 사형 선고를 받았다면 중복 등록 방지
+	if (IsPendingKill()) return;
+
+	bPendingKill = true;
+
+	// 소속된 월드의 대기열에 나를 등록해달라고 요청
+	if (GetWorld())
+	{
+		GetWorld()->RequestDestroyActor(this);
+	}
 }
 
 void AActor::SerializeClass(json::JSON& outJson) const

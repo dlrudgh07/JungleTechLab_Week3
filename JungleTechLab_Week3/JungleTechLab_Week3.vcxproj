@@ -155,6 +155,7 @@
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClInclude Include="Circle.h" />
+    <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="Quad.h" />
     <ClInclude Include="ResourceManager.h" />

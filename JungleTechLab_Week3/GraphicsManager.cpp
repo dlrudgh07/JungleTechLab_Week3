@@ -79,44 +79,31 @@ void FGraphicsManager::GizmoPrepare()
 	mRenderer->RSUpdateState();
 
 }
-void FGraphicsManager::Render(const TArray<FRenderInfo> renderInfos)
+
+
+void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 {
-	FMatrix viewProjection;
-	//if (mbPerspectiveProjection)
-	//{
-	//	viewProjection = mViewProjectionMatrix;
-	//}
-	//else
-	//{
-	//	viewProjection = mViewOrthogonalProjectionMatrix;
-	//}
-
-	viewProjection = mViewUnifiedProjectionMatrix;
-
+	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
 	for (const FRenderInfo& renderInfo : renderInfos)
 	{
-		//mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, mViewProjectionMatrix, renderInfo.Color);
-		// todo: 조명처리할게 아니라면, mvp 처리는 cpu에서 하고 넘기는더 효율적이다
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
-
 		if (renderInfo.VertexBuffer == nullptr || renderInfo.VertexBuffer->VertexBuffer == nullptr)
 			continue;
-
-
+	
 		if (renderInfo.BaseTexture != nullptr && renderInfo.BaseTexture->Resource != nullptr)
 		{
-			mRenderer->BindTexture(renderInfo.BaseTexture->Resource->SRV.Get());
+			mRenderer->BindTexture(0, renderInfo.BaseTexture->Resource->SRV.Get());
 		}
 		else
 		{
-			// 텍스처가 없으면 렌더러에 내장된 1x1 화이트 텍스처를 꽂아 정점 색상을 보존
-			mRenderer->BindTexture(mRenderer->DefaultWhiteTextureSRV);
+			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
+			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
+
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer->VertexBuffer.Get(), renderInfo.VertexBuffer->NumVertices);
 	}
 }
-
 
 
 
