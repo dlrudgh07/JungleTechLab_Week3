@@ -9,6 +9,7 @@
 
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
+static constexpr uint32 UUID_VERTEX_CAPACITY = 10; // 초기에할당한 크기이다 용량이 꽉차면 2배로 재할당
 
 FGraphicsManager::FGraphicsManager(HWND hWindow)
 	: mbWireFrame(false)
@@ -20,7 +21,7 @@ FGraphicsManager::FGraphicsManager(HWND hWindow)
 	mRenderer->CreateShader();
 	mRenderer->CreateConstantBuffer();
 	mRenderer->CreateLineVertexBuffer(LINE_VERTEX_CAPACITY);
-	mRenderer->CreateUUIDVertexBuffer(LINE_VERTEX_CAPACITY);
+	mRenderer->CreateUUIDVertexBuffer(UUID_VERTEX_CAPACITY);
 	mRenderer->CreateUUIDSampleState();
 
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
@@ -211,7 +212,7 @@ void FGraphicsManager::DrawAllUUID(const TArray<FRenderInfo> renderInfos, FVecto
 
 		const float UpLength = 0.12f;
 		const float RightLength = 0.12f;
-		const float WordOffset = 0.12f;
+		const float WordOffset = 0.09f;
 		const uint32 CellLine = 16;
 		const float LocalOffst = (1.0f / CellLine);
 
@@ -253,7 +254,7 @@ void FGraphicsManager::FlushUUID()
 	mRenderer->PrepareShader();
 
 	// 안 비우면 매 프레임 누적돼 버퍼가 넘친다. 용량은 유지한 채 개수만 0으로
-	mUUIDVertices.Reset(LINE_VERTEX_CAPACITY); // 나중에 수정해야됨 UUID용으로
+	mUUIDVertices.Reset(UUID_VERTEX_CAPACITY); // 나중에 수정해야됨 UUID용으로
 }
 
 void FGraphicsManager::RenderOverlay(const TArray<FRenderInfo> renderInfos) //깊이버퍼 초기화

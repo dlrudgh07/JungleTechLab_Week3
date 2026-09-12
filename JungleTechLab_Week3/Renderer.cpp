@@ -451,6 +451,31 @@ void URenderer::RenderLines(const FVertexSimple* vertices, uint32 numVertices)
 	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
+bool URenderer::ReAllocateUUIDVertexBuffer(uint32 RequestSize)
+{
+	uint32 NextVertexCapacity = max(RequestSize, UUIDVertexCapacity * 2);
+
+	ID3D11Buffer* NewUUIDVertexBuffer = nullptr;
+
+	D3D11_BUFFER_DESC vertexbufferdesc = {};
+	vertexbufferdesc.ByteWidth = NextVertexCapacity * sizeof(FVertexSimple);
+	vertexbufferdesc.Usage = D3D11_USAGE_DYNAMIC;
+	vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	if (SUCCEEDED(Device->CreateBuffer(&vertexbufferdesc, nullptr, &NewUUIDVertexBuffer)))
+	{
+		UUIDVertexCapacity = NextVertexCapacity;
+		ReleaseUUIDVertexBuffer();
+		UUIDVertexBuffer = NewUUIDVertexBuffer;
+		UE_LOG("realooc true");
+		return (true);
+	}
+	UE_LOG("realooc false");
+	return(false);
+
+}
+
 // 쌓아둔 UUID 전체를 한 번의 Draw로 그린다.
 void URenderer::RenderUUID(const FVertexSimple* vertices, uint32 numVertices)
 {
@@ -458,7 +483,10 @@ void URenderer::RenderUUID(const FVertexSimple* vertices, uint32 numVertices)
 
 	if (numVertices > UUIDVertexCapacity)
 	{
-		numVertices = UUIDVertexCapacity;   // 넘치면 자른다. 늘리려면 CreateUUIDVertexBuffer의 인자를 키운다
+		if (ReAllocateUUIDVertexBuffer(numVertices) == false)
+		{
+			numVertices = UUIDVertexCapacity;
+		}
 	}
 
 	// WRITE_DISCARD: 이전 내용을 버리고 새 메모리를 받는다.

@@ -131,6 +131,7 @@ public:
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
 	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);
+	bool ReAllocateUUIDVertexBuffer(uint32 RequestSize);
 	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
 	void SwapBuffer();
 
