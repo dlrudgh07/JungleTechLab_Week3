@@ -88,16 +88,28 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	// ==========================================
 	// [2] 텍스처 에셋 생성 및 등록
 	// ==========================================
-	UTexture* DefaultTexture = FObjectFactory::ConstructObject<UTexture>();
-	// DefaultTexture->Resource = GraphicsManager->LoadTextureFromFile("default.png"); // todo -> 이건 기존에 개발했던거 추가하면 될듯
-	ResourceManager->RegisterTexture("DefaultTexture", DefaultTexture);
+	UTexture* CrateTexture = FObjectFactory::ConstructObject<UTexture>();
+
+	/*
+	FTexture* LoadedTex = FTextureManager::GetManager().LoadTexture("crate.png");
+	if (LoadedTex != nullptr)
+	{
+		// 로드된 GPU 리소스를 UTexture 껍데기에 연결
+		CrateTexture->Resource = new FTextureResource{ LoadedTex->SRV };
+		CrateTexture->Width = LoadedTex->Width;
+		CrateTexture->Height = LoadedTex->Height;
+	}
+
+	// 카탈로그에 "CrateTexture"라는 이름으로 등록
+	ResourceManager->RegisterTexture("CrateTexture", CrateTexture);
+	*/
 
 	// ==========================================
 	// [3] 머티리얼 에셋 생성 및 등록
 	// ==========================================
 	UMaterial* DefaultMaterial = FObjectFactory::ConstructObject<UMaterial>();
 	DefaultMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 0.0f);
-	DefaultMaterial->BaseTexture = ResourceManager->GetTexture("DefaultTexture");
+	DefaultMaterial->BaseTexture = ResourceManager->GetTexture("DefaultTexture");	// todo : 이게 없으니 이걸 white texture로 가야함
 	ResourceManager->RegisterMaterial("DefaultMaterial", DefaultMaterial);
 
 	// ==========================================

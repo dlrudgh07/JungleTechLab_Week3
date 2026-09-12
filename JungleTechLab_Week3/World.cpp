@@ -14,7 +14,9 @@ UWorld::~UWorld()
 {
 	for (AActor* CurrentActor : Actors)
 	{
-		delete CurrentActor;
+		// todo
+		// 이거 고쳐야함
+		CurrentActor->Destroy();
 	}
 }
 

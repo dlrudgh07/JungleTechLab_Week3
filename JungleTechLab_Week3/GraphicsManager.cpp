@@ -95,9 +95,9 @@ void FGraphicsManager::Render(const TArray<FRenderInfo> renderInfos)
 		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
 
 		if (renderInfo.VertexBuffer == nullptr || renderInfo.VertexBuffer->VertexBuffer == nullptr)
-		{
 			continue;
-		}
+
+
 		if (renderInfo.BaseTexture != nullptr && renderInfo.BaseTexture->Resource != nullptr)
 		{
 			mRenderer->BindTexture(renderInfo.BaseTexture->Resource->SRV.Get());
@@ -111,6 +111,12 @@ void FGraphicsManager::Render(const TArray<FRenderInfo> renderInfos)
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer->VertexBuffer.Get(), renderInfo.VertexBuffer->NumVertices);
 	}
 }
+
+
+
+
+
+
 void FGraphicsManager::DrawLine(const FVector& start, const FVector& end, const FVector4& color)
 {
 	// 월드 좌표 그대로 넣는다. 그래서 그릴 때 World 행렬이 단위행렬이다
