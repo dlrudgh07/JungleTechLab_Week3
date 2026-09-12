@@ -186,7 +186,7 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	// [2] 텍스처 에셋 로드 및 등록
 	// ==========================================
 	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)
-	LoadTextureFromFile("CrateTexture", "C:/Users/JUNGLE/Desktop/GameEngine/Week3/JungleTechLab_Week3/JungleTechLab_Week3/crate.jpg");
+	LoadTextureFromFile("CrateTexture", "crate.jpg");
 
 	LoadTextureFromFile("FontTexture", "Assets/DDS/FontAtlas.dds");
 

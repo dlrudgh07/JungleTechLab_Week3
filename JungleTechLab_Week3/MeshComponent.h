@@ -20,7 +20,7 @@ public:
 	{
 		UPrimitiveComponent::Update(OutRenderInfos, DeltaTime);
 	}
-
+	
 	void SetMaterial(int32 ElementIndex, class UMaterial* Material)
 	{
 		if (OverrideMaterials.Num() <= ElementIndex)
