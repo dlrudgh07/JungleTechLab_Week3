@@ -29,6 +29,8 @@ public:
 	UTexture() = default;
 	~UTexture() = default;
 
+	void SetResource(FString FilePath);
+
 	REFLECT_CLASS(UTexture, UObject)
 
 };

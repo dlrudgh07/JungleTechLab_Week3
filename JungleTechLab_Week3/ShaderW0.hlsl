@@ -37,6 +37,10 @@ PS_INPUT mainVS(VS_INPUT input)
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
     float4 texColor = txDiffuse.Sample(samLinear, input.uv);
+
+    float4 ResultColor = input.color * texColor;
+
+    ResultColor.a = texColor.r;
     
-    return input.color * texColor;
+    return ResultColor;
 }

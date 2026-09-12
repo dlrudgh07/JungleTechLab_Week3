@@ -336,5 +336,6 @@
     <None Include="ObjectFactory.inl">
       <Filter>Core\UObject</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

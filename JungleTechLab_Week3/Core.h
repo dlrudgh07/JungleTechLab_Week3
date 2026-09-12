@@ -111,6 +111,8 @@ public:
 	FString ToLower() const;
 	FString ToUpper() const;
 
+	unsigned char At(uint32 Index) const;
+
 	FString& operator+=(std::string_view str);
 	FString& operator+=(const FString& str);
 

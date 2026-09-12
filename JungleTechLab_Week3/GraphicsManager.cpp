@@ -5,6 +5,7 @@
 #include "Console.h"
 #include "StaticMesh.h"
 #include "Texture.h"
+#include "FQuad.h"
 
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
@@ -19,6 +20,8 @@ FGraphicsManager::FGraphicsManager(HWND hWindow)
 	mRenderer->CreateShader();
 	mRenderer->CreateConstantBuffer();
 	mRenderer->CreateLineVertexBuffer(LINE_VERTEX_CAPACITY);
+	mRenderer->CreateUUIDVertexBuffer(LINE_VERTEX_CAPACITY);
+	mRenderer->CreateUUIDSampleState();
 
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
 }
@@ -27,6 +30,7 @@ FGraphicsManager::~FGraphicsManager()
 {
 	mRenderer->ReleaseLineVertexBuffer();
 	mRenderer->ReleaseConstantBuffer();
+	mRenderer->ReleaseUUIDVertexBuffer();
 	mRenderer->ReleaseShader();
 	mRenderer->Release();
 
@@ -182,6 +186,74 @@ void FGraphicsManager::FlushLines()
 
 	// 안 비우면 매 프레임 누적돼 버퍼가 넘친다. 용량은 유지한 채 개수만 0으로
 	mLineVertices.Reset(LINE_VERTEX_CAPACITY);
+}
+
+
+void FGraphicsManager::DrawUUID(const FQuad& quad)
+{
+	// 월드 좌표 그대로 넣는다. 그래서 그릴 때 World 행렬이 단위행렬이다
+	mUUIDVertices.Add({ quad.LeftDown.x , quad.LeftDown.y, quad.LeftDown.z, 1.0f,1.0f,1.0f,1.0f, quad.u[0], quad.v[1]}); // 좌측하단
+	mUUIDVertices.Add({ quad.RightUp.x, quad.RightUp.y, quad.RightUp.z, 1.0f,1.0f,1.0f,1.0f, quad.u[1], quad.v[0] }); // 우측상단
+	mUUIDVertices.Add({ quad.RightDown.x, quad.RightDown.y, quad.RightDown.z, 1.0f,1.0f,1.0f,1.0f, quad.u[1], quad.v[1] }); // 우측하단
+	mUUIDVertices.Add({ quad.RightUp.x, quad.RightUp.y, quad.RightUp.z, 1.0f,1.0f,1.0f,1.0f, quad.u[1], quad.v[0] }); // 우측상단
+	mUUIDVertices.Add({ quad.LeftDown.x, quad.LeftDown.y, quad.LeftDown.z, 1.0f,1.0f,1.0f,1.0f, quad.u[0], quad.v[1] }); // 좌측하단
+	mUUIDVertices.Add({ quad.LeftUp.x, quad.LeftUp.y, quad.LeftUp.z, 1.0f,1.0f,1.0f,1.0f, quad.u[0], quad.v[0] }); // 좌측상단
+}
+
+void FGraphicsManager::DrawAllUUID(const TArray<FRenderInfo> renderInfos, FVector UpVector, FVector RightVector)
+{
+	for (const FRenderInfo& renderInfo : renderInfos)
+	{
+		FMatrix CurrentWorldMatrix = renderInfo.WorldTransformMatrix;
+
+		FString UUID = FString("UID:").Append(renderInfo.ObejctID.GUID.ToString());
+		FQuad Quad;
+
+		const float UpLength = 0.12f;
+		const float RightLength = 0.12f;
+		const float WordOffset = 0.12f;
+		const uint32 CellLine = 16;
+		const float LocalOffst = (1.0f / CellLine);
+
+		FVector ModelVector = CurrentWorldMatrix.TransformPosition(FVector(0, 0, 0));
+		FVector Origin = ModelVector - (RightVector * WordOffset * (UUID.Len() * 0.5f));
+
+		Origin.z += 1.0f;
+
+		for (int i = 0; i < UUID.Len(); i++)
+		{
+			unsigned char CurrentAsciiCode = UUID.At(i);
+
+			FVector Cursor = Origin + RightVector * (WordOffset * i);
+
+			Quad.LeftUp = Cursor + UpVector * UpLength;
+			Quad.RightUp = Cursor + RightVector * RightLength + UpVector * UpLength;
+			Quad.LeftDown = Cursor;
+			Quad.RightDown = Cursor + RightVector * RightLength;
+
+			Quad.u[0] = (0 * LocalOffst) + LocalOffst * (CurrentAsciiCode % CellLine);  // 좌측
+			Quad.u[1] = (1 * LocalOffst) + LocalOffst * (CurrentAsciiCode % CellLine);  // 우측
+
+			Quad.v[0] = (0 * LocalOffst) + LocalOffst * (CurrentAsciiCode / CellLine);  // 상단
+			Quad.v[1] = (1 * LocalOffst) + LocalOffst * (CurrentAsciiCode / CellLine);  // 하단
+			DrawUUID(Quad);
+		}
+	}
+}
+
+void FGraphicsManager::FlushUUID()
+{
+	if (mUUIDVertices.Num() == 0) return;
+
+	mRenderer->UpdateConstant(FMatrix::Identity, mViewUnifiedProjectionMatrix, FVector4(0, 0, 0, 0));
+	//mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, FVector4(1, 1, 0, 0));
+
+	mRenderer->PrepareTextureShader();
+	mRenderer->RenderUUID(&mUUIDVertices[0], mUUIDVertices.Num());
+	mRenderer->PrepareShader();
+
+	// 안 비우면 매 프레임 누적돼 버퍼가 넘친다. 용량은 유지한 채 개수만 0으로
+	mUUIDVertices.Reset(LINE_VERTEX_CAPACITY); // 나중에 수정해야됨 UUID용으로
 }
 
 void FGraphicsManager::RenderOverlay(const TArray<FRenderInfo> renderInfos) //깊이버퍼 초기화

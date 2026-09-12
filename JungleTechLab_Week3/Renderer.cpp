@@ -13,6 +13,7 @@ void URenderer::Create(HWND hWindow)
 	CreateRasterizerState();
 	CreateSamplerState();
 	CreateDefaultWhiteTexture();
+	CreateAlphaBlendState();
 }
 
 void URenderer::CreateDeviceAndSwapChain(HWND hWindow)
@@ -136,6 +137,22 @@ void URenderer::CreateLineVertexBuffer(uint32 maxVertices)
 	}
 }
 
+// UUID는 매 프레임 내용이 바뀌므로 IMMUTABLE로는 만들 수 없다.
+// DYNAMIC + CPU_ACCESS_WRITE 라야 Map으로 덮어쓸 수 있다. (상수 버퍼와 같은 조합)
+void URenderer::CreateUUIDVertexBuffer(uint32 maxVertices)
+{
+	D3D11_BUFFER_DESC vertexbufferdesc = {};
+	vertexbufferdesc.ByteWidth = maxVertices * sizeof(FVertexSimple);
+	vertexbufferdesc.Usage = D3D11_USAGE_DYNAMIC;
+	vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	if (SUCCEEDED(Device->CreateBuffer(&vertexbufferdesc, nullptr, &UUIDVertexBuffer)))
+	{
+		UUIDVertexCapacity = maxVertices;
+	}
+}
+
 void URenderer::ReleaseLineVertexBuffer()
 {
 	if (LineVertexBuffer)
@@ -145,6 +162,18 @@ void URenderer::ReleaseLineVertexBuffer()
 	}
 
 	LineVertexCapacity = 0;
+}
+
+
+void URenderer::ReleaseUUIDVertexBuffer()
+{
+	if (UUIDVertexBuffer)
+	{
+		UUIDVertexBuffer->Release();
+		UUIDVertexBuffer = nullptr;
+	}
+
+	UUIDVertexBuffer = 0;
 }
 
 void URenderer::CreateRasterizerState()
@@ -184,6 +213,7 @@ void URenderer::Release()
 	ReleaseDepthStencilState();
 	ReleaseBlendState();
 	ReleaseFrameBuffer();
+	ReleaseUUIDSampleState();
 	ReleaseDeviceAndSwapChain();
 }
 
@@ -271,6 +301,7 @@ void URenderer::PrepareShader()
 	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
 	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
 	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	CurrentBoundSRV = nullptr;
 
 	if (ConstantBuffer)
@@ -284,6 +315,21 @@ void URenderer::PrepareShader()
 	}
 }
 
+void URenderer::PrepareTextureShader()
+{
+	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
+	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
+	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	DeviceContext->PSSetShaderResources(0, 1, &UUIDTextureView);
+	DeviceContext->PSSetSamplers(0, 1, &UUIDSamplerState);
+	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
+
+	if (ConstantBuffer)
+	{
+		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
+		DeviceContext->PSSetConstantBuffers(0, 1, &ConstantBuffer);
+	}
+}
 
 void URenderer::CreateSamplerState()
 {
@@ -298,6 +344,29 @@ void URenderer::CreateSamplerState()
 
 	Device->CreateSamplerState(&Description, &SamplerState);
 }
+
+void URenderer::CreateUUIDSampleState()
+{
+	HRESULT hr = DirectX::CreateDDSTextureFromFile(Device, L"Assets/DDS/FontAtlas.dds", nullptr, &UUIDTextureView);
+	if (!(SUCCEEDED(hr)))
+	{
+		UE_LOG_F("Not Fild DDS Texture : %s", "Assets / DDS / FontAtlas.dds");
+	}
+
+	UUIDSamplerInfo.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	UUIDSamplerInfo.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	UUIDSamplerInfo.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	UUIDSamplerInfo.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	UUIDSamplerInfo.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	UUIDSamplerInfo.MinLOD = 0;
+	UUIDSamplerInfo.MaxLOD = D3D11_FLOAT32_MAX;
+	UUIDSamplerInfo.MipLODBias = 0;
+	UUIDSamplerInfo.MaxAnisotropy = 0;
+
+
+	Device->CreateSamplerState(&UUIDSamplerInfo, &UUIDSamplerState);
+}
+
 void URenderer::ReleaseSamplerState()
 {
 	if (SamplerState)
@@ -380,6 +449,32 @@ void URenderer::RenderLines(const FVertexSimple* vertices, uint32 numVertices)
 	DeviceContext->Draw(numVertices, 0);
 
 	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+// 쌓아둔 UUID 전체를 한 번의 Draw로 그린다.
+void URenderer::RenderUUID(const FVertexSimple* vertices, uint32 numVertices)
+{
+	if (!UUIDVertexBuffer || vertices == nullptr || numVertices == 0) return;
+
+	if (numVertices > UUIDVertexCapacity)
+	{
+		numVertices = UUIDVertexCapacity;   // 넘치면 자른다. 늘리려면 CreateUUIDVertexBuffer의 인자를 키운다
+	}
+
+	// WRITE_DISCARD: 이전 내용을 버리고 새 메모리를 받는다.
+	// GPU가 지난 프레임 데이터를 아직 읽고 있어도 CPU가 기다리지 않는다.
+	D3D11_MAPPED_SUBRESOURCE UUIDBufferMSR;
+	if (FAILED(DeviceContext->Map(UUIDVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &UUIDBufferMSR)))
+	{
+		return;
+	}
+	memcpy(UUIDBufferMSR.pData, vertices, numVertices * sizeof(FVertexSimple));
+	DeviceContext->Unmap(UUIDVertexBuffer, 0);
+
+	// 직전에 메시 버퍼가 물려 있으므로 갈아끼워야 한다
+	UINT offset = 0;
+	DeviceContext->IASetVertexBuffers(0, 1, &UUIDVertexBuffer, &Stride, &offset);
+	DeviceContext->Draw(numVertices, 0);
 }
 
 void URenderer::RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI)
@@ -513,9 +608,35 @@ void URenderer::CreateNoColorWriteBlendState()
 	Device->CreateBlendState(&desc, &NoColorWriteBlendState);
 }
 
+void URenderer::CreateAlphaBlendState()
+{
+	D3D11_BLEND_DESC desc = {};
+	desc.RenderTarget[0].BlendEnable = TRUE; // 블렌딩 켜기
+	desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA; // 새 색에 알파를 곱함
+	desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA; // 기존 색에 (1 - 알파)를 곱함
+	desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; // 둘을 더함
+	desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE; // 알파 채널은 그대로
+	desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; // 기존 알파는 무시
+	desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; // 더하기
+	desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // 모든 채널 쓰기
+
+	Device->CreateBlendState(&desc, &AlphaBlendState);
+}
+
+
+void URenderer::ReleaseUUIDSampleState()
+{
+	if (SamplerState)
+	{
+		SamplerState->Release();
+		SamplerState = nullptr;
+	}
+}
+
 void URenderer::ReleaseBlendState()
 {
 	if (NoColorWriteBlendState) { NoColorWriteBlendState->Release(); NoColorWriteBlendState = nullptr; }
+	if (AlphaBlendState) { AlphaBlendState->Release(); AlphaBlendState = nullptr; }
 }
 
 void URenderer::ReleaseDepthStencilBuffer()
