@@ -8,7 +8,7 @@
 #include <wrl/client.h>
 #include "Console.h"
 #include "DDSTextureLoader.h"
-
+#include "StaticMesh.h"
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
 #pragma comment(lib, "d3dcompiler")
@@ -94,6 +94,7 @@ public:
 	void CreateDeviceAndSwapChain(HWND hWindow);
 	void CreateShader();
 	void CreateFrameBuffer();
+	ID3D11Buffer* CreateIndexBuffer(uint32* indices, uint32 indicesCount);
 	ID3D11Buffer* CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
 	void CreateLineVertexBuffer(uint32 maxVertices);
 	void CreateUUIDVertexBuffer(uint32 maxVertices);
@@ -130,11 +131,11 @@ public:
 	void PrepareShader();
 	void PrepareTextureShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
-	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
+	void RenderPrimitive(FBuffer* pBuffer);
 	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);
 	bool ReAllocateUUIDVertexBuffer(uint32 RequestSize);
-	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
+	void RenderHighlight(FBuffer* pBuffer, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
 	void SwapBuffer();
 
 

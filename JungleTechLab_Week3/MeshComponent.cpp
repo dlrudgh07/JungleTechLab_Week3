@@ -8,3 +8,4 @@ void UMeshComponent::DeserializeClass(const json::JSON& inJson)
 {
 	UPrimitiveComponent::DeserializeClass(inJson);
 }
+

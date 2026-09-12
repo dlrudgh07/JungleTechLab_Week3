@@ -6,6 +6,7 @@
 #include "StaticMesh.h"
 #include "Texture.h"
 #include "FQuad.h"
+#include "MeshUtility.h"
 
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
@@ -100,7 +101,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
 
 
-		mRenderer->RenderPrimitive(renderInfo.VertexBuffer->VertexBuffer.Get(), renderInfo.VertexBuffer->NumVertices);
+		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
 	}
 }
 
@@ -280,13 +281,30 @@ void FGraphicsManager::SetPerspectiveProjection(bool bPerspectiveProjection)
 
 FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize)
 {
-	ID3D11Buffer* rawBuffer = mRenderer->CreateVertexBuffer(InputVertices, InputVerticesSize);
+	TArray<FVertexSimple> OutVertices;
+	TArray<uint32> OutIndices;
+
 	UINT numVertices = static_cast<UINT>(InputVerticesSize / sizeof(FVertexSimple));
+	Welding(InputVertices, numVertices, OutVertices, OutIndices);
 
+	uint32 indicesCount = OutIndices.Num();
+	uint32 verticesCount = OutVertices.Num();
+	if (OutVertices.Num() == 0)
+	{
+		return nullptr;
+	}
+
+	ID3D11Buffer* vertexBuffer = mRenderer->CreateVertexBuffer(&OutVertices[0], verticesCount *sizeof(FVertexSimple));
+	ID3D11Buffer* indexBuffer= mRenderer->CreateIndexBuffer(&OutIndices[0], indicesCount);
 	FBuffer* newBuffer = new FBuffer();
-	newBuffer->VertexBuffer = rawBuffer;
-	newBuffer->NumVertices = numVertices;
 
+	// VertexBuffer 설정
+	newBuffer->VertexBuffer.Attach(vertexBuffer);  //소유권이전
+	newBuffer->NumVertices = verticesCount;
+
+	// IndexBuffer 설정
+	newBuffer->IndexBuffer.Attach(indexBuffer); //소유권이전
+	newBuffer->NumIndices = indicesCount;
 	return newBuffer;
 }
 
@@ -346,10 +364,8 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		* FMatrix::Translation(Center)
 		* RI.WorldTransformMatrix;
 
-	// 맵 캐싱 제거 및 ComPtr의 원시 포인터 전달
 	mRenderer->RenderHighlight(
-		RI.VertexBuffer->VertexBuffer.Get(),
-		RI.VertexBuffer->NumVertices,
+		RI.VertexBuffer,
 		mViewUnifiedProjectionMatrix,
 		Outline,
 		RI
