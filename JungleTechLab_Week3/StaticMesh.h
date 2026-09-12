@@ -6,9 +6,10 @@
 #include <vector>
 #include "Renderer.h"
 
+// GPU용
 struct FBuffer
 {
-	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> Buffer;
 	UINT NumVertices;
 };
 
@@ -17,25 +18,20 @@ class UStaticMesh : public UObject
 public:
 	// factory 에서 필요함
 	void Initialize() {};
+	void Initialize(FBuffer&& InputVertexBufferGPU, const FVertexSimple* InputVertexBufferCPU, const uint32 VertexBufferCount,
+		FBuffer&& InputIndexBufferGPU, const uint32* InputIndexBufferCPU, const uint32 IndexBufferCount);
 
-
-	// 1. 렌더러가 쓸 GPU 버퍼
-	struct FBuffer* VertexBuffer = nullptr;
-
-	// 2. 레이캐스트/물리 연산을 위한 CPU 원본 데이터
-	// todo 일단은 vector로 쓰고 나중에 바꾸기
-	std::vector<FVertexSimple> CPUVertices;
+	FBuffer VertexBufferGPU{};
+	std::vector<FVertexSimple> VertexBufferCPU;
+	FBuffer IndexBufferGPU{};
+	std::vector<uint32> IndexBufferCPU;
 
 	TArray<class UMaterial*> StaticMaterials;
 
 	UStaticMesh() = default;
 	~UStaticMesh()
 	{
-		if (VertexBuffer != nullptr)
-		{
-			delete VertexBuffer;
-			VertexBuffer = nullptr;
-		}
+		// RAII
 	}
 
 	REFLECT_CLASS(UStaticMesh, UObject)

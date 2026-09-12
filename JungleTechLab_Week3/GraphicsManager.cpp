@@ -79,28 +79,30 @@ void FGraphicsManager::GizmoPrepare()
 
 }
 
-
-void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
+void FGraphicsManager::Render(const TArray<FRenderInfo>& RenderInfos)
 {
 	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
-	for (const FRenderInfo& renderInfo : renderInfos)
+	for (const FRenderInfo& CurrentRenderInfo : RenderInfos)
 	{
-		if (renderInfo.VertexBuffer == nullptr || renderInfo.VertexBuffer->VertexBuffer == nullptr)
-			continue;
-	
-		if (renderInfo.BaseTexture != nullptr && renderInfo.BaseTexture->Resource != nullptr)
+		// VertexBuffer와 IndexBuffer가 모두 유효한지 검사
+		if (CurrentRenderInfo.VertexBuffer == nullptr || CurrentRenderInfo.VertexBuffer->Buffer == nullptr ||
+			CurrentRenderInfo.IndexBuffer == nullptr || CurrentRenderInfo.IndexBuffer->Buffer == nullptr)
 		{
-			mRenderer->BindTexture(0, renderInfo.BaseTexture->Resource->SRV.Get());
+			UE_LOG("Buffer is not valid");
+			continue;
+		}
+
+		if (CurrentRenderInfo.BaseTexture != nullptr && CurrentRenderInfo.BaseTexture->Resource != nullptr)
+		{
+			mRenderer->BindTexture(0, CurrentRenderInfo.BaseTexture->Resource->SRV.Get());
 		}
 		else
 		{
-			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
 			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
+		mRenderer->UpdateConstant(CurrentRenderInfo.WorldTransformMatrix, viewProjection, CurrentRenderInfo.Color);
 
-
-		mRenderer->RenderPrimitive(renderInfo.VertexBuffer->VertexBuffer.Get(), renderInfo.VertexBuffer->NumVertices);
+		mRenderer->RenderPrimitive(CurrentRenderInfo.VertexBuffer->Buffer.Get(), CurrentRenderInfo.IndexBuffer->Buffer.Get(), CurrentRenderInfo.IndexBuffer->NumVertices);
 	}
 }
 
@@ -278,17 +280,24 @@ void FGraphicsManager::SetPerspectiveProjection(bool bPerspectiveProjection)
 	mbPerspectiveProjection = bPerspectiveProjection;
 }
 
-FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize)
+
+FBuffer FGraphicsManager::CreateVertexBuffer(const FVertexSimple* InputVertices, const uint32 InputVerticesSize)
 {
-	ID3D11Buffer* rawBuffer = mRenderer->CreateVertexBuffer(InputVertices, InputVerticesSize);
-	UINT numVertices = static_cast<UINT>(InputVerticesSize / sizeof(FVertexSimple));
-
-	FBuffer* newBuffer = new FBuffer();
-	newBuffer->VertexBuffer = rawBuffer;
-	newBuffer->NumVertices = numVertices;
-
-	return newBuffer;
+	FBuffer NewBuffer;
+	NewBuffer.Buffer = mRenderer->CreateVertexBuffer(InputVertices, InputVerticesSize);
+	NewBuffer.NumVertices = InputVerticesSize / sizeof(FVertexSimple);
+	return NewBuffer; 
 }
+FBuffer FGraphicsManager::CreateIndexBuffer(const uint32* InputIndices, const uint32 InputIndicesSize)
+{
+	FBuffer NewBuffer;
+	NewBuffer.Buffer = mRenderer->CreateIndexBuffer(InputIndices, InputIndicesSize);
+	NewBuffer.NumVertices = InputIndicesSize / sizeof(uint32);
+	return NewBuffer;
+}
+
+
+
 
 URenderer* FGraphicsManager::GetRenderer() const
 {
@@ -314,7 +323,9 @@ static float GetOutlineAxisScale(float worldHalfExtent, float worldThickness)
 
 void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 {
-	if (RI.VertexBuffer == nullptr || RI.VertexBuffer->VertexBuffer == nullptr)
+	// VertexBuffer와 IndexBuffer 모두 유효한지 확인 (Buffer 멤버 변수 체크)
+	if (RI.VertexBuffer == nullptr || RI.VertexBuffer->Buffer == nullptr ||
+		RI.IndexBuffer == nullptr || RI.IndexBuffer->Buffer == nullptr)
 		return;
 
 	// EPrimitive 하드코딩을 제거하고 RI에서 정보를 가져옴
@@ -346,10 +357,11 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		* FMatrix::Translation(Center)
 		* RI.WorldTransformMatrix;
 
-	// 맵 캐싱 제거 및 ComPtr의 원시 포인터 전달
+	// 렌더러에 VertexBuffer, IndexBuffer, 그리고 인덱스 개수를 전달
 	mRenderer->RenderHighlight(
-		RI.VertexBuffer->VertexBuffer.Get(),
-		RI.VertexBuffer->NumVertices,
+		RI.VertexBuffer->Buffer.Get(),
+		RI.IndexBuffer->Buffer.Get(),
+		RI.IndexBuffer->NumVertices, // 버텍스 개수 대신 인덱스 개수 전달
 		mViewUnifiedProjectionMatrix,
 		Outline,
 		RI

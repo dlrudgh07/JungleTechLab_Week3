@@ -150,6 +150,9 @@
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Core\Asset</Filter>
     </ClCompile>
+    <ClCompile Include="StaticMesh.cpp">
+      <Filter>Core\Asset</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">

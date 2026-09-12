@@ -3,11 +3,14 @@
 #include "Transform.h"
 #include "Object.h"
 
-struct FRenderInfo
-{
-	struct FBuffer* VertexBuffer = nullptr;
+struct FRenderInfo {
+	const struct FBuffer* VertexBuffer = nullptr;
+	const struct FBuffer* IndexBuffer = nullptr;
+
 	const struct FVertexSimple* CollisionVertices = nullptr;
 	uint32 CollisionVertexCount = 0;
+	const uint32* CollisionIndices = nullptr; 
+	uint32 CollisionIndexCount = 0;
 
 	class UTexture* BaseTexture = nullptr;
 

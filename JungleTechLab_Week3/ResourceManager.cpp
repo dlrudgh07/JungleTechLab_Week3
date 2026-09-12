@@ -171,19 +171,30 @@ UTexture* FResourceManager::GetDefaultWhiteTexture() const
 	return GetTexture("DefaultWhite");
 }
 
+
+void FResourceManager::CreateAndRegisterStaticMesh(
+	class FGraphicsManager* GraphicsManager,
+	const std::string& MeshName,
+	const FVertexSimple* Vertices, uint32 NumVerts,
+	const uint32* Indices, uint32 NumIndices,
+	const std::string& MaterialName)
+{
+	UStaticMesh* Mesh = FObjectFactory::ConstructObject<UStaticMesh>(
+		GraphicsManager->CreateVertexBuffer(Vertices, sizeof(FVertexSimple) * NumVerts),
+		Vertices, NumVerts,
+		GraphicsManager->CreateIndexBuffer(Indices, sizeof(uint32) * NumIndices),
+		Indices, NumIndices
+	);
+
+	Mesh->StaticMaterials.Add(GetMaterial(MaterialName));
+	RegisterStaticMesh(MeshName, Mesh);
+}
+
+
 void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager)
 {
 	// ==========================================
-	// [1] 그래픽스 버퍼 생성 
-	// ==========================================
-	FBuffer* CubeBuffer = GraphicsManager->CreateBuffer(Cube_vertices, sizeof(Cube_vertices));
-	FBuffer* QuadBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices));
-	FBuffer* SphereBuffer = GraphicsManager->CreateBuffer(Sphere_vertices, sizeof(Sphere_vertices));
-	FBuffer* GizmoArrowBuffer = GraphicsManager->CreateBuffer(GizmoArrow_vertices, sizeof(GizmoArrow_vertices));
-	FBuffer* CircleBuffer = GraphicsManager->CreateBuffer(Circle_vertices, sizeof(Circle_vertices));
-
-	// ==========================================
-	// [2] 텍스처 에셋 로드 및 등록
+	// [1] 텍스처 에셋 로드 및 등록
 	// ==========================================
 	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)
 	LoadTextureFromFile("CrateTexture", "C:/Users/JUNGLE/Desktop/GameEngine/Week3/JungleTechLab_Week3/JungleTechLab_Week3/crate.jpg");
@@ -191,74 +202,59 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	LoadTextureFromFile("FontTexture", "Assets/DDS/FontAtlas.dds");
 
 	// ==========================================
-	// [3] 머티리얼 에셋 생성 및 등록
+	// [2] 머티리얼 에셋 생성 및 등록
 	// ==========================================
-	// 3-1. 디폴트 화이트 머티리얼 (단색 큐브용)
+	// 2-1. 디폴트 화이트 머티리얼
 	UMaterial* DefaultMaterial = FObjectFactory::ConstructObject<UMaterial>();
 	DefaultMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 0.0f);
 	DefaultMaterial->BaseTexture = GetDefaultWhiteTexture(); // 매니저에 내장된 디폴트 화이트 UTexture
 	RegisterMaterial("DefaultMaterial", DefaultMaterial);
 
-	// 3-2. 나무 상자 머티리얼
+	// 2-2. 나무 상자 머티리얼
 	UMaterial* CrateMaterial = FObjectFactory::ConstructObject<UMaterial>();
 	CrateMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	CrateMaterial->BaseTexture = GetTexture("CrateTexture");
 	RegisterMaterial("CrateMaterial", CrateMaterial);
 
-	// 3-3. Ascii 아틀라스 폰트 머티리얼
+	// 2-3. Ascii 아틀라스 폰트 머티리얼
 	UMaterial* FotnMaterial = FObjectFactory::ConstructObject<UMaterial>();
 	FotnMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	FotnMaterial->BaseTexture = GetTexture("FontTexture");
-	RegisterMaterial("FotnMaterial", FotnMaterial);
+	RegisterMaterial("FontMaterial", FotnMaterial);
 
 
 	// ==========================================
-	// [4] 스태틱 메쉬 에셋 생성 및 등록
+	// [3] 스태틱 메쉬 에셋 생성 및 등록 (Initialize()을 이용한 방식)
+	// todo: 이건 추후에 asset import 기능 추가되면 런타임에서 가져오도록 변경해야함
 	// ==========================================
-	uint32 VertCount = sizeof(Cube_vertices) / sizeof(FVertexSimple);
+	//
 
-	// 4-1. 기본 큐브 메쉬
-	UStaticMesh* CubeMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	CubeMesh->VertexBuffer = CubeBuffer;
-	CubeMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	for (uint32 i = 0; i < VertCount; ++i) CubeMesh->CPUVertices.emplace_back(Cube_vertices[i]);
-	RegisterStaticMesh("Cube", CubeMesh);
+	// 3-1. 기본 큐브 메쉬
+	CreateAndRegisterStaticMesh(GraphicsManager, "Cube", Cube_vertices, Cube_indices, "DefaultMaterial");
 
-	// 4-2. 나무 상자 메쉬 (모양은 큐브 버퍼를 똑같이 쓰고, 머티리얼만 갈아끼움)
-	UStaticMesh* CrateMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	CrateMesh->VertexBuffer = CubeBuffer;
-	CrateMesh->StaticMaterials.Add(GetMaterial("CrateMaterial"));
-	for (uint32 i = 0; i < VertCount; ++i) CrateMesh->CPUVertices.emplace_back(Cube_vertices[i]);
-	RegisterStaticMesh("Crate", CrateMesh);
+	// 3-2. 나무 상자 메쉬 (모양은 큐브 버퍼를 똑같이 쓰고, 머티리얼만 갈아끼움)
+	CreateAndRegisterStaticMesh(GraphicsManager, "Crate", Cube_vertices, Cube_indices, "CrateMaterial");
 
-	// 4-3. 스피어 메쉬
-	UStaticMesh* SphereMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	SphereMesh->VertexBuffer = SphereBuffer;
-	SphereMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(Sphere_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i) SphereMesh->CPUVertices.emplace_back(Sphere_vertices[i]);
-	RegisterStaticMesh("Sphere", SphereMesh);
+	// 3-3. 스피어 메쉬
+	std::vector<uint32> SphereDummyIndices;
+	uint32 VertexCount = sizeof(Sphere_vertices) / sizeof(FVertexSimple);
+	for (uint32 CurrentCount = 0; CurrentCount < VertexCount; ++CurrentCount)
+		SphereDummyIndices.push_back(CurrentCount);
+	CreateAndRegisterStaticMesh(GraphicsManager, "Sphere", Sphere_vertices, VertexCount, SphereDummyIndices.data(), static_cast<uint32>(SphereDummyIndices.size()), "DefaultMaterial");
 
-	// 4-4. 기즈모 메쉬
-	UStaticMesh* GizmoArrowMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	GizmoArrowMesh->VertexBuffer = GizmoArrowBuffer;
-	GizmoArrowMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(GizmoArrow_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i) GizmoArrowMesh->CPUVertices.emplace_back(GizmoArrow_vertices[i]);
-	RegisterStaticMesh("GizmoArrow", GizmoArrowMesh);
+	// 3-4. 기즈모 메쉬
+	std::vector<uint32> GizmoArrowDummyIndices;
+	VertexCount = sizeof(GizmoArrow_vertices) / sizeof(FVertexSimple);
+	for (uint32 CurrentCount = 0, EndCount = sizeof(GizmoArrow_vertices) / sizeof(FVertexSimple); CurrentCount < EndCount; ++CurrentCount)
+		GizmoArrowDummyIndices.push_back(CurrentCount);
+	CreateAndRegisterStaticMesh(GraphicsManager, "GizmoArrow", GizmoArrow_vertices, VertexCount, GizmoArrowDummyIndices.data(), static_cast<uint32>(GizmoArrowDummyIndices.size()), "DefaultMaterial");
 
-	UStaticMesh* CircleMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	CircleMesh->VertexBuffer = CircleBuffer;
-	CircleMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(Circle_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i) CircleMesh->CPUVertices.emplace_back(Circle_vertices[i]);
-	RegisterStaticMesh("Circle", CircleMesh);
+	std::vector<uint32> CircleDummyIndices;
+	VertexCount = sizeof(Circle_vertices) / sizeof(FVertexSimple);
+	for (uint32 CurrentCount = 0, EndCount = sizeof(Circle_vertices) / sizeof(FVertexSimple); CurrentCount < EndCount; ++CurrentCount)
+		CircleDummyIndices.push_back(CurrentCount);
+	CreateAndRegisterStaticMesh(GraphicsManager, "Circle", Circle_vertices, VertexCount, CircleDummyIndices.data(), static_cast<uint32>(CircleDummyIndices.size()), "DefaultMaterial");
 
-	// 4-5. 쿼드 메쉬
-	UStaticMesh* QuadMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	QuadMesh->VertexBuffer = QuadBuffer;
-	QuadMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(Quad_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i) QuadMesh->CPUVertices.emplace_back(Quad_vertices[i]);
-	RegisterStaticMesh("Quad", QuadMesh);
+	// 3-5. 쿼드 메쉬
+	CreateAndRegisterStaticMesh(GraphicsManager, "Quad", Quad_vertices, Quad_indices, "DefaultMaterial");
 }

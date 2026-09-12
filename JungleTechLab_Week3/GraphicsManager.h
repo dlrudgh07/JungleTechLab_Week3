@@ -43,7 +43,9 @@ public:
 	float GetCameraOrthoDistance() const { return mCameraOrthoDistance; }
 	void SetCameraOrthoDistance(float distance) { mCameraOrthoDistance = distance; }
 
-	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
+	FBuffer CreateVertexBuffer(const FVertexSimple* InputVertices, const uint32 InputVerticesSize);
+	FBuffer CreateIndexBuffer(const uint32* InputIndices, const uint32 InputIndicesSize);
+
 	URenderer* GetRenderer() const;
 
 	//Highlight

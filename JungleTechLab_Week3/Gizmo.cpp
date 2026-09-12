@@ -331,10 +331,22 @@ TArray<FRenderInfo> FGizmo::GetGizmoRenderInfo(FResourceManager* RM) const
 		if (eType == EGIZMO_TYPE::SCALE)
 		{
 			UStaticMesh* ScaleHandleMesh = RM->GetStaticMesh("Cube");
-			if (ScaleHandleMesh && ScaleHandleMesh->VertexBuffer)
+
+			// 포인터가 아니라 내부의 ComPtr(Buffer)가 할당되어 있는지 확인
+			if (ScaleHandleMesh && ScaleHandleMesh->VertexBufferGPU.Buffer != nullptr)
 			{
 				FRenderInfo ScaleInfo;
-				ScaleInfo.VertexBuffer = ScaleHandleMesh->VertexBuffer;
+
+				// GPU 버퍼 주소 연결 (Vertex + Index)
+				ScaleInfo.VertexBuffer = &ScaleHandleMesh->VertexBufferGPU;
+				ScaleInfo.IndexBuffer = &ScaleHandleMesh->IndexBufferGPU;
+
+				// CPU 충돌 데이터 연결 (기즈모 피킹에 활용될 수 있으므로 일관성 있게 세팅)
+				ScaleInfo.CollisionVertices = ScaleHandleMesh->VertexBufferCPU.data();
+				ScaleInfo.CollisionVertexCount = static_cast<uint32>(ScaleHandleMesh->VertexBufferCPU.size());
+				ScaleInfo.CollisionIndices = ScaleHandleMesh->IndexBufferCPU.data();
+				ScaleInfo.CollisionIndexCount = static_cast<uint32>(ScaleHandleMesh->IndexBufferCPU.size());
+
 				ScaleInfo.WorldTransformMatrix = GetScaleHandleMatrix(AXIS[i]);
 				ScaleInfo.Color = GetAxisColor(AXIS[i]);
 				// Gizmo는 하이라이트를 안하므로 Bounds는 기본값 그대로 둠
@@ -344,12 +356,25 @@ TArray<FRenderInfo> FGizmo::GetGizmoRenderInfo(FResourceManager* RM) const
 
 		// 2. 공통 축 렌더링 (화살표, 링, 막대)
 		UStaticMesh* AxisMesh = GetAxisMesh(RM);
-		if (AxisMesh && AxisMesh->VertexBuffer)
+
+		// 동일하게 내부 Buffer 할당 여부 확인
+		if (AxisMesh && AxisMesh->VertexBufferGPU.Buffer != nullptr)
 		{
 			FRenderInfo Info;
-			Info.VertexBuffer = AxisMesh->VertexBuffer;
+
+			// GPU 버퍼 주소 연결 (Vertex + Index)
+			Info.VertexBuffer = &AxisMesh->VertexBufferGPU;
+			Info.IndexBuffer = &AxisMesh->IndexBufferGPU;
+
+			// CPU 충돌 데이터 연결
+			Info.CollisionVertices = AxisMesh->VertexBufferCPU.data();
+			Info.CollisionVertexCount = static_cast<uint32>(AxisMesh->VertexBufferCPU.size());
+			Info.CollisionIndices = AxisMesh->IndexBufferCPU.data();
+			Info.CollisionIndexCount = static_cast<uint32>(AxisMesh->IndexBufferCPU.size());
+
 			Info.WorldTransformMatrix = GetAxisMatrix(AXIS[i]);
 			Info.Color = GetAxisColor(AXIS[i]);
+
 			RenderInfos.Add(Info);
 		}
 	}

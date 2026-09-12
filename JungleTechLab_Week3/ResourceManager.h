@@ -37,9 +37,30 @@ public:
 	void LoadTextureFromFile(const std::string& AssetName, const std::string& FilePath);
 	UTexture* GetDefaultWhiteTexture() const;
 
+	void CreateAndRegisterStaticMesh(
+		class FGraphicsManager* GraphicsManager,
+		const std::string& MeshName,
+		const FVertexSimple* Vertices, uint32 NumVerts,
+		const uint32* Indices, uint32 NumIndices,
+		const std::string& MaterialName);
+
+	template <size_t NumVerts, size_t NumIndices>
+	void CreateAndRegisterStaticMesh(
+		class FGraphicsManager* GraphicsManager,
+		const std::string& MeshName,
+		const FVertexSimple(&Vertices)[NumVerts],
+		const uint32(&Indices)[NumIndices],
+		const std::string& MaterialName)
+	{
+		CreateAndRegisterStaticMesh(GraphicsManager, MeshName, Vertices, NumVerts, Indices, NumIndices, MaterialName);
+	}
+
 	void ClearAll();
 
 private:
+
+
+
 	void CreateDefaultWhiteTexture();
 
 	Microsoft::WRL::ComPtr<ID3D11Device>        Device;

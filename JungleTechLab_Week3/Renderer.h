@@ -94,7 +94,8 @@ public:
 	void CreateDeviceAndSwapChain(HWND hWindow);
 	void CreateShader();
 	void CreateFrameBuffer();
-	ID3D11Buffer* CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
+	ID3D11Buffer* CreateVertexBuffer(const FVertexSimple* vertices, const UINT ByteWidth);
+	ID3D11Buffer* CreateIndexBuffer(const void* indices, const UINT ByteWidth);
 	void CreateLineVertexBuffer(uint32 maxVertices);
 	void CreateUUIDVertexBuffer(uint32 maxVertices);
 	void CreateRasterizerState();
@@ -130,11 +131,11 @@ public:
 	void PrepareShader();
 	void PrepareTextureShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
-	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
+	void RenderPrimitive(ID3D11Buffer* pVertexBuffer, ID3D11Buffer* pIndexBuffer, UINT indexCount);
 	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);
 	bool ReAllocateUUIDVertexBuffer(uint32 RequestSize);
-	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
+	void RenderHighlight(ID3D11Buffer* pVertexBuffer, ID3D11Buffer* pIndexBuffer, uint32 indexCount, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
 	void SwapBuffer();
 
 
