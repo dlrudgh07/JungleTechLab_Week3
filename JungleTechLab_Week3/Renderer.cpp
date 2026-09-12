@@ -115,6 +115,31 @@ ID3D11Buffer* URenderer::CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWi
 	return vertexBuffer;
 }
 
+ID3D11Buffer* URenderer::CreateDynamicVertexBuffer(FVertexSimple* vertices, UINT ByteWidth)
+{
+	UINT numVertices = ByteWidth / sizeof(FVertexSimple);
+
+	D3D11_BUFFER_DESC vertexbufferdesc = {};
+	vertexbufferdesc.ByteWidth = ByteWidth;
+	vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	//동적 버퍼의 중요한 세팅
+	vertexbufferdesc.Usage = D3D11_USAGE_DYNAMIC;
+	vertexbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	//어차피 나중에 채울 거라 빈것으로
+	D3D11_SUBRESOURCE_DATA vertexbufferSRD = {  };
+
+	ID3D11Buffer* vertexBuffer = nullptr;
+	HRESULT hr = Device->CreateBuffer(&vertexbufferdesc, &vertexbufferSRD, &vertexBuffer);
+	if (FAILED(hr))
+	{
+		UE_LOG("동적 버퍼 만들기 실패");
+		return nullptr;
+	}
+
+	return vertexBuffer;
+}
+
 void URenderer::ReleaseVertexBuffer(ID3D11Buffer* vertexBuffer)
 {
 	vertexBuffer->Release();
@@ -294,6 +319,22 @@ void URenderer::RSUpdateState()
 	DeviceContext->RSSetState(RasterizerState[0]);
 }
 
+void URenderer::UpdateDynamicVertexBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount)
+{
+	if (Buffer == nullptr || Vertices == nullptr) return;
+
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	HRESULT hr = DeviceContext->Map(Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+	{
+		UE_LOG("Update Dynamic Vertex Buffer Fail");
+		return;
+	}
+
+	memcpy(mapped.pData, Vertices, sizeof(FVertexSimple) * VertexCount);
+	DeviceContext->Unmap(Buffer, 0);
+}
+
 void URenderer::PrepareShader()
 {
 	ClearTextureCache(); // 프레임 렌더링 시작 전 캐시 초기화
@@ -312,7 +353,8 @@ void URenderer::PrepareShader()
 
 void URenderer::PrepareTextureShader()
 {
-	DeviceContext->PSSetSamplers(0, 1, &UUIDSamplerState);
+	//UUIDSamplerState가 없어서 일단 주석. 나중에 전용으로 생성할 필요 있으면 만들 것.
+	//DeviceContext->PSSetSamplers(0, 1, &UUIDSamplerState);
 	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
 
 	if (ConstantBuffer)

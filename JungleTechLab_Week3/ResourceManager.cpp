@@ -2,6 +2,7 @@
 
 #include <wrl/client.h>
 #include <d3d11.h>
+#include <fstream>
 
 #include "Renderer.h"
 #include "WICTextureLoader.h"
@@ -12,6 +13,7 @@
 #include "Material.h"
 #include "GraphicsManager.h"
 #include "Texture.h"
+#include "FFontAsset.h"
 
 #include "Cube.h"
 #include "Sphere.h"
@@ -87,6 +89,159 @@ UTexture* FResourceManager::GetTexture(const std::string& Name) const
 	return nullptr;
 }
 
+bool FResourceManager::LoadFont_FNTFile(const FString& AssetName, const FString& FilePath)
+{
+	std::ifstream file(FilePath);
+	if (!file.is_open())
+	{
+		UE_LOG("Cannot open file %s", FilePath.CStr());
+		return false;
+	}
+	
+	FFontAsset* NewFont = new FFontAsset();
+	NewFont->SetFontName(AssetName);
+
+	std::string rawLine;
+	while (std::getline(file, rawLine))
+	{
+		FString line = std::string_view(rawLine);
+
+		//\r은 있다면 잘라내기
+		if (line.EndsWith(std::string("\r")))
+		{
+			line = line.LeftChop(1);
+		}
+
+		//비어있으면
+		if (line.Equals(FString("")))
+			continue;
+
+		//기본 정보
+		if (line.Find(FString("common"), 0) == 0)
+		{
+			//파싱
+			TMap<FString, FString> CharMap = ParseKeyValueLine(line);
+
+			//기본 정보 저장
+			NewFont->SetLineHeight(std::stoi(CharMap["lineHeight"]));
+			NewFont->SetBaseLine(std::stoi(CharMap["base"]));
+			NewFont->SetAtlasWidth(std::stoi(CharMap["scaleW"]));
+			NewFont->SetAtlasHeight(std::stoi(CharMap["scaleH"]));
+		}
+		//페이지 저장
+		else if (line.Find(FString("page"), 0) == 0)
+		{
+			TMap<FString, FString> CharMap = ParseKeyValueLine(line);
+
+			//페이지 인덱스
+			int32 PageId = std::stoi(CharMap["id"]);
+			FString FileName = CharMap["file"];
+
+			//파일 경로
+			FString FilePath = FString("Assets/Fonts/Gulim/").Append(FileName);
+
+			//Page 텍스처 로드
+			//나중에 파일 탐색기로 폰트를 임포트 할 수 있게 해야한다.
+			if (!LoadTextureFromFile(FileName, FilePath))
+			{
+				UE_LOG("Font Page Texture Load Failed");
+				continue;
+			}
+
+			//나중에 찾을 수 있게 인덱스와 이름을 저장
+			NewFont->AddPageName(PageId, FileName);
+		}
+		//문자 데이터 저장
+		else if (line.Find(FString("char"), 0) == 0)
+		{
+			//한줄 파싱
+			TMap<FString, FString> CharMap = ParseKeyValueLine(line);
+
+			//chars 항목이면 넘어가기
+			if (CharMap.Num() < 2) continue;
+
+			FCharacterInfo info = {};
+			info.Id = std::stoi(CharMap["id"]);
+			info.X = std::stoi(CharMap["x"]);
+			info.Y = std::stoi(CharMap["y"]);
+			info.Width = std::stoi(CharMap["width"]);
+			info.Height = std::stoi(CharMap["height"]);
+			info.XOffset = std::stoi(CharMap["xoffset"]);
+			info.YOffset = std::stoi(CharMap["yoffset"]);
+			info.XAdvance = std::stoi(CharMap["xadvance"]);
+			info.Page = std::stoi(CharMap["page"]);
+
+
+			NewFont->AddCharInfo(info.Id, info);
+		}
+		//kerning이 생기면 작업할 것.
+		/*else if (line.Find(FString("char"), 0) == 0)
+		{
+
+		}*/
+	}
+
+	//등록
+	RegisterFontAsset(AssetName, NewFont);
+	return true;
+}
+
+TMap<FString, FString> FResourceManager::ParseKeyValueLine(const FString& line)
+{
+	TMap<FString, FString> Result;
+
+	int32 i = 0;
+	int32 len = line.Len();
+
+	FString remaining = line;
+
+	while (remaining.Len() > 0)
+	{
+		//공백 인덱스 찾기
+		int32 SpaceIndex = remaining.Find(FString(" "), 0);
+
+		//공백이 없다면 한 글자, 있다면 공백 왼쪽으로 가져오기
+		FString Token = (SpaceIndex == -1) ? remaining : remaining.Left(SpaceIndex);
+		//한글자였다면 빈칸으로 두어 while 탈출, 아니라면 다음 검사를 위해 공백 오른쪽 문자열로 할당
+		remaining = (SpaceIndex == -1) ? FString("") : remaining.RightChop(SpaceIndex + 1);
+
+		//공백 왼쪽 문자열에 = 가 없다면 common char와 같은 타입이다.
+		int32 EqualIndex = Token.Find(FString("="), 0);
+		if (EqualIndex == -1) continue;
+
+		//key, value 할당
+		FString key = Token.Left(EqualIndex);
+		FString value = Token.RightChop(EqualIndex + 1);
+
+		//value가 page의 file일 경우 따옴표를 제거해야 함.
+		//""만 해도 len이 2다.
+		if (value.Len() >= 2 && value.StartsWith(FString("\"")) && value.EndsWith(FString("\"")))
+		{
+			value = value.Mid(1, value.Len() - 2);
+		}
+
+		Result.Add(key, value);
+	}
+
+	return Result;
+}
+
+void FResourceManager::RegisterFontAsset(const std::string& Name, FFontAsset* Font)
+{
+	assert(Font != nullptr && "Cannot register a null Font!");
+	FontAssetMap[Name] = Font;
+}
+
+FFontAsset* FResourceManager::GetFontAsset(const std::string& Name) const
+{
+	auto it = FontAssetMap.find(Name);
+	if (it != FontAssetMap.end())
+	{
+		return it->second;
+	}
+	return nullptr;
+}
+
 void FResourceManager::ClearAll()
 {
 	// 별도의 GC나 메모리 풀로 관리된다면
@@ -109,15 +264,22 @@ void FResourceManager::ClearAll()
 		delete Pair.second;
 	}
 	TextureMap.clear();
+
+	for (auto& Pair : FontAssetMap)
+	{
+		delete Pair.second;
+	}
+	FontAssetMap.clear();
 }
 
 
-void FResourceManager::LoadTextureFromFile(const std::string& AssetName, const std::string& FilePath)
+bool FResourceManager::LoadTextureFromFile(const std::string& AssetName, const std::string& FilePath)
 {
 	// 1. 이미 등록된 이름이면 로드하지 않음
 	if (TextureMap.find(AssetName) != TextureMap.end())
 	{
-		return;
+		UE_LOG("이미 등록된 %s 텍스처입니다.", AssetName);
+		return false;
 	}
 
 	// 2. 새로운 UTexture 껍데기 생성
@@ -145,7 +307,7 @@ void FResourceManager::LoadTextureFromFile(const std::string& AssetName, const s
 	{
 		UE_LOG("Failed to load texture: %s", FilePath.c_str());
 		delete NewTexture;
-		return;
+		return false;
 	}
 
 	// 4. GPU 데이터(SRV)를 FTextureResource 래퍼로 묶어서 UTexture에 연결
@@ -163,6 +325,8 @@ void FResourceManager::LoadTextureFromFile(const std::string& AssetName, const s
 
 	// 6. 캐시에 등록
 	RegisterTexture(AssetName, NewTexture);
+
+	return true;
 }
 
 
@@ -186,9 +350,12 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	// [2] 텍스처 에셋 로드 및 등록
 	// ==========================================
 	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)
-	LoadTextureFromFile("CrateTexture", "crate.jpg");
+	if (!LoadTextureFromFile("CrateTexture", "crate.jpg")) UE_LOG("CrateTexture 로드 실패");
+	
+	if (!LoadTextureFromFile("FontTexture", "Assets/DDS/FontAtlas.dds")) UE_LOG("FontTexture 로드 실패");
 
-	LoadTextureFromFile("FontTexture", "Assets/DDS/FontAtlas.dds");
+	//굴림 폰트 아틀라스 로드
+	if (!LoadFont_FNTFile("Gulim", "Assets/Fonts/Gulim/Gulim.fnt")) UE_LOG("굴림체 폰트 로드 실패");
 
 	// ==========================================
 	// [3] 머티리얼 에셋 생성 및 등록

@@ -11,10 +11,20 @@
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
 static constexpr uint32 UUID_VERTEX_CAPACITY = 8192; // 초기에할당한 크기이다 용량이 꽉차면 2배로 재할당
 
-FGraphicsManager::FGraphicsManager(HWND hWindow)
+FGraphicsManager::FGraphicsManager()
 	: mbWireFrame(false)
 	, mbPerspectiveProjection(true)
 	, mProjectionRatio(1.0f)
+{
+	//명시적 호출로 변경
+}
+
+FGraphicsManager::~FGraphicsManager()
+{
+	//명시적 호출로 변경
+}
+
+void FGraphicsManager::Initialize(HWND hWindow)
 {
 	mRenderer = new URenderer;
 	mRenderer->Create(hWindow);
@@ -26,7 +36,7 @@ FGraphicsManager::FGraphicsManager(HWND hWindow)
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
 }
 
-FGraphicsManager::~FGraphicsManager()
+void FGraphicsManager::Release()
 {
 	mRenderer->ReleaseLineVertexBuffer();
 	mRenderer->ReleaseConstantBuffer();
@@ -288,6 +298,24 @@ FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 Inp
 	newBuffer->NumVertices = numVertices;
 
 	return newBuffer;
+}
+
+FBuffer* FGraphicsManager::CreateDynamicBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize)
+{
+	ID3D11Buffer* rawBuffer = mRenderer->CreateDynamicVertexBuffer(InputVertices, InputVerticesSize);
+	UINT numVertices = static_cast<UINT>(InputVerticesSize / sizeof(FVertexSimple));
+
+	FBuffer* newBuffer = new FBuffer();
+	newBuffer->VertexBuffer = rawBuffer;
+	newBuffer->NumVertices = numVertices;
+
+	return newBuffer;
+}
+
+void FGraphicsManager::UpdateDynamicBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount)
+{
+	if (mRenderer == nullptr) return;
+	mRenderer->UpdateDynamicVertexBuffer(Buffer, Vertices, VertexCount);
 }
 
 URenderer* FGraphicsManager::GetRenderer() const

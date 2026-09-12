@@ -22,10 +22,10 @@ public:
 	void Tick(bool bPumpMessages);
 	void End();
 private:
-	FGraphicsManager* GraphicsManager = nullptr;
+	//FGraphicsManager* GraphicsManager = nullptr;
 	FSceneManager* SceneManager = nullptr;
 	FFileManager* FileManager = nullptr;
-	FResourceManager* ResourceManager = nullptr;
+	//FResourceManager* ResourceManager = nullptr;
 
 	FFrameTimer* FrameTimer = nullptr;
 	bool GInTick = false;

@@ -131,6 +131,7 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Core.cpp" />
+    <ClCompile Include="FFontAsset.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Guid.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClInclude Include="Circle.h" />
+    <ClInclude Include="FFontAsset.h" />
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="Quad.h" />
@@ -168,6 +170,7 @@
       <FileType>Document</FileType>
     </ClInclude>
     <ClCompile Include="StaticMeshComponent.cpp" />
+    <ClCompile Include="UTextComponent.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -217,6 +220,7 @@
     <ClInclude Include="TSparseArray.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="StaticMeshComponent.h" />
+    <ClInclude Include="UTextComponent.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="Transform.h" />

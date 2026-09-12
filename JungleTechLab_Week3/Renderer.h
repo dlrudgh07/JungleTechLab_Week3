@@ -95,6 +95,7 @@ public:
 	void CreateShader();
 	void CreateFrameBuffer();
 	ID3D11Buffer* CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
+	ID3D11Buffer* CreateDynamicVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
 	void CreateLineVertexBuffer(uint32 maxVertices);
 	void CreateUUIDVertexBuffer(uint32 maxVertices);
 	void CreateRasterizerState();
@@ -124,6 +125,7 @@ public:
 
 	//Update
 	void RSUpdateState();
+	void UpdateDynamicVertexBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount);
 
 	//Rendering
 	void Prepare(bool bWireFrame);

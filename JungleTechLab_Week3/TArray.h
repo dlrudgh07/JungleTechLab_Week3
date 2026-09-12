@@ -48,6 +48,10 @@ public:
 	void RemoveAtSwap(uint32 index);
 	void RemoveLast();
 
+	T* Data()
+	{
+		return mDatas.data();
+	}
 	/*
 	int32 Find(const ElementType& Item) const;
 	template <typename Predicate>
@@ -60,7 +64,7 @@ public:
 	int32 RemoveAll(const ElementType& Item); 
 	void RemoveAtSwap(int32 Index, int32 Count = 1, bool bAllowShrinking = true);
 	*/
-
+	
 private:
 	std::vector<T> mDatas;
 };

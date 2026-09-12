@@ -150,6 +150,12 @@
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Core\Asset</Filter>
     </ClCompile>
+    <ClCompile Include="FFontAsset.cpp">
+      <Filter>Core\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="UTextComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">
@@ -325,6 +331,12 @@
     </ClInclude>
     <ClInclude Include="FPath.h">
       <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="FFontAsset.h">
+      <Filter>Core\Asset</Filter>
+    </ClInclude>
+    <ClInclude Include="UTextComponent.h">
+      <Filter>Core\Component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -29,6 +29,7 @@ public:
 	void Reset();
 	void Empty(int32 ExpectedNumElements = 0);
 	V* Find(const T& key);
+	const V* Find(const T& key)const;
 
 	bool Contains(const T& key) const;
 	bool IsEmpty() const;
@@ -98,6 +99,18 @@ inline void TMap<T, V>::Empty(int32 capacity)
 
 template <typename T, typename V>
 inline V* TMap<T, V>::Find(const T& key)
+{
+	auto iter = mMap.find(key);
+	if (iter == mMap.end())
+	{
+		return nullptr;
+	}
+
+	return &iter->second;
+}
+
+template<typename T, typename V>
+inline const V* TMap<T, V>::Find(const T& key) const
 {
 	auto iter = mMap.find(key);
 	if (iter == mMap.end())
