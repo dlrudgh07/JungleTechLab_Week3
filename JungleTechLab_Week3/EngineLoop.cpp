@@ -144,17 +144,16 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			GraphicsManager->Render(SceneManager->GetRenderInfos());
 		}
 
-			//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
-			if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
-			{
-				GraphicsManager->DrawWorldAxis();
-			}
-			if (HasFlag(flags, EEngineShowFlags::SF_Grid))
-			{
-				GraphicsManager->DrawGrid(ViewportClient->GetCamera().Transform, ResourceManager->IniConfig.GetGridOffset(), ResourceManager->IniConfig.GetGridRange());
-			}
-			//Grid
-			GraphicsManager->FlushLines();
+		//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
+		if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
+		{
+			GraphicsManager->DrawWorldAxis();
+		}
+		if (HasFlag(flags, EEngineShowFlags::SF_Grid))
+		{
+			GraphicsManager->DrawGrid(ViewportClient->GetCamera().Transform, ResourceManager->IniConfig.GetGridOffset(), ResourceManager->IniConfig.GetGridRange());
+		}
+
 
 		//강조
 		if (auto SelectedActor = SceneManager->GetSelectedActor())
@@ -169,9 +168,10 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			if (HasFlag(flags, EEngineShowFlags::SF_BoundingBoxes) && GraphicsManager->IsDrawAABB())
 			{
 				GraphicsManager->DrawAABB(static_cast<UPrimitiveComponent*>(SelectedActor->GetRootComponent())->GetWorldBounds());
-				GraphicsManager->FlushLines();
 			}
 		}
+
+		GraphicsManager->FlushLines();
 
 		// Gizmo
 		if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
@@ -180,14 +180,20 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			GraphicsManager->RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(ResourceManager));
 		}
 
-		if (HasFlag(flags, EEngineShowFlags::SF_UUID)) {
-			// UUID 텍스쳐 랜더링
-			GraphicsManager->DrawAllUUID(SceneManager->GetRenderInfos(),
-				ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
-			GraphicsManager->FlushUUID(ResourceManager->GetTexture("FontTexture"));
+		// UUID 텍스쳐 랜더링
+		if (HasFlag(flags, EEngineShowFlags::SF_UUID))
+		{
+			if (UWorld* World = SceneManager->GetCurrentWorld())
+			{
+				for (AActor* Actor : World->GetActors())
+				{
+					UPrimitiveComponent* RootComponent = static_cast<UPrimitiveComponent*>(Actor->GetRootComponent());
+					GraphicsManager->DrawCurrentUUID(RootComponent, ViewportClient->mCamera.GetUpVector(),
+						ViewportClient->mCamera.GetRightVector());
+				}
+				GraphicsManager->FlushUUID(ResourceManager->GetTexture("FontTexture"));
+			}
 		}
-
-
 
 		//ImGui
 		{
