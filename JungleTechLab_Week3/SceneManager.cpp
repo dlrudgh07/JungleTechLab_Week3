@@ -670,7 +670,8 @@ void FSceneManager::ExecuteLoadScene()
 		auto Data = json::JSON::Load(jsonString);
 		if (!mResources)
 			throw std::runtime_error("Scene resource manager is not initialized");
-		FResourceManager StagedResources;
+		FResourceManager &StagedResources = FResourceManager::Get();
+		StagedResources.ClearAll();
 		mResources->InitializeForLoad(StagedResources);
 		FSceneLoadScope Scope;
 		if (Data.hasKey("Version") &&

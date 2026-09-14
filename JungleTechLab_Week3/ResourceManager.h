@@ -69,8 +69,6 @@ public:
 	void DeserializeAssets(const json::JSON& In);
 	void InitializeForLoad(FResourceManager& Target) const;
 	void SwapAssets(FResourceManager& Other);
-	FResourceManager(const FResourceManager&) = delete;
-	FResourceManager& operator=(const FResourceManager&) = delete;
 
 	FIniConfig IniConfig;
 
