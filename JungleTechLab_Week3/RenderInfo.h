@@ -3,6 +3,12 @@
 #include "Transform.h"
 #include "Object.h"
 
+enum class EBlendMode
+{
+	Opaque,      // 블렌딩 없음 (BlendState = nullptr)
+	Translucent, // 알파 블렌딩 사용
+};
+
 struct FRenderInfo
 {
 	struct FBuffer* VertexBuffer = nullptr;
@@ -12,6 +18,9 @@ struct FRenderInfo
 
 	class UTexture* BaseTexture = nullptr;
 
+	//BlendMode 임시 설정
+	//머티리얼 쪽에 있으면 좋을 거 같긴하다.
+	EBlendMode BlendMode = EBlendMode::Opaque;
 	FVector LocalBoundsCenter = FVector(0.0f, 0.0f, 0.0f);
 	FVector LocalBoundsHalfExtent = FVector(0.5f, 0.5f, 0.5f);
 

@@ -2,7 +2,7 @@
 #include "StaticMeshComponent.h"
 #include "StaticMesh.h"
 
-void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
+void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const 
 {
 	if (StaticMesh == nullptr || StaticMesh->VertexBuffer == nullptr)
 		return;
