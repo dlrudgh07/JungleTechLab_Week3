@@ -18,7 +18,7 @@ public:
 	~FGraphicsManager();
 
 	//void Prepare(const Camera* mCamera);
-	void Prepare(const FCamera* mCamera);
+	void Prepare(const FCamera* mCamera,EViewModeIndex viewMode);
 	void GizmoPrepare();
 
 
@@ -31,8 +31,6 @@ public:
 	void Update(float deltaTime);
 
 	float GetAspect() const { return mAspect; }
-	bool GetWireFrame() const { return mbWireFrame; } const
-	void SetWireFrame(bool bWireFrame) { mbWireFrame = bWireFrame; }
 
 	bool IsPerspectiveProjection() const;
 	void SetPerspectiveProjection(bool bPerspectiveProjection);
@@ -90,7 +88,6 @@ private:
 	TArray<FLineVertex> mLineVertices;
 	TArray<FVertexSimple> mUUIDVertices;
 
-	bool mbWireFrame = false;
 	bool mbPerspectiveProjection = false;
 	bool mbShowWorldAxis = true;
 	bool mbShowGrid = true;

@@ -6,6 +6,7 @@
 struct FRenderInfo
 {
 	struct FBuffer* VertexBuffer = nullptr;
+	
 	const struct FVertexSimple* CollisionVertices = nullptr;
 	uint32 CollisionVertexCount = 0;
 
@@ -17,4 +18,5 @@ struct FRenderInfo
 	FMatrix WorldTransformMatrix;
 	FObjectID ObejctID;
 	FVector4 Color;
+
 };

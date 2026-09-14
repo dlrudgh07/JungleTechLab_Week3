@@ -1,5 +1,5 @@
 ﻿#include "Renderer.h"
-
+#include "StaticMesh.h"
 void URenderer::Create(HWND hWindow)
 {
 	CreateDeviceAndSwapChain(hWindow);
@@ -98,6 +98,23 @@ void URenderer::ReleaseFrameBuffer()
 	}
 }
 
+ID3D11Buffer* URenderer::CreateIndexBuffer(uint32* indices,uint32 indicesCount)
+{	
+
+	D3D11_BUFFER_DESC indexbufferdesc = {};
+	//indexbufferdesc.ByteWidth = ByteWidth;
+	indexbufferdesc.ByteWidth = (indicesCount) * sizeof(uint32);  // indices개수
+	indexbufferdesc.Usage = D3D11_USAGE_IMMUTABLE;
+	indexbufferdesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA indexbufferSRD = { indices };
+
+	ID3D11Buffer* IndexBuffer=nullptr;
+	Device->CreateBuffer(&indexbufferdesc, &indexbufferSRD, &IndexBuffer);
+
+	return IndexBuffer;
+}
+
 ID3D11Buffer* URenderer::CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth)
 {
 	UINT numVertices = ByteWidth / sizeof(FVertexSimple);
@@ -109,7 +126,7 @@ ID3D11Buffer* URenderer::CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWi
 
 	D3D11_SUBRESOURCE_DATA vertexbufferSRD = { vertices };
 
-	ID3D11Buffer* vertexBuffer;
+	ID3D11Buffer* vertexBuffer = nullptr;
 	Device->CreateBuffer(&vertexbufferdesc, &vertexbufferSRD, &vertexBuffer);
 
 	return vertexBuffer;
@@ -308,7 +325,7 @@ void URenderer::ReleaseShader()
 	}
 }
 
-void URenderer::Prepare(bool bWireFrame)
+void URenderer::Prepare(EViewModeIndex viewMode)
 {
 	DeviceContext->ClearRenderTargetView(FrameBufferRTV, ClearColor);
 
@@ -320,7 +337,11 @@ void URenderer::Prepare(bool bWireFrame)
 
 	DeviceContext->RSSetViewports(1, &ViewportInfo);
 
-	DeviceContext->RSSetState(RasterizerState[bWireFrame ? 1 : 0]);
+	if(viewMode==EViewModeIndex::VMI_Wireframe)
+	DeviceContext->RSSetState(RasterizerState[1]);
+
+	else
+	DeviceContext->RSSetState(RasterizerState[0]);
 
 	//세 번째 인자에 nullptr 대신 DSV를 넘긴다
 	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, DepthStencilView);
@@ -429,11 +450,20 @@ void URenderer::CreateDefaultWhiteTexture()
 
 
 
-void URenderer::RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices)
+void URenderer::RenderPrimitive(FBuffer* pBuffer)
 {
 	UINT offset = 0;
-	DeviceContext->IASetVertexBuffers(0, 1, &pBuffer, &Stride, &offset);
-	DeviceContext->Draw(numVertices, 0);
+	// ComPtr에 &를 붙이면 ReleaseAndGetAddressOf()가 호출되어 버퍼가 해제된다.
+	// 주소만 넘길 때는 반드시 GetAddressOf()를 써야 한다.
+	DeviceContext->IASetVertexBuffers(0, 1, pBuffer->VertexBuffer.GetAddressOf(), &Stride, &offset);
+
+	if (pBuffer->NumIndices > 0)
+	{
+		DeviceContext->IASetIndexBuffer(pBuffer->IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		DeviceContext->DrawIndexed(pBuffer->NumIndices, 0, 0);
+	}
+	else DeviceContext->Draw(pBuffer->NumVertices, 0);
+
 }
 
 // 쌓아둔 선분 전체를 한 번의 Draw로 그린다.
@@ -556,7 +586,7 @@ void URenderer::RenderUUID(const FVertexSimple* vertices, uint32 numVertices)
 	DeviceContext->Draw(numVertices, 0);
 }
 
-void URenderer::RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI)
+void URenderer::RenderHighlight(FBuffer* pBuffer, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI)
 {
 	// (a) 스텐실에 1 마킹. 색은 쓰지 않으므로 화면 변화 없음.
 	//     다른 오브젝트에 가려진 부분도 반드시 마킹해야 한다. 여기서 빠지면
@@ -564,13 +594,13 @@ void URenderer::RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mView
 	DeviceContext->OMSetBlendState(NoColorWriteBlendState, nullptr, 0xffffffff);
 	DeviceContext->OMSetDepthStencilState(StencilMarkState, 1);
 	UpdateConstant(RI.WorldTransformMatrix, mViewProjectionMatrix);
-	RenderPrimitive(pBuffer, Num);
+	RenderPrimitive(pBuffer);
 
 	// (b) 확대판을 단색으로. 스텐실 != 1 인 곳만 통과 -> 테두리
 	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	DeviceContext->OMSetDepthStencilState(StencilOutlineState, 1);
 	UpdateConstant(Outline, mViewProjectionMatrix, FVector4(1.f, 0.6f, 0.f, 1.f));
-	RenderPrimitive(pBuffer, Num);
+	RenderPrimitive(pBuffer);
 
 	// (c) 원상복구
 	DeviceContext->OMSetDepthStencilState(DepthStencilState, 0);

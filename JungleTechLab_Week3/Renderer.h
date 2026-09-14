@@ -7,7 +7,7 @@
 #include "RenderInfo.h"
 #include <wrl/client.h>
 #include "Console.h"
-
+#include "DDSTextureLoader.h"
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
 #pragma comment(lib, "d3dcompiler")
@@ -18,6 +18,8 @@ struct FLineVertex
 	float r, g, b, a; // Color    (16 byte)
 };
 
+// 전방선언
+struct FBuffer;
 // 1. Define the triangle vertices
 struct FVertexSimple
 {
@@ -34,7 +36,6 @@ struct FConstants
 	FMatrix ViewProjection;
 	FVector4 Tint;          // rgb = 색, a = 섞는 비율
 };
-
 
 class URenderer
 {
@@ -104,6 +105,7 @@ public:
 	void CreateDeviceAndSwapChain(HWND hWindow);
 	void CreateShader();
 	void CreateFrameBuffer();
+	ID3D11Buffer* CreateIndexBuffer(uint32* indices, uint32 indicesCount);
 	ID3D11Buffer* CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
 	void CreateLineVertexBuffer(uint32 maxVertices);
 	void CreateUUIDVertexBuffer(uint32 maxVertices);
@@ -136,16 +138,17 @@ public:
 	void RSUpdateState();
 
 	//Rendering
-	void Prepare(bool bWireFrame);
+	void Prepare(EViewModeIndex viewMode);
 	void PrepareShader();
 	void PrepareTextureShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
+	//void RenderPrimitive(FBuffer* pBuffer);
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
 	void RenderLines(const FLineVertex* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);
 	bool ReAllocateLineVertexBuffer(uint32 RequestSize);
 	bool ReAllocateUUIDVertexBuffer(uint32 RequestSize);
-	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
+	void RenderHighlight(FBuffer* pBuffer, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
 	void SwapBuffer();
 
 

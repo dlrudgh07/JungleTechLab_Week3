@@ -1,7 +1,6 @@
 ﻿#include "ObjectFactory.h"
 
 #include "Json/json.hpp"
-
 #include "Actor.h"
 #include "PrimitiveComponent.h"
 
@@ -52,15 +51,19 @@ bool FObjectFactory::RegisterClassInfo(FString className, const FClassInfo* clas
 	return true;
 }
 
-#include "SceneComponent.h"
-#include "PrimitiveComponent.h"
 #include "World.h"
+#include "StaticMeshComponent.h"
 
 TMap<FString, std::function<const FClassInfo* ()>> FObjectFactory::mClassInfoMap = {
 	{"UObject", &UObject::GetClass },
 	{"AActor", &AActor::GetClass },
 	{"UActorComponent", &UActorComponent::GetClass },
 	{"USceneComponent", &USceneComponent::GetClass },
-	{"UPrimitiveComponent", &UPrimitiveComponent::GetClass },
+	{ "UPrimitiveComponent", &UPrimitiveComponent::GetClass },
+	{ "UMeshComponent", &UMeshComponent::GetClass },
+	{ "UStaticMeshComponent", &UStaticMeshComponent::GetClass },
+	{ "UMaterial", &UMaterial::GetClass },
+	{ "UStaticMesh", &UStaticMesh::GetClass },
+	{"UTexture", &UTexture::GetClass },
 	{"UWorld", &UWorld::GetClass }
 };

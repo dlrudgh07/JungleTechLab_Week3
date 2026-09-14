@@ -138,6 +138,7 @@
     <ClCompile Include="IniParser.cpp" />
     <ClCompile Include="JsonUtil.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
+    <ClCompile Include="MeshUtility.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="FEditorViewportClient.cpp" />
     <ClCompile Include="GraphicsManager.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Circle.h" />
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
+    <ClInclude Include="MeshUtility.h" />
     <ClInclude Include="IniConfig.h" />
     <ClInclude Include="IniParser.h" />
     <ClInclude Include="Quad.h" />
