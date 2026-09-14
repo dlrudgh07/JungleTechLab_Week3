@@ -8,11 +8,12 @@
 #include <wrl/client.h>
 #include "Console.h"
 #include "DDSTextureLoader.h"
-#include "StaticMesh.h"
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
 #pragma comment(lib, "d3dcompiler")
 
+// 전방선언
+struct FBuffer;
 // 1. Define the triangle vertices
 struct FVertexSimple
 {
@@ -29,7 +30,6 @@ struct FConstants
 	FMatrix ViewProjection;
 	FVector4 Tint;          // rgb = 색, a = 섞는 비율
 };
-
 
 class URenderer
 {
@@ -127,7 +127,7 @@ public:
 	void RSUpdateState();
 
 	//Rendering
-	void Prepare(bool bWireFrame);
+	void Prepare(EViewModeIndex viewMode);
 	void PrepareShader();
 	void PrepareTextureShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));

@@ -1,5 +1,5 @@
 ﻿#include "Renderer.h"
-
+#include "StaticMesh.h"
 void URenderer::Create(HWND hWindow)
 {
 	CreateDeviceAndSwapChain(hWindow);
@@ -286,7 +286,7 @@ void URenderer::ReleaseShader()
 	}
 }
 
-void URenderer::Prepare(bool bWireFrame)
+void URenderer::Prepare(EViewModeIndex viewMode)
 {
 	DeviceContext->ClearRenderTargetView(FrameBufferRTV, ClearColor);
 
@@ -298,7 +298,11 @@ void URenderer::Prepare(bool bWireFrame)
 
 	DeviceContext->RSSetViewports(1, &ViewportInfo);
 
-	DeviceContext->RSSetState(RasterizerState[bWireFrame ? 1 : 0]);
+	if(viewMode==EViewModeIndex::VMI_Wireframe)
+	DeviceContext->RSSetState(RasterizerState[1]);
+
+	else
+	DeviceContext->RSSetState(RasterizerState[0]);
 
 	//세 번째 인자에 nullptr 대신 DSV를 넘긴다
 	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, DepthStencilView);

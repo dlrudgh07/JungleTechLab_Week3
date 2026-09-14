@@ -7,14 +7,12 @@
 #include "Texture.h"
 #include "FQuad.h"
 #include "MeshUtility.h"
-
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
 static constexpr uint32 UUID_VERTEX_CAPACITY = 8192; // 초기에할당한 크기이다 용량이 꽉차면 2배로 재할당
 
 FGraphicsManager::FGraphicsManager(HWND hWindow)
-	: mbWireFrame(false)
-	, mbPerspectiveProjection(true)
+	: mbPerspectiveProjection(true)
 	, mProjectionRatio(1.0f)
 {
 	mRenderer = new URenderer;
@@ -25,6 +23,8 @@ FGraphicsManager::FGraphicsManager(HWND hWindow)
 	mRenderer->CreateUUIDVertexBuffer(UUID_VERTEX_CAPACITY);
 
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
+
+	
 }
 
 FGraphicsManager::~FGraphicsManager()
@@ -38,9 +38,9 @@ FGraphicsManager::~FGraphicsManager()
 	delete mRenderer;
 }
 
-void FGraphicsManager::Prepare(const FCamera* mCamera)
+void FGraphicsManager::Prepare(const FCamera* mCamera,EViewModeIndex viewMode)
 {
-	mRenderer->Prepare(mbWireFrame);
+	mRenderer->Prepare(viewMode);
 	mRenderer->PrepareShader();
 
 	// Cache view and projection matrices for rendering
