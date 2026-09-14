@@ -94,12 +94,38 @@ void FGraphicsManager::GizmoPrepare()
 
 void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 {
-	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
 	if (renderInfos.IsEmpty())
 	{
 		//없어도 일단 PrepareShader();
 		mRenderer->PrepareShader();
 	}
+	//불투명, 반투명 나누기
+	TArray<FRenderInfo> OpaqueList;
+	TArray<FRenderInfo> TranslucentList;
+
+	for (const FRenderInfo& renderInfo : renderInfos)
+	{
+		//반투명
+		if (renderInfo.BlendMode == EBlendMode::Translucent)
+		{
+			TranslucentList.Add(renderInfo);
+		}
+		else
+		{
+			OpaqueList.Add(renderInfo);			
+		}
+	}
+
+	RenderList(OpaqueList);
+	RenderList(TranslucentList);
+
+	mRenderer->PrepareShader();
+}
+
+void FGraphicsManager::RenderList(const TArray<FRenderInfo>& renderInfos)
+{
+	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
+
 	for (const FRenderInfo& renderInfo : renderInfos)
 	{
 		if (renderInfo.VertexBuffer == nullptr || renderInfo.VertexBuffer->VertexBuffer == nullptr)
@@ -129,11 +155,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
 	}
-	mRenderer->PrepareShader();
 }
-
-
-
 
 
 void FGraphicsManager::DrawLine(const FVector& start, const FVector& end, const FVector4& color)

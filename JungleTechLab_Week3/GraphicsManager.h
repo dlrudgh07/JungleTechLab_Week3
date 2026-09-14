@@ -41,6 +41,7 @@ public:
 
 
 	void Render(const TArray<FRenderInfo>& renderInfos);
+	void RenderList(const TArray<FRenderInfo>& renderInfos);
 	//void RenderOverlay(const TArray<FRenderInfo>& renderInfos);
 	void RenderOverlay(const TArray<FRenderInfo> renderInfos); //깊이버퍼 초기화
 	// FRenderInfo
