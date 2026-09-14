@@ -5,6 +5,7 @@
 #include "Core.h"
 #include <d3d11.h>
 #include <wrl/client.h>
+#include "IniConfig.h"
 
 class UStaticMesh;
 class UMaterial;
@@ -38,6 +39,8 @@ public:
 	UTexture* GetDefaultWhiteTexture() const;
 
 	void ClearAll();
+
+	FIniConfig IniConfig;
 
 private:
 	void CreateDefaultWhiteTexture();

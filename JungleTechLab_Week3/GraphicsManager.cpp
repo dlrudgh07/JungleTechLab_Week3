@@ -202,6 +202,58 @@ void FGraphicsManager::DrawAABB(const FBoxSphereBounds&& WorldBounds)
 }
 
 
+void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 Range)
+{
+	if (!mbShowGrid) return;
+
+	int RepeatNum = Range * (1.0f / Offset);
+	float GridGap = -0.001f;
+	float Extent = Offset * (RepeatNum);
+
+	FVector X1;
+	FVector X2;
+	FVector Y1;
+	FVector Y2;
+
+	FVector Origin;
+
+	Origin.x = floorf(CameraTransform.Location.x / (Offset * 5)) * Offset * 5;
+	Origin.y = floorf(CameraTransform.Location.y / (Offset * 5)) * Offset * 5;
+
+	for (int i = -RepeatNum; i <= RepeatNum; i++)
+	{
+		float CurrentOffset = Offset * i;
+		float alpha = 0.25f;
+		if (i % 5 == 0)
+		{
+			alpha = 0.8f;
+		}
+
+		X1 = { CurrentOffset, Extent , GridGap };
+		X2 = { CurrentOffset, -Extent , GridGap };
+		Y1 = { Extent, CurrentOffset , GridGap };
+		Y2 = { -Extent, CurrentOffset , GridGap };
+		X1 += Origin; X2 += Origin; Y1 += Origin; Y2 += Origin;
+
+		if (X1.x == 0)
+		{
+			DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
+			continue;
+		}
+		else if (Y1.y == 0)
+		{
+			DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
+			continue;
+		}
+		else if (X1.x == 0 && Y1.y == 0)
+		{
+			continue;
+		}
+		DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
+		DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
+	}
+}
+
 void FGraphicsManager::FlushLines()
 {
 	if (mLineVertices.Num() == 0) return;

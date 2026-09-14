@@ -233,15 +233,26 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		bool bShowGizmo = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Gizmo);
 		if (ImGui::Checkbox("Gizmo", &bShowGizmo))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bShowGizmo);
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Gizmo, bShowGizmo);
 		}
 
 		bool bBillBoard = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BillboardText);
 		if (ImGui::Checkbox("BillBoard", &bBillBoard))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bBillBoard);
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BillboardText, bBillBoard);
 		}
 
+		bool bGrid = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Grid);
+		if (ImGui::Checkbox("Grid", &bGrid))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Grid, bGrid);
+		}
+
+		bool bUUID = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_UUID);
+		if (ImGui::Checkbox("UUID", &bUUID))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_UUID, bUUID);
+		}
 
 		ImGui::EndCombo();
 	}
@@ -254,12 +265,38 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		guiReference.ViewportClient->SetViewMode(static_cast<EViewModeIndex>(viewModeIndex));
 	}
 
-	ImGui::Text("FOV     ");
+	ImGui::Text("FOV        ");
 	ImGui::SameLine();
 	ImGui::SliderFloat("##FOV", &camera.mFovDegree, 0.0f, 180.0f);
 
+
+	float Speed = guiReference.ResourceManager->IniConfig.GetCameraSpeed();
+	ImGui::Text("Speed      ");
+	ImGui::SameLine();
+	if (ImGui::SliderFloat("##Speed", &Speed, 0.1f, 100.0f))
+	{
+		guiReference.ResourceManager->IniConfig.SetCameraSpeed(Speed);
+	}
+	if (ImGui::IsItemDeactivatedAfterEdit())
+	{
+		guiReference.ResourceManager->IniConfig.Save();
+	}
+
+	float Sensitivity = guiReference.ResourceManager->IniConfig.GetCameraSensitivity();
+	ImGui::Text("Sensitivity");
+	ImGui::SameLine();
+	if (ImGui::SliderFloat("##Sensitivity", &Sensitivity, 0.01f, 0.5f))
+	{
+		guiReference.ResourceManager->IniConfig.SetCameraSensitivity(Sensitivity);
+	}
+	if (ImGui::IsItemDeactivatedAfterEdit())
+	{
+		guiReference.ResourceManager->IniConfig.Save();
+	}
+
+
 	// 1) 라벨 텍스트를 먼저 그리고 같은 줄로
-	ImGui::Text("Location");
+	ImGui::Text("Location   ");
 	ImGui::SameLine();
 
 	// 2) 텍스트를 그린 "뒤"의 남은 폭을 기준으로 계산
@@ -275,7 +312,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	ImGui::SetNextItemWidth(itemWidth);
 	ImGui::DragFloat("##CamLocZ", &camera.Transform.Location.z, 0.1f, 10.0f);
 
-	ImGui::Text("Rotation");
+	ImGui::Text("Rotation   ");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
 	ImGui::DragFloat("##CamRotX", &camera.Transform.Rotation.Roll, 0.1f, 180.0f);
@@ -311,6 +348,34 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		guiReference.ViewportClient->mGizmo.CycleGizmoType();
 	}
 
+	float Offset = guiReference.ResourceManager->IniConfig.GetGridOffset();
+
+	ImGui::SeparatorText("Grid Controll");
+	ImGui::Text("Offset ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(150);
+	if (ImGui::DragFloat("##OFFSET", &Offset, 0.01f, 0.1f, 20.0f))
+	{
+		guiReference.ResourceManager->IniConfig.SetGridOffset(Offset);
+	}
+	if (ImGui::IsItemDeactivatedAfterEdit())
+	{
+		guiReference.ResourceManager->IniConfig.Save();
+	}
+
+	int Range = guiReference.ResourceManager->IniConfig.GetGridRange();
+
+	ImGui::Text("Range  ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(150);
+	if (ImGui::DragInt("##RANGE", &Range, 0.1f, 20, 100))
+	{
+		guiReference.ResourceManager->IniConfig.SetGridRange(Range);
+	}
+	if (ImGui::IsItemDeactivatedAfterEdit())
+	{
+		guiReference.ResourceManager->IniConfig.Save();
+	}
 
 	ImGui::End();
 }

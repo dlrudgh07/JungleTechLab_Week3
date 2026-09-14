@@ -159,6 +159,12 @@
     <ClCompile Include="FBoxSphereBounds.cpp">
       <Filter>Core\Types</Filter>
     </ClCompile>
+    <ClCompile Include="IniParser.cpp">
+      <Filter>Core\Serialize</Filter>
+    </ClCompile>
+    <ClCompile Include="IniConfig.cpp">
+      <Filter>Core\Serialize</Filter>
+    </ClCompile>
     <ClCompile Include="Gizmo.cpp">
       <Filter>Rendering\Gizmo</Filter>
     </ClCompile>
@@ -347,9 +353,18 @@
     <ClInclude Include="FBoxSphereBounds.h">
       <Filter>Core\Types</Filter>
     </ClInclude>
+    <ClInclude Include="IniParser.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="IniConfig.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderW0.hlsl">
+      <Filter>Rendering\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ShaderLine.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

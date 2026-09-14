@@ -53,6 +53,7 @@ public:
 	void DrawAABB(const FBoxSphereBounds&& WorldBounds);
 	void SetDrawAABB(const bool bInputShowAABB) { bShowAABB = bInputShowAABB; }
 	bool IsDrawAABB() const { return bShowAABB; }
+	void DrawGrid(FTransform CameraTransform, float Offset, int32 Range);
 	void FlushLines();
 
 
@@ -88,12 +89,13 @@ private:
 
 	// Graphics config
 	// 이번 프레임에 쌓인 선분. 정점 2개가 선분 하나
-	TArray<FVertexSimple> mLineVertices;
+	TArray<FLineVertex> mLineVertices;
 	TArray<FVertexSimple> mUUIDVertices;
 
 	bool mbPerspectiveProjection = false;
 	bool mbShowWorldAxis = true;
 	bool bShowAABB = true;
+	bool mbShowGrid = true;
 	float mAspect = 0;
 	float mProjectionRatio = 0; // 0.0f ~ 1.0f, 0이면 직교, 1이면 원근, 그 사이면 혼합
 
@@ -103,4 +105,5 @@ private:
 	float mProjectionElapsed = 0.0f;
 	float mProjectionDuration = 1.0f;
 	bool mbProjectionTransitioning = false;
+
 };
