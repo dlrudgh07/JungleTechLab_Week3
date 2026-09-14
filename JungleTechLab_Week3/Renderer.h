@@ -7,7 +7,7 @@
 #include "RenderInfo.h"
 #include <wrl/client.h>
 #include "Console.h"
-#include "DDSTextureLoader.h"
+//#include "DDSTextureLoader.h"
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
 #pragma comment(lib, "d3dcompiler")
@@ -142,8 +142,7 @@ public:
 	void PrepareShader();
 	void PrepareTextureShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
-	//void RenderPrimitive(FBuffer* pBuffer);
-	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
+	void RenderPrimitive(FBuffer* pBuffer);
 	void RenderLines(const FLineVertex* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);
 	bool ReAllocateLineVertexBuffer(uint32 RequestSize);

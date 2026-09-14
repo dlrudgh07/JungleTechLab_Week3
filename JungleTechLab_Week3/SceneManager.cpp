@@ -217,15 +217,26 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		bool bShowGizmo = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Gizmo);
 		if (ImGui::Checkbox("Gizmo", &bShowGizmo))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bShowGizmo);
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Gizmo, bShowGizmo);
 		}
 
 		bool bBillBoard = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BillboardText);
 		if (ImGui::Checkbox("BillBoard", &bBillBoard))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bBillBoard);
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BillboardText, bBillBoard);
 		}
 
+		bool bGrid = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Grid);
+		if (ImGui::Checkbox("Grid", &bGrid))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Grid, bGrid);
+		}
+
+		bool bUUID = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_UUID);
+		if (ImGui::Checkbox("UUID", &bUUID))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_UUID, bUUID);
+		}
 
 		ImGui::EndCombo();
 	}

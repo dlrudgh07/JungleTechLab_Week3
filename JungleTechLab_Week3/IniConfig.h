@@ -24,8 +24,11 @@ public:
 
 private:
 	FIniParser IniParser;
-	float GridOffset;
-	int32 GridRange;
-	float CameraSensitivity;
-	float CameraSpeed;
+	//Grid
+	float	GridOffset;
+	int32	GridRange;
+	//Camera
+	float	CameraSensitivity;
+	float	CameraSpeed;
+	//Flags
 };

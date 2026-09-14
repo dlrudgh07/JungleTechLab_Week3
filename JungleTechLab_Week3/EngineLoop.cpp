@@ -147,10 +147,13 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
 			{
 				GraphicsManager->DrawWorldAxis();
-				//Grid
-				GraphicsManager->DrawGrid(ViewportClient->GetCamera().Transform, ResourceManager->IniConfig.GetGridOffset(), ResourceManager->IniConfig.GetGridRange());
-				GraphicsManager->FlushLines();
 			}
+			if (HasFlag(flags, EEngineShowFlags::SF_Grid))
+			{
+				GraphicsManager->DrawGrid(ViewportClient->GetCamera().Transform, ResourceManager->IniConfig.GetGridOffset(), ResourceManager->IniConfig.GetGridRange());
+			}
+			//Grid
+			GraphicsManager->FlushLines();
 
 			//강조
 			if (SceneManager->GetSelectedActor())
