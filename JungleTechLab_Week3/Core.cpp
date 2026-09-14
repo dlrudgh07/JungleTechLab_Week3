@@ -327,6 +327,39 @@ FString FString::ToUpper() const
 	return result;
 }
 
+bool FString::Empty()
+{
+	return (mData->empty());
+}
+
+char* FString::Data() const
+{
+	return(mData->data());
+}
+
+size_t FString::Size() const
+{
+	return (mData->size());
+}
+
+size_t FString::Find(const char c)
+{
+	return (mData->find(c));
+}
+
+size_t FString::FindFirstNotOf(FString str)
+{
+	return (mData->find_first_not_of(str));
+}
+
+size_t FString::FindLastNotOf(FString str)
+{
+	return (mData->find_last_not_of(str));
+}
+
+
+
+
 unsigned char FString::At(uint32 Index) const
 {
 	return (mData->at(Index));

@@ -106,7 +106,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		}
 
 		GraphicsManager->UpdateProjectionTransition(deltaTime);
-		ViewportClient->Update(deltaTime, GraphicsManager->GetRenderer()->ViewportInfo, SceneManager, GraphicsManager->GetPerspectiveRatio());
+		ViewportClient->Update(deltaTime, GraphicsManager->GetRenderer()->ViewportInfo, SceneManager, GraphicsManager->GetPerspectiveRatio(), ResourceManager->IniConfig);
 	}
 
 	//Physics Threads
@@ -144,17 +144,17 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			GraphicsManager->Render(SceneManager->GetRenderInfos());
 		}
 
-		//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
-		GraphicsManager->DrawWorldAxis();
-		GraphicsManager->FlushLines();
-
-
-		//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
-		if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
-		{
-			GraphicsManager->DrawWorldAxis();
+			//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
+			if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
+			{
+				GraphicsManager->DrawWorldAxis();
+			}
+			if (HasFlag(flags, EEngineShowFlags::SF_Grid))
+			{
+				GraphicsManager->DrawGrid(ViewportClient->GetCamera().Transform, ResourceManager->IniConfig.GetGridOffset(), ResourceManager->IniConfig.GetGridRange());
+			}
+			//Grid
 			GraphicsManager->FlushLines();
-		}
 
 		//강조
 		if (auto SelectedActor = SceneManager->GetSelectedActor())

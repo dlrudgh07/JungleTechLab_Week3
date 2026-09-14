@@ -19,6 +19,7 @@
 #include "Quad.h"
 #include "Triangle.h"
 #include "GizmoArrow.h"
+#include "IniParser.h"
 
 
 FResourceManager::FResourceManager()

@@ -47,6 +47,8 @@ void FFileManager::WriteStringToFile(std::string_view fileName, std::string_view
 		throw std::runtime_error("Attempted to write outside of the file directory: " + filePath.string());
 	}
 
+	std::filesystem::create_directories(filePath.parent_path());
+
 	std::ofstream fileStream(filePath, std::ios::out);
 	if (!fileStream.is_open())
 	{
