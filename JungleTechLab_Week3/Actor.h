@@ -25,6 +25,7 @@ public:
 
 	void AddComponent(UActorComponent* actorComponent);
 	void AddRootSceneComponent(USceneComponent* sceneComponent);
+	USceneComponent* GetRootComponent() { return RootComponent; }
 	bool RemoveComponent(FGuid TargetComponentGuid);
 
 	FTransform GetTransform() const;

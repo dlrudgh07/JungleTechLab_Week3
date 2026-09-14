@@ -155,6 +155,53 @@ void FGraphicsManager::DrawWorldAxis()
 	}
 }
 
+void FGraphicsManager::DrawAABB(const FBoxSphereBounds&& WorldBounds)
+{
+	if (!bShowAABB)
+		return;
+
+	// 1. 월드 공간에서의 Min, Max 계산
+	const FVector Min = WorldBounds.Center - WorldBounds.BoxHalfExtent;
+	const FVector Max = WorldBounds.Center + WorldBounds.BoxHalfExtent;
+
+	// 2. 월드 공간의 꼭짓점(코너) 8개 구하기
+	FVector Corners[8] =
+	{
+		FVector(Min.x, Min.y, Min.z), // 0: 좌하단 앞
+		FVector(Max.x, Min.y, Min.z), // 1: 우하단 앞
+		FVector(Max.x, Max.y, Min.z), // 2: 우하단 뒤
+		FVector(Min.x, Max.y, Min.z), // 3: 좌하단 뒤
+
+		FVector(Min.x, Min.y, Max.z), // 4: 좌상단 앞
+		FVector(Max.x, Min.y, Max.z), // 5: 우상단 앞
+		FVector(Max.x, Max.y, Max.z), // 6: 우상단 뒤
+		FVector(Min.x, Max.y, Max.z)  // 7: 좌상단 뒤
+	};
+
+	// 3. DrawLine으로 박스의 모서리(Edge) 12개 그리기
+	// 노란색
+	const FVector4 BoxColor(1.0f, 1.0f, 0.0f, 1.0f);
+
+	// 밑면(Bottom Face) 4줄
+	DrawLine(Corners[0], Corners[1], BoxColor);
+	DrawLine(Corners[1], Corners[2], BoxColor);
+	DrawLine(Corners[2], Corners[3], BoxColor);
+	DrawLine(Corners[3], Corners[0], BoxColor);
+
+	// 윗면(Top Face) 4줄
+	DrawLine(Corners[4], Corners[5], BoxColor);
+	DrawLine(Corners[5], Corners[6], BoxColor);
+	DrawLine(Corners[6], Corners[7], BoxColor);
+	DrawLine(Corners[7], Corners[4], BoxColor);
+
+	// 기둥(Vertical Pillars) 4줄
+	DrawLine(Corners[0], Corners[4], BoxColor);
+	DrawLine(Corners[1], Corners[5], BoxColor);
+	DrawLine(Corners[2], Corners[6], BoxColor);
+	DrawLine(Corners[3], Corners[7], BoxColor);
+}
+
+
 void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 Range)
 {
 	if (!mbShowGrid) return;
@@ -331,17 +378,19 @@ void FGraphicsManager::SetPerspectiveProjection(bool bPerspectiveProjection)
 	mbPerspectiveProjection = bPerspectiveProjection;
 }
 
-FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize)
+// todo
+// 나중에 std::vector를 TArray로 변경해야함
+FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32> & OutIndices)
 {
-	TArray<FVertexSimple> OutVertices;
-	TArray<uint32> OutIndices;
+	OutVertices.clear();
+	OutIndices.clear();
 
 	UINT numVertices = static_cast<UINT>(InputVerticesSize / sizeof(FVertexSimple));
 	Welding(InputVertices, numVertices, OutVertices, OutIndices);
 
-	uint32 indicesCount = OutIndices.Num();
-	uint32 verticesCount = OutVertices.Num();
-	if (OutVertices.Num() == 0)
+	uint32 indicesCount = static_cast<uint32>(OutIndices.size());
+	uint32 verticesCount = static_cast<uint32>(OutVertices.size());
+	if (OutVertices.size() == 0)
 	{
 		return nullptr;
 	}
@@ -388,8 +437,8 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		return;
 
 	// EPrimitive 하드코딩을 제거하고 RI에서 정보를 가져옴
-	const FVector Center = RI.BoundsCenter;
-	const FVector HalfExtent = RI.BoundsHalfExtent;
+	const FVector Center = RI.LocalBoundsCenter;
+	const FVector HalfExtent = RI.LocalBoundsHalfExtent;
 
 	const FVector ObjectLocation = RI.WorldTransformMatrix.TransformPosition(Center);
 	const float Depth = FVector::dot(ObjectLocation - mCameraLocation, mCameraForward);
@@ -407,9 +456,10 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		RI.WorldTransformMatrix.GetUnitAxis(EAxis::Z).Length());
 
 	FVector OutlineScale = {
-		GetOutlineAxisScale(HalfExtent.x * WorldScale.x, WorldThickness),
-		GetOutlineAxisScale(HalfExtent.y * WorldScale.y, WorldThickness),
-		GetOutlineAxisScale(HalfExtent.z * WorldScale.z, WorldThickness) };
+			GetOutlineAxisScale(HalfExtent.x * WorldScale.x, WorldThickness),
+			GetOutlineAxisScale(HalfExtent.y * WorldScale.y, WorldThickness),
+			GetOutlineAxisScale(HalfExtent.z * WorldScale.z, WorldThickness)
+	};
 
 	const FMatrix Outline = FMatrix::Translation(FVector(-Center.x, -Center.y, -Center.z))
 		* FMatrix::Scale(OutlineScale)

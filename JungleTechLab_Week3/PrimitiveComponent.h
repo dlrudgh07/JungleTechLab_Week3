@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "SceneComponent.h"
+#include "FBoxSphereBounds.h"
 
 class UPrimitiveComponent : public USceneComponent
 {
@@ -9,9 +10,9 @@ public:
 	UPrimitiveComponent() {};
 
 	// factory 에서 필요함
-	void Initialize() {};
-
+	void Initialize() { UpdateBounds(); };
 	virtual ~UPrimitiveComponent() {};
+
 
 	virtual void Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime) override
 	{
@@ -20,4 +21,25 @@ public:
 
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
+
+	FBoxSphereBounds GetWorldBounds() const
+	{
+		return Bounds;
+	}
+	virtual FBoxSphereBounds GetLocalBounds() const
+	{
+		return FBoxSphereBounds{};
+	}
+
+
+	void UpdateBounds();
+
+protected:
+	virtual FBoxSphereBounds CalculateBounds(const FMatrix& LocalToWorld) const
+	{
+		return Bounds;
+	}
+
+
+	FBoxSphereBounds Bounds{};
 };

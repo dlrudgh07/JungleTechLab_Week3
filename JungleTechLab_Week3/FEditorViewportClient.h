@@ -34,15 +34,18 @@ public:
 	FCamera mCamera;
 	FGizmo mGizmo;
 
+	// todo
+	// 다른 곳에서도 AABB처리가 필요하여 일단 뺏음
+	// 이건 별도의 namespace에서 처리하는게 좋아보임
+	static bool IsRayIntersectAABB(
+		const FVector& RayOrigin,
+		const FVector& RayDirection,
+		const FVector& BoxCenter,
+		const FVector& BoxHalfExtent,
+		float& HitTimeAABB);
+
 private:
-	//마우스 밑 무언가의
-	FRenderInfo mHoveredRenderInfo;
-
-	// 선택된 액터의 RenderInfo는 캐시하지 않는다. 필요할 때 ClickedActor->GetRenderInfos()로 그때그때 뽑는다.
-	//마우스 밑 무언가가 Actor이면 저장. RayCast 에서 채워야 함 (아직 미구현)
-	// INFO: mClickedActor moved to FSceneManager::mSelectedActor.
-	//AActor* mClickedActor = nullptr;
-
+	AActor* HoveredActor = nullptr;
 
 	bool RayIntersectsTriangle( // 두개의 
 		const FVector& Origin,
