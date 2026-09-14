@@ -56,6 +56,7 @@ public:
     D3D11_VIEWPORT ViewportInfo;
     ID3D11VertexShader* SimpleVertexShader;
     ID3D11PixelShader* SimplePixelShader;
+    ID3D11PixelShader* FontTexturePixelShader;
     ID3D11InputLayout* SimpleInputLayout;
 
 	ID3D11ShaderResourceView* UUIDTextureView;
@@ -130,7 +131,9 @@ public:
 	//Rendering
 	void Prepare(bool bWireFrame);
 	void PrepareShader();
+	void PrepareFontShader();
 	void PrepareTextureShader();
+	void SetDefaultShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
 	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);

@@ -38,7 +38,7 @@ public:
 	void Release();
 
 private:
-	std::wstring Text = L"가";
+	std::wstring Text = L"";
 
 	FFontAsset* FontAsset = nullptr;
 
@@ -48,4 +48,6 @@ private:
 	bool bDirty = true;
 
 	FVector4 Color = FVector4(1.f, 1.f, 1.f, 1.f);
+
+	float FontScale = 0.01f;
 };

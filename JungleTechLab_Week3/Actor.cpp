@@ -205,6 +205,11 @@ void AActor::SetScale(FVector scale)
 	}
 }
 
+const TArray<UActorComponent*>& AActor::GetComponents() const
+{
+	return Components;
+}
+
 int32 AActor::GetComponentIndex(FGuid TargetComponentGuid) const
 {
 	for (int32 i = 0; i < Components.Num(); ++i)

@@ -42,6 +42,9 @@ public:
 		return bPendingKill;
 	};
 
+	//갖고 있는 Componet들 반환
+	const TArray<UActorComponent*>& GetComponents()const;
+
 private:
 	int32 GetComponentIndex(FGuid TargetComponentGuid) const;
 

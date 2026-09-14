@@ -70,6 +70,11 @@ public:
 
 	float GetPanelWidth() const;
 
+	//wchar -> char
+	std::string WStringToString(const std::wstring& wstr);
+	//char -> wchar
+	std::wstring StringToWString(const std::string& utf8);
+
 private:
 	// 예약된 씬 작업을 저장할 변수들
 	bool bPendingNewScene = false;

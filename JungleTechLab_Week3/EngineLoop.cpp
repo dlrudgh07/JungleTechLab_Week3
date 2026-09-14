@@ -39,12 +39,10 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 
 	HWND hWnd = CreateWindowExW(
 		0, WindowClass, Title, WS_VISIBLE | WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT, 600, 1024,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		nullptr, nullptr, hInstance, nullptr
 	);
 
-	ShowWindow(hWnd, SW_SHOWMAXIMIZED);
-	UpdateWindow(hWnd);
 
 	RECT clientRect;
 	GetClientRect(hWnd, &clientRect);
@@ -83,6 +81,10 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	SceneManager = new FSceneManager();
 	//SceneManager->RequestNewScene();
 	SceneManager->RequestNewScene();
+
+	ShowWindow(hWnd, SW_SHOWMAXIMIZED);
+	UpdateWindow(hWnd);
+
 }
 
 

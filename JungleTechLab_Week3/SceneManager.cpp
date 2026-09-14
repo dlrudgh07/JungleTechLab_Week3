@@ -15,6 +15,7 @@
 #include "FEditorViewportClient.h"
 #include "Camera.h"
 #include "Console.h"
+#include "UTextComponent.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
@@ -122,7 +123,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
 	// todo : 이건 추후 자동화해야할듯함
-	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate"};
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh"};
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
 	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
@@ -137,10 +138,17 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			// 3. 선택된 인덱스를 문자열 이름으로 변환 ("Cube", "Sphere" 등)
 			std::string SelectedName = AssetNames[mGuiInputField.SelectedMeshIndex];
 
-			// Factory를 통해 UStaticMeshComponent를 가진 진짜 액터를 스폰
-			AActor* newActor = mCurrentWorld->SpawnStaticMeshActor(SelectedName, { FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
-			if (newActor == nullptr)
-				UE_LOG("Error: Asset not found in ResourceManager!");
+			if (SelectedName == "Text Mesh")
+			{
+				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 90, 90), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+			}
+			else
+			{
+				// Factory를 통해 UStaticMeshComponent를 가진 진짜 액터를 스폰
+				AActor* newActor = mCurrentWorld->SpawnStaticMeshActor(SelectedName, { FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+				if (newActor == nullptr)
+					UE_LOG("Error: Asset not found in ResourceManager!");
+			}			
 		}
 	}
 
@@ -324,6 +332,30 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 		if (ImGui::DragFloat3("Scale", &scaleInput.x, 0.1f, MIN_SCALE, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))
 		{
 			mSelectedActor->SetScale(scaleInput);
+		}
+
+		//TextComponent를 갖고 있다면
+		//UTextComponent*
+		const TArray<UActorComponent*>& AllComp = mSelectedActor->GetComponents();
+		for (auto Elem : AllComp)
+		{
+			if (Elem->IsA(UTextComponent::GetClass()))
+			{
+				UTextComponent* TextComp = Elem->Cast<UTextComponent>();
+				std::wstring text = TextComp->GetText();
+
+				std::string text_ToString = WStringToString(text);
+
+				static char buffer[256] = {};
+				strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
+
+				//글자가 바뀐다면
+				if (ImGui::InputText("Text", buffer, sizeof(buffer), 0, (ImGuiInputTextCallback)1))
+				{					
+					TextComp->SetText(StringToWString(buffer));
+					
+				}
+			}
 		}
 	}
 	ImGui::End();
@@ -577,6 +609,34 @@ void  FSceneManager::SetSelectedActor(AActor* actor)
 float FSceneManager::GetPanelWidth() const
 {
 	return mPanelWidth;
+}
+
+std::string FSceneManager::WStringToString(const std::wstring& wstr)
+{
+	if (wstr.empty()) return std::string("");
+
+	int sizeNeeded = WideCharToMultiByte(
+		CP_UTF8, 0, wstr.c_str(), (int)wstr.size(),
+		nullptr, 0, nullptr, nullptr
+	);
+
+	std::string result(sizeNeeded, 0);
+	WideCharToMultiByte(
+		CP_UTF8, 0, wstr.c_str(), (int)wstr.size(),
+		result.data(), sizeNeeded, nullptr, nullptr
+	);
+
+	return result;
+}
+
+std::wstring FSceneManager::StringToWString(const std::string& utf8)
+{
+	if (utf8.empty()) return std::wstring(L"");
+
+	int sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), nullptr, 0);
+	std::wstring result(sizeNeeded, 0);
+	MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), result.data(), sizeNeeded);
+	return result;
 }
 
 const TArray<FRenderInfo>& FSceneManager::GetRenderInfos() const

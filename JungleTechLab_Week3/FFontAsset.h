@@ -36,7 +36,7 @@ public:
 	const FCharacterInfo* GetCharInfo(int32 CharId)const;
 
 	//UV 계산하여 반환
-	TArray<FVector2>& GetUV(const FCharacterInfo& Info)const;
+	TArray<FVector2> GetUV(const FCharacterInfo& Info)const;
 
 	int32 GetLineHeight()const;
 	void SetLineHeight(int32 pLineHeight);

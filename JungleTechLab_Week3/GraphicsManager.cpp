@@ -50,7 +50,9 @@ void FGraphicsManager::Release()
 void FGraphicsManager::Prepare(const FCamera* mCamera)
 {
 	mRenderer->Prepare(mbWireFrame);
-	mRenderer->PrepareShader();
+
+	//Shader가 나눠짐에 따라 분리
+	//mRenderer->PrepareShader();
 
 	// Cache view and projection matrices for rendering
 	const float nearZ = 0.1f;
@@ -93,6 +95,11 @@ void FGraphicsManager::GizmoPrepare()
 void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 {
 	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
+	if (renderInfos.IsEmpty())
+	{
+		//없어도 일단 PrepareShader();
+		mRenderer->PrepareShader();
+	}
 	for (const FRenderInfo& renderInfo : renderInfos)
 	{
 		if (renderInfo.VertexBuffer == nullptr || renderInfo.VertexBuffer->VertexBuffer == nullptr)
@@ -100,10 +107,20 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 	
 		if (renderInfo.BaseTexture != nullptr && renderInfo.BaseTexture->Resource != nullptr)
 		{
+			if (renderInfo.BlendMode == EBlendMode::Translucent)
+			{
+				
+				mRenderer->PrepareFontShader(); 
+			}
+			else
+			{
+				mRenderer->PrepareShader();  
+			}
 			mRenderer->BindTexture(0, renderInfo.BaseTexture->Resource->SRV.Get());
 		}
 		else
 		{
+			mRenderer->PrepareShader();
 			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
 			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}

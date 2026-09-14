@@ -43,7 +43,19 @@ void UTextComponent::SetFontAsset(FFontAsset* Font)
 
 void UTextComponent::BuildTextQuads()
 {
-	if (FontAsset == nullptr || Text == L"") return;
+	if (FontAsset == nullptr) return;
+	//if (Text == L"")
+	//{
+	//	//기존 글자 버퍼 해제
+	//	for (auto& Elem : PageBuffers)
+	//	{
+	//		Elem.second->VertexBuffer->Release();
+	//		delete Elem.second;
+	//	}
+
+	//	PageBuffers.Reset();
+	//	return;
+	//}
 
 	//page 별로 Vertices를 저장합니다.
 	//key : page 인덱스
@@ -60,7 +72,12 @@ void UTextComponent::BuildTextQuads()
 	{
 		//한글자의 정보 가져오기
 		const FCharacterInfo* Info = FontAsset->GetCharInfo((int32)ch);
-		if (Info == nullptr) continue;
+		if (Info == nullptr)
+		{
+			//UE 로그가 한글도 지원하도록 나중에 작업해보자.
+			//UE_LOG_F("{}에서 {}가 없습니다.", Text, ch);
+			continue;
+		}
 
 		//penX에 Kerning의 값만큼 더해줘야한다.
 		//penX += FontAsset->GetKerning(...);
@@ -68,16 +85,18 @@ void UTextComponent::BuildTextQuads()
 		//글자의 텍스처 상 uv
 		TArray<FVector2> uv = FontAsset->GetUV(*Info);
 
+		assert(uv.Num() == 2);
+		if (uv.Num() != 2) return;
+
 		//버텍스 위치
 		//시작지점인 penX,Y에서 Offset만큼 이동 후 Width, Height만큼 글자가 차지한다.
-		float left = penX + Info->XOffset;
-		float top = penY + Info->YOffset;
-		float right = left + Info->Width;
-		float bottom = top + Info->Height;
+		float left = penX + Info->XOffset * FontScale;
+		float top = penY + Info->YOffset* FontScale;
+		float right = left + Info->Width* FontScale;
+		float bottom = top + Info->Height* FontScale;
 
 		//페이지에 해당하는 버텍스 채우기
 		TArray<FVertexSimple>& Vertices = VerticesByPage[Info->Page];
-
 		Vertices.Add({left, top, 0, 1,1,1,1, uv[0].x, uv[0].y});		//top left
 		Vertices.Add({right, top, 0, 1,1,1,1, uv[1].x, uv[0].y});		//top right
 		Vertices.Add({right, bottom, 0, 1,1,1,1, uv[1].x, uv[1].y});	//bottom right
@@ -86,16 +105,27 @@ void UTextComponent::BuildTextQuads()
 		Vertices.Add({left, bottom, 0, 1,1,1,1, uv[0].x, uv[1].y});		//bottom left
 
 		//지점 이동
-		penX += Info->XAdvance;
+		penX += Info->XAdvance * FontScale;
 		//PrevChar = ch;
 	}
+
+	//기존 글자 버퍼 해제
+	for (auto& Elem : PageBuffers)
+	{
+		Elem.second->VertexBuffer->Release();
+		delete Elem.second;
+	}
+
+	PageBuffers.Reset();
 
 	// 2) 페이지별로 각자 Dynamic 버퍼에 채워 넣기
 	for (auto& [page, verts] : VerticesByPage)
 	{
+		uint32 Count = verts.Num() * sizeof(FVertexSimple);
+		//UE_LOG("sizeof verts : %d", Count);
 		// 초기 생성
 		if (PageBuffers.Find(page) == nullptr)
-			PageBuffers[page] = FGraphicsManager::Get().CreateDynamicBuffer(verts.Data(), verts.Num());
+			PageBuffers[page] = FGraphicsManager::Get().CreateDynamicBuffer(verts.Data(), Count);
 		FGraphicsManager::Get().UpdateDynamicBuffer(PageBuffers[page]->VertexBuffer.Get(), verts.Data(), verts.Num());
 	}
 
@@ -111,6 +141,8 @@ void UTextComponent::Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime
 
 void UTextComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
 {
+	if (FontAsset == nullptr) return;
+
 	if (bDirty)
 	{
 		// dirty일 때만 재생성
@@ -125,6 +157,7 @@ void UTextComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
 		FRenderInfo Info;
 		Info.VertexBuffer = buffer;
 		Info.BaseTexture = FResourceManager::Get().GetTexture(FontAsset->GetPageName(page));
+		Info.BlendMode = EBlendMode::Translucent;
 		Info.WorldTransformMatrix = GetTransformMatrix().MakeMatrix();
 		Info.BoundsCenter = FVector(0.0f, 0.0f, 0.0f);
 		Info.BoundsHalfExtent = FVector(0.5f, 0.5f, 0.5f);

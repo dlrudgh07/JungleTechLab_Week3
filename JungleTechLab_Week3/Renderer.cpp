@@ -127,13 +127,13 @@ ID3D11Buffer* URenderer::CreateDynamicVertexBuffer(FVertexSimple* vertices, UINT
 	vertexbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	//어차피 나중에 채울 거라 빈것으로
-	D3D11_SUBRESOURCE_DATA vertexbufferSRD = {  };
+	//D3D11_SUBRESOURCE_DATA vertexbufferSRD;
 
 	ID3D11Buffer* vertexBuffer = nullptr;
-	HRESULT hr = Device->CreateBuffer(&vertexbufferdesc, &vertexbufferSRD, &vertexBuffer);
+	HRESULT hr = Device->CreateBuffer(&vertexbufferdesc, nullptr, &vertexBuffer);
 	if (FAILED(hr))
 	{
-		UE_LOG("동적 버퍼 만들기 실패");
+		UE_LOG("Fail CreateDynamicVertexBuffer()");
 		return nullptr;
 	}
 
@@ -250,13 +250,52 @@ void URenderer::CreateShader()
 	ID3DBlob* vertexshaderCSO;
 	ID3DBlob* pixelshaderCSO;
 
-	D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
+	HRESULT hr = D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
+	if (FAILED(hr))
+	{
+		UE_LOG("ShaderW0.hlsl compile failed.");
+		assert(false);
+	}
 
-	Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &SimpleVertexShader);
+	hr = Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &SimpleVertexShader);
 
-	D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
+	if (FAILED(hr))
+	{
+		UE_LOG("Create SimpleVertexShader failed.");
+		assert(false);
+	}
 
-	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &SimplePixelShader);
+	hr = D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("ShaderW0.hlsl compile failed.");
+		assert(false);
+	}
+
+	hr = Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &SimplePixelShader);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create SimplePixelShader failed.");
+		assert(false);
+	}
+
+	D3DCompileFromFile(L"FontTexturePixelShader.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("FontTexturePixelShader.hlsl compile failed.");
+		assert(false);
+	}
+
+	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &FontTexturePixelShader);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create FontTexturePixelShader failed.");
+		assert(false);
+	}
 
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
@@ -265,7 +304,13 @@ void URenderer::CreateShader()
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
-	Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &SimpleInputLayout);
+	hr = Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &SimpleInputLayout);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create InputLayout failed.");
+		assert(false);
+	}
 
 	Stride = sizeof(FVertexSimple);
 
@@ -312,7 +357,9 @@ void URenderer::Prepare(bool bWireFrame)
 	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, DepthStencilView);
 	//깊이 테스트 규칙 적용
 	DeviceContext->OMSetDepthStencilState(DepthStencilState, 0);
-	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+
+	//PrepareShader()에서 처리
+	//DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 }
 void URenderer::RSUpdateState()
 {
@@ -327,7 +374,7 @@ void URenderer::UpdateDynamicVertexBuffer(ID3D11Buffer* Buffer, const FVertexSim
 	HRESULT hr = DeviceContext->Map(Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
 	if (FAILED(hr))
 	{
-		UE_LOG("Update Dynamic Vertex Buffer Fail");
+		UE_LOG("Fail.. UpdateDynamicVertexBuffer");
 		return;
 	}
 
@@ -351,6 +398,22 @@ void URenderer::PrepareShader()
 	BindSampler(0, SamplerState.Get());	// texture mapping
 }
 
+void URenderer::PrepareFontShader()
+{
+	ClearTextureCache(); // 프레임 렌더링 시작 전 캐시 초기화
+
+	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
+	DeviceContext->PSSetShader(FontTexturePixelShader, nullptr, 0);
+	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
+	if (ConstantBuffer)
+	{
+		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
+	}
+
+	BindSampler(0, SamplerState.Get());	// texture mapping
+}
+
 void URenderer::PrepareTextureShader()
 {
 	//UUIDSamplerState가 없어서 일단 주석. 나중에 전용으로 생성할 필요 있으면 만들 것.
@@ -362,6 +425,10 @@ void URenderer::PrepareTextureShader()
 		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
 		DeviceContext->PSSetConstantBuffers(0, 1, &ConstantBuffer);
 	}
+}
+
+void URenderer::SetDefaultShader()
+{
 }
 
 void URenderer::CreateSamplerState()

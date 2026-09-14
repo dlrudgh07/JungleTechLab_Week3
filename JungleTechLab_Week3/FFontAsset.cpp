@@ -13,7 +13,7 @@ const FCharacterInfo* FFontAsset::GetCharInfo(int32 CharId) const
 	return info;
 }
 
-TArray<FVector2>& FFontAsset::GetUV(const FCharacterInfo& Info) const
+TArray<FVector2> FFontAsset::GetUV(const FCharacterInfo& Info) const
 {
 	TArray<FVector2> uv;
 	FVector2 uv0, uv1;

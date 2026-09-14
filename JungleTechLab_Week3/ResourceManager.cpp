@@ -278,7 +278,7 @@ bool FResourceManager::LoadTextureFromFile(const std::string& AssetName, const s
 	// 1. 이미 등록된 이름이면 로드하지 않음
 	if (TextureMap.find(AssetName) != TextureMap.end())
 	{
-		UE_LOG("이미 등록된 %s 텍스처입니다.", AssetName);
+		UE_LOG("%s is already Register Texture", AssetName);
 		return false;
 	}
 
@@ -350,12 +350,12 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	// [2] 텍스처 에셋 로드 및 등록
 	// ==========================================
 	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)
-	if (!LoadTextureFromFile("CrateTexture", "crate.jpg")) UE_LOG("CrateTexture 로드 실패");
+	if (!LoadTextureFromFile("CrateTexture", "crate.jpg")) UE_LOG("Load Fail CrateTexture");
 	
-	if (!LoadTextureFromFile("FontTexture", "Assets/DDS/FontAtlas.dds")) UE_LOG("FontTexture 로드 실패");
+	if (!LoadTextureFromFile("FontTexture", "Assets/DDS/FontAtlas.dds")) UE_LOG("Load Fail CrateTexture FontTexture");
 
 	//굴림 폰트 아틀라스 로드
-	if (!LoadFont_FNTFile("Gulim", "Assets/Fonts/Gulim/Gulim.fnt")) UE_LOG("굴림체 폰트 로드 실패");
+	if (!LoadFont_FNTFile("Gulim", "Assets/Fonts/Gulim/Gulim.fnt")) UE_LOG("Load Fail CrateTexture Gulim FontAsset");
 
 	// ==========================================
 	// [3] 머티리얼 에셋 생성 및 등록

@@ -231,10 +231,3 @@ inline void TArray<T>::RemoveLast()
 	mDatas.erase(mDatas.begin() + mDatas.size() - 1);
 
 }
-
-
-
-
-
-
-
