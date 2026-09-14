@@ -336,8 +336,8 @@ FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 Inp
 	UINT numVertices = static_cast<UINT>(InputVerticesSize / sizeof(FVertexSimple));
 	Welding(InputVertices, numVertices, OutVertices, OutIndices);
 
-	uint32 indicesCount = OutIndices.size();
-	uint32 verticesCount = OutVertices.size();
+	uint32 indicesCount = static_cast<uint32>(OutIndices.size());
+	uint32 verticesCount = static_cast<uint32>(OutVertices.size());
 	if (OutVertices.size() == 0)
 	{
 		return nullptr;

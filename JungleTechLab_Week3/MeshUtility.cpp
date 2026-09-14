@@ -41,7 +41,7 @@ void Welding(const FVertexSimple* InVertices, uint32 InVertexCount,
 
 		if (FoundIndex == -1) // OutVertices안에 중복이 없으면
 		{
-			FoundIndex = OutVertices.size();
+			FoundIndex = static_cast<int32>(OutVertices.size());
 			OutVertices.emplace_back(InVertices[i]);
 		}
 		OutIndices.emplace_back(FoundIndex);

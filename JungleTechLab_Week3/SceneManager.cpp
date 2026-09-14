@@ -214,6 +214,12 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bShowPrimitive);
 		}
 
+		bool bShowAABB = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BoundingBoxes);
+		if (ImGui::Checkbox("Show AABB", &bShowAABB))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BoundingBoxes, bShowAABB);
+		}
+
 		bool bShowGizmo = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Gizmo);
 		if (ImGui::Checkbox("Gizmo", &bShowGizmo))
 		{
