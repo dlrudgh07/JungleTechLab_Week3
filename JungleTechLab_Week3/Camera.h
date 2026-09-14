@@ -161,7 +161,7 @@ public:
 		return result;
 	}
 
-	void Rotate(long Dx, long Dy)
+	void Rotate(long Dx, long Dy, float Sensitivity)
 	{
 		Transform.Rotation.Yaw += FMath::Fmod(Dx * Sensitivity, 360.f);
 		Transform.Rotation.Pitch -= FMath::Fmod(Dy * Sensitivity, 360.f);
@@ -169,7 +169,6 @@ public:
 
 	void Update();
 
-	void SetSensitivity(float _v) { Sensitivity = _v; }
 	FVector GetForwardVector() const { return FMatrix::Rotate(Transform.Rotation).GetUnitAxis(EAxis::X); }
 	FVector GetRightVector()   const { return FMatrix::Rotate(Transform.Rotation).GetUnitAxis(EAxis::Y); }
 	FVector GetUpVector()      const { return FMatrix::Rotate(Transform.Rotation).GetUnitAxis(EAxis::Z); }
@@ -179,9 +178,6 @@ public:
 
 	//속도
 	FVector Velocity = FVector(0);
-
-	//카메라 이동 민감도
-	float Sensitivity = 0.1f;
 
 	//카메라 시야각
 	float mFovDegree = 60.f;

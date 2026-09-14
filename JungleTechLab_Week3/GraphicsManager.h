@@ -43,12 +43,6 @@ public:
 	float GetCameraOrthoDistance() const { return mCameraOrthoDistance; }
 	void SetCameraOrthoDistance(float distance) { mCameraOrthoDistance = distance; }
 
-	float GetGridOffset() const { return GridOffset; }
-	void SetGridOffset(float _Offset) { GridOffset = _Offset; }
-
-	float GetGridRange() const { return GridRange; }
-	void SetGridRange(int32 _GridRange) { GridRange = _GridRange; }
-
 	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
 	URenderer* GetRenderer() const;
 
@@ -57,7 +51,7 @@ public:
 	// 호출 즉시 그리지 않고 배열에 쌓는다. FlushLines()에서 한 번에 그린다.
 	void DrawLine(const FVector& start, const FVector& end, const FVector4& color);
 	void DrawWorldAxis();
-	void DrawGrid(FTransform CameraTransform);
+	void DrawGrid(FTransform CameraTransform, float Offset, int32 Range);
 	void FlushLines();
 
 
@@ -110,7 +104,4 @@ private:
 	float mProjectionDuration = 1.0f;
 	bool mbProjectionTransitioning = false;
 
-	//grid
-	float GridOffset;
-	int32 GridRange;
 };

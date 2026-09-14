@@ -154,12 +154,10 @@ void FGraphicsManager::DrawWorldAxis()
 	}
 }
 
-void FGraphicsManager::DrawGrid(FTransform CameraTransform)
+void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 Range)
 {
 	if (!mbShowGrid) return;
 
-	float Offset = GetGridOffset();
-	int32 Range = GetGridRange();
 	int RepeatNum = Range * (1 / Offset);
 	float GridGap = -0.001f;
 	float Extent = Offset * (RepeatNum);

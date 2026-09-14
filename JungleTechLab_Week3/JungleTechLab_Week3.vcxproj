@@ -134,6 +134,8 @@
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Guid.cpp" />
+    <ClCompile Include="IniConfig.cpp" />
+    <ClCompile Include="IniParser.cpp" />
     <ClCompile Include="JsonUtil.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
@@ -157,6 +159,8 @@
     <ClInclude Include="Circle.h" />
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
+    <ClInclude Include="IniConfig.h" />
+    <ClInclude Include="IniParser.h" />
     <ClInclude Include="Quad.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Texture.h" />

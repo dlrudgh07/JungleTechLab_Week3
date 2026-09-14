@@ -126,7 +126,7 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 	}
 }
 
-void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio)
+void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio, FIniConfig& IniConfig)
 {
 	const FInputState& Input = WindowApplication.Input;
 	ImGuiIO& io = ImGui::GetIO();
@@ -135,7 +135,7 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 	// 회전을 이동보다 먼저, 이번 프레임에 돌린 방향으로 바로 움직이게
 	if (!io.WantCaptureMouse && Input.IsDown(VK_RBUTTON))
 	{
-		mCamera.Rotate(Input.MouseDX, Input.MouseDY);
+		mCamera.Rotate(Input.MouseDX, Input.MouseDY, IniConfig.GetCameraSensitivity());
 	}
 
 	// Camera Velocity
@@ -180,12 +180,13 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 		//입력이 있으면 마우스 휠은 카메라 이동속도 조절
 		else
 		{
-			mCamera.Speed *= FMath::Pow(1.2f, Input.MouseWheelDelta);
-			mCamera.Speed = FMath::Clamp(mCamera.Speed, 0.1f, 100.0f);
+			IniConfig.SetCameraSpeed(IniConfig.GetCameraSpeed() * FMath::Pow(1.2f, Input.MouseWheelDelta));
 		}
 	}
 
-	const FVector TargetVelocity = MoveDir * mCamera.Speed;
+
+	//const FVector TargetVelocity = MoveDir * mCamera.Speed;
+	const FVector TargetVelocity = MoveDir * IniConfig.GetCameraSpeed();
 
 	// 지수 감쇠만큼 카메라 속도가 서서히 줄어듬
 	const float Alpha = FMath::Exp(-mCamera.Damping * deltaTime);

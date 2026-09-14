@@ -6,6 +6,7 @@
 #include "Camera.h"
 #include "RenderInfo.h"
 #include "Gizmo.h"
+#include "IniConfig.h"
 
 class AActor;
 class FSceneManager;
@@ -15,7 +16,7 @@ struct FEditorViewportClient
 public:
 	void RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, float perspectiveRatio);
 	float GetFov() const { return mCamera.mFovDegree; }
-	void Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio);
+	void Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio, FIniConfig& IniConfig);
 	bool IsMouseHit() const { return bMouseHit; }
 
 	void Reset();

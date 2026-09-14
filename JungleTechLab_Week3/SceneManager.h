@@ -25,6 +25,7 @@ struct FGuiReference
 	FEditorViewportClient* ViewportClient;
 	FResourceManager* ResourceManager;
 	const FFileManager* FileManager;
+
 };
 
 struct FGuiInputField

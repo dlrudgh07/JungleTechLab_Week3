@@ -19,7 +19,6 @@
 #include "Texture.h"
 #include "Material.h"
 #include "StaticMesh.h"
-
 #include <objbase.h>
 
 
@@ -105,7 +104,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		}
 
 		GraphicsManager->UpdateProjectionTransition(deltaTime);
-		ViewportClient->Update(deltaTime, GraphicsManager->GetRenderer()->ViewportInfo, SceneManager, GraphicsManager->GetPerspectiveRatio());
+		ViewportClient->Update(deltaTime, GraphicsManager->GetRenderer()->ViewportInfo, SceneManager, GraphicsManager->GetPerspectiveRatio(), ResourceManager->IniConfig);
 	}
 
 	//Physics Threads
@@ -140,7 +139,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		GraphicsManager->DrawWorldAxis();
 
 		//Grid
-		GraphicsManager->DrawGrid(ViewportClient->GetCamera().Transform);
+		GraphicsManager->DrawGrid(ViewportClient->GetCamera().Transform, ResourceManager->IniConfig.GetGridOffset(), ResourceManager->IniConfig.GetGridRange());
 
 		GraphicsManager->FlushLines();
 

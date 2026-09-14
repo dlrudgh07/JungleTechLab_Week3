@@ -150,6 +150,12 @@
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Core\Asset</Filter>
     </ClCompile>
+    <ClCompile Include="IniParser.cpp">
+      <Filter>Core\Serialize</Filter>
+    </ClCompile>
+    <ClCompile Include="IniConfig.cpp">
+      <Filter>Core\Serialize</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">
@@ -324,6 +330,12 @@
       <Filter>Rendering\Shapes</Filter>
     </ClInclude>
     <ClInclude Include="FPath.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="IniParser.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="IniConfig.h">
       <Filter>Core\Serialize</Filter>
     </ClInclude>
   </ItemGroup>
