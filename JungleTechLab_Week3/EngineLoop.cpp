@@ -19,6 +19,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "StaticMesh.h"
+#include "PrimitiveComponent.h"
 
 #include <objbase.h>
 
@@ -133,6 +134,13 @@ void FEngineLoop::Tick(bool bPumpMessages)
 
 		GraphicsManager->Update(deltaTime);
 
+		//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
+		GraphicsManager->DrawWorldAxis();
+		GraphicsManager->FlushLines();
+
+
+		//강조
+		if (auto SelectedActor = SceneManager->GetSelectedActor())
 		// Show Flag에 따른 렌더 선택 분기
 		{
 			EEngineShowFlags flags = ViewportClient->GetShowFlags();
@@ -143,6 +151,13 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			{
 				GraphicsManager->Render(SceneManager->GetRenderInfos());
 			}
+
+			if (GraphicsManager->IsDrawAABB())
+			{
+				GraphicsManager->DrawAABB(static_cast<UPrimitiveComponent*>(SelectedActor->GetRootComponent())->GetWorldBounds());
+				GraphicsManager->FlushLines();
+			}
+		}
 
 			//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
 			if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))

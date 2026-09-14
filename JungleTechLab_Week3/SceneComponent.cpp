@@ -1,5 +1,5 @@
 ﻿#include "SceneComponent.h"
-
+#include "PrimitiveComponent.h"
 #include <format>
 
 #include "Transform.h"
@@ -66,6 +66,11 @@ FVector USceneComponent::GetRelativeLocation() const
 void USceneComponent::SetRelativeLocation(FVector location)
 {
 	RelativeLocation = location;
+
+	if (IsA<UPrimitiveComponent>())
+	{
+		static_cast<UPrimitiveComponent*>(this)->UpdateBounds();
+	}
 }
 
 FRotator USceneComponent::GetRelativeRotation() const
@@ -76,6 +81,11 @@ FRotator USceneComponent::GetRelativeRotation() const
 void USceneComponent::SetRelativeRotation(FRotator rotation)
 {
 	RelativeRotation = rotation;
+
+	if (IsA<UPrimitiveComponent>())
+	{
+		static_cast<UPrimitiveComponent*>(this)->UpdateBounds();
+	}
 }
 
 FVector USceneComponent::GetRelativeScale3D() const
@@ -86,6 +96,11 @@ FVector USceneComponent::GetRelativeScale3D() const
 void USceneComponent::SetRelativeScale3D(FVector scale)
 {
 	RelativeScale3D = scale;
+
+	if (IsA<UPrimitiveComponent>())
+	{
+		static_cast<UPrimitiveComponent*>(this)->UpdateBounds();
+	}
 }
 
 FTransform USceneComponent::GetTransformMatrix() const
