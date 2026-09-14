@@ -174,16 +174,7 @@ UTexture* FResourceManager::GetDefaultWhiteTexture() const
 void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager)
 {
 	// ==========================================
-	// [1] 그래픽스 버퍼 생성 
-	// ==========================================
-	FBuffer* CubeBuffer = GraphicsManager->CreateBuffer(Cube_vertices, sizeof(Cube_vertices));
-	FBuffer* QuadBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices));
-	FBuffer* SphereBuffer = GraphicsManager->CreateBuffer(Sphere_vertices, sizeof(Sphere_vertices));
-	FBuffer* GizmoArrowBuffer = GraphicsManager->CreateBuffer(GizmoArrow_vertices, sizeof(GizmoArrow_vertices));
-	FBuffer* CircleBuffer = GraphicsManager->CreateBuffer(Circle_vertices, sizeof(Circle_vertices));
-
-	// ==========================================
-	// [2] 텍스처 에셋 로드 및 등록
+	// [1] 텍스처 에셋 로드 및 등록
 	// ==========================================
 	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)
 	LoadTextureFromFile("CrateTexture", "./Assets/FireAnimationTexture.png");
@@ -191,15 +182,15 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	LoadTextureFromFile("FireTexture", "./Assets/FireAnimationTexture.png");
 
 	// ==========================================
-	// [3] 머티리얼 에셋 생성 및 등록
+	// [2] 머티리얼 에셋 생성 및 등록
 	// ==========================================
-	// 3-1. 디폴트 화이트 머티리얼 (단색 큐브용)
+	// 디폴트 화이트 머티리얼 (단색 큐브용)
 	UMaterial* DefaultMaterial = FObjectFactory::ConstructObject<UMaterial>();
 	DefaultMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 0.0f);
 	DefaultMaterial->BaseTexture = GetDefaultWhiteTexture(); // 매니저에 내장된 디폴트 화이트 UTexture
 	RegisterMaterial("DefaultMaterial", DefaultMaterial);
 
-	// 3-2. 나무 상자 머티리얼
+	// 나무 상자 머티리얼
 	UMaterial* CrateMaterial = FObjectFactory::ConstructObject<UMaterial>();
 	CrateMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	CrateMaterial->BaseTexture = GetTexture("CrateTexture");
@@ -218,52 +209,56 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	RegisterMaterial("SubUVMaterial", SubUVMaterial);
 
 	// ==========================================
-	// [4] 스태틱 메쉬 에셋 생성 및 등록
+	// [3] 스태틱 메쉬 에셋 생성 및 등록
+	// todo - 지금은 하드코딩으로 버퍼를 만들고 잇지만, 나중에는 이것들을 import 기능을 통해 동적으로 처리할수있도록해야함
+	// todo - 순서가 반복되는데, 이걸 별도의 템플릿이나 함수로 빼야할거같음
+	// /		다만 import기능이 어떤식으로 구현될지 몰라서, 일단 이대로 두었음
 	// ==========================================
-	uint32 VertCount = sizeof(Cube_vertices) / sizeof(FVertexSimple);
-
-	// 4-1. 기본 큐브 메쉬
+	// 기본 큐브 메쉬
 	UStaticMesh* CubeMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* CubeBuffer = GraphicsManager->CreateBuffer(Cube_vertices, sizeof(Cube_vertices), CubeMesh->CPUVertices, CubeMesh->CPUIndices);
 	CubeMesh->VertexBuffer = CubeBuffer;
 	CubeMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	for (uint32 i = 0; i < VertCount; ++i) CubeMesh->CPUVertices.emplace_back(Cube_vertices[i]);
+	CubeMesh->Initialize();
 	RegisterStaticMesh("Cube", CubeMesh);
 
-	// 4-2. 나무 상자 메쉬 (모양은 큐브 버퍼를 똑같이 쓰고, 머티리얼만 갈아끼움)
+	// 나무 상자 메쉬 (모양은 큐브 버퍼를 똑같이 쓰고, 머티리얼만 갈아끼움)
 	UStaticMesh* CrateMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	CrateMesh->VertexBuffer = CubeBuffer;
+	// cube buffer와 동일하지만, "asset은 자신의 buffer를 독립적으로 갖는다" 를 원칙으로 진행하여, double free 되는 것을 방지한다.
+	FBuffer* CrateBuffer = GraphicsManager->CreateBuffer(Cube_vertices, sizeof(Cube_vertices), CrateMesh->CPUVertices, CrateMesh->CPUIndices);
+	CrateMesh->VertexBuffer = CrateBuffer;
 	CrateMesh->StaticMaterials.Add(GetMaterial("CrateMaterial"));
-	for (uint32 i = 0; i < VertCount; ++i) CrateMesh->CPUVertices.emplace_back(Cube_vertices[i]);
+	CrateMesh->Initialize();
 	RegisterStaticMesh("Crate", CrateMesh);
 
-	// 4-3. 스피어 메쉬
+	// 스피어 메쉬
 	UStaticMesh* SphereMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* SphereBuffer = GraphicsManager->CreateBuffer(Sphere_vertices, sizeof(Sphere_vertices), SphereMesh->CPUVertices, SphereMesh->CPUIndices);
 	SphereMesh->VertexBuffer = SphereBuffer;
 	SphereMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(Sphere_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i) SphereMesh->CPUVertices.emplace_back(Sphere_vertices[i]);
+	SphereMesh->Initialize();
 	RegisterStaticMesh("Sphere", SphereMesh);
 
-	// 4-4. 기즈모 메쉬
+	// 기즈모 메쉬
 	UStaticMesh* GizmoArrowMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* GizmoArrowBuffer = GraphicsManager->CreateBuffer(GizmoArrow_vertices, sizeof(GizmoArrow_vertices), GizmoArrowMesh->CPUVertices, GizmoArrowMesh->CPUIndices);
 	GizmoArrowMesh->VertexBuffer = GizmoArrowBuffer;
 	GizmoArrowMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(GizmoArrow_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i) GizmoArrowMesh->CPUVertices.emplace_back(GizmoArrow_vertices[i]);
+	GizmoArrowMesh->Initialize();
 	RegisterStaticMesh("GizmoArrow", GizmoArrowMesh);
 
 	UStaticMesh* CircleMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* CircleBuffer = GraphicsManager->CreateBuffer(Circle_vertices, sizeof(Circle_vertices), CircleMesh->CPUVertices, CircleMesh->CPUIndices);
 	CircleMesh->VertexBuffer = CircleBuffer;
 	CircleMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(Circle_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i) CircleMesh->CPUVertices.emplace_back(Circle_vertices[i]);
+	CircleMesh->Initialize();
 	RegisterStaticMesh("Circle", CircleMesh);
 
-	// 4-5. 쿼드 메쉬
+	// 쿼드 메쉬
 	UStaticMesh* QuadMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* QuadBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices), QuadMesh->CPUVertices, QuadMesh->CPUIndices);
 	QuadMesh->VertexBuffer = QuadBuffer;
 	QuadMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
-	VertCount = sizeof(Quad_vertices) / sizeof(FVertexSimple);
-	for (uint32 i = 0; i < VertCount; ++i) QuadMesh->CPUVertices.emplace_back(Quad_vertices[i]);
+	QuadMesh->Initialize();
 	RegisterStaticMesh("Quad", QuadMesh);
 }

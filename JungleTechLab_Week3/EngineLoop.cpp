@@ -19,6 +19,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "StaticMesh.h"
+#include "PrimitiveComponent.h"
 
 #include <objbase.h>
 
@@ -132,50 +133,62 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		}
 
 		GraphicsManager->Update(deltaTime);
+		GraphicsManager->Prepare(&ViewportClient->mCamera, ViewportClient->GetViewMode());
 
 		// Show Flag에 따른 렌더 선택 분기
+		EEngineShowFlags flags = ViewportClient->GetShowFlags();
+
+
+		if (HasFlag(flags, EEngineShowFlags::SF_Primitives))
 		{
-			EEngineShowFlags flags = ViewportClient->GetShowFlags();
+			GraphicsManager->Render(SceneManager->GetRenderInfos());
+		}
 
-			GraphicsManager->Prepare(&ViewportClient->mCamera, ViewportClient->GetViewMode());
+		//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
+		GraphicsManager->DrawWorldAxis();
+		GraphicsManager->FlushLines();
 
-			if (HasFlag(flags, EEngineShowFlags::SF_Primitives))
+
+		//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
+		if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
+		{
+			GraphicsManager->DrawWorldAxis();
+			GraphicsManager->FlushLines();
+		}
+
+		//강조
+		if (auto SelectedActor = SceneManager->GetSelectedActor())
+		{
+			FRenderInfo clickedRenderInfo;
+
+			if (SelectedActor->GetFirstRenderInfo(clickedRenderInfo))
 			{
-				GraphicsManager->Render(SceneManager->GetRenderInfos());
+				GraphicsManager->RenderHighLight(clickedRenderInfo);
 			}
 
-			if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
+			if (HasFlag(flags, EEngineShowFlags::SF_BoundingBoxes) && GraphicsManager->IsDrawAABB())
 			{
-				//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
-				GraphicsManager->DrawWorldAxis();
+				GraphicsManager->DrawAABB(static_cast<UPrimitiveComponent*>(SelectedActor->GetRootComponent())->GetWorldBounds());
 				GraphicsManager->FlushLines();
 			}
-
-			//강조
-			if (SceneManager->GetSelectedActor())
-			{
-				FRenderInfo clickedRenderInfo;
-
-				if (SceneManager->GetSelectedActor()->GetFirstRenderInfo(clickedRenderInfo))
-				{
-					GraphicsManager->RenderHighLight(clickedRenderInfo);
-				}
-			}
-
-			// Gizmo
-			if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
-			{
-				GraphicsManager->GizmoPrepare();
-				GraphicsManager->RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(ResourceManager));
-			}
-
-			if (HasFlag(flags, EEngineShowFlags::SF_UUID)) {
-				// UUID 텍스쳐 랜더링
-				GraphicsManager->DrawAllUUID(SceneManager->GetRenderInfos(),
-				ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
-				GraphicsManager->FlushUUID(ResourceManager->GetTexture("FontTexture"));
-			}
 		}
+
+		// Gizmo
+		if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
+		{
+			GraphicsManager->GizmoPrepare();
+			GraphicsManager->RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(ResourceManager));
+		}
+
+		if (HasFlag(flags, EEngineShowFlags::SF_UUID)) {
+			// UUID 텍스쳐 랜더링
+			GraphicsManager->DrawAllUUID(SceneManager->GetRenderInfos(),
+				ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
+			GraphicsManager->FlushUUID(ResourceManager->GetTexture("FontTexture"));
+		}
+
+
+
 		//ImGui
 		{
 			ImGui::Render();

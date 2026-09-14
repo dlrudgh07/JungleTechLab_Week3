@@ -131,6 +131,7 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Core.cpp" />
+    <ClCompile Include="FBoxSphereBounds.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Guid.cpp" />
@@ -157,6 +158,7 @@
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClInclude Include="Circle.h" />
+    <ClInclude Include="FBoxSphereBounds.h" />
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="MeshUtility.h" />
@@ -171,6 +173,7 @@
     <ClInclude Include="TSparseArray.inl">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="StaticMeshComponent.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>

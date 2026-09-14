@@ -153,6 +153,12 @@
     <ClCompile Include="ParticleSubUVComponent.cpp">
       <Filter>Core\Component</Filter>
     </ClCompile>
+    <ClCompile Include="StaticMesh.cpp">
+      <Filter>Core\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="FBoxSphereBounds.cpp">
+      <Filter>Core\Types</Filter>
+    </ClCompile>
     <ClCompile Include="Gizmo.cpp">
       <Filter>Rendering\Gizmo</Filter>
     </ClCompile>
@@ -337,6 +343,9 @@
     </ClInclude>
     <ClInclude Include="ParticleSubUVComponent.h">
       <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="FBoxSphereBounds.h">
+      <Filter>Core\Types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

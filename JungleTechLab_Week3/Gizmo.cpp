@@ -4,6 +4,7 @@
 
 #include "ResourceManager.h"
 #include "StaticMesh.h"
+#include "FEditorViewportClient.h"
 
 FVector FGizmo::AxisDirection(EGIZMO_AXIS axis) const {
 	const FMatrix Result_yaw = FMatrix::RotateZ(UpdateRotation.Yaw);
@@ -217,27 +218,17 @@ bool FGizmo::GetDragRotation(const FVector& nearPoint, const FVector& farPoint, 
 
 bool FGizmo::IsRayInGizmo(FVector nearPoint, FVector farPoint)
 {
-
-	/*
-	Ray와 Axis사이의 최단거리를 구한다.
-	3차원의 두 직선에 최단거리는 각 두 직선에 수직하는 선분이다.
-
-	수직벡터 = 광선벡터 - 기즈모축벡터
-	1) W = D - A (모두 단위벡터임)
-	2) WxD=0, WxA=0 (수직이므로 내적값이 0)
-
-	3)W = ray시작점 + t*(ray단위벡터) - (기즈모시작점 + s*기즈모 단위벡터)
-
-	*/
 	mbHovered = false;
 	eAxis = NONE;
 	if (!mbVisible) return false;
+
 	FVector norm_ray = (farPoint - nearPoint);
 	norm_ray.Normalize(); // norm_ray= ray의 단위벡터
 	const EGIZMO_AXIS axis[3] = { X, Y, Z };
 
-	if (eType == ROTATE) //회전 기즈모의 충돌처리
+	if (eType == ROTATE)
 	{
+		// plane 처리
 		const float ringRadius = mRingRadiusRatio * mGizmoScale;
 		float shortAxisLen = 0.0f;
 		for (int i = 0; i < 3; ++i)
@@ -261,42 +252,58 @@ bool FGizmo::IsRayInGizmo(FVector nearPoint, FVector farPoint)
 				eAxis = axis[i];
 			}
 		}
-
-
 	}
-	else { // TRANSLATE, SCALE
-		FVector w0 = nearPoint - mLocation;
-		//수학 함수 구현
-		const float axisLength = mAxisLength * mGizmoScale;
-		const float hitRadius = mHitRadius * mGizmoScale;
+	else
+	{
+		// ========================================================
+		// [TRANSLATE, SCALE]: 깔끔한 AABB (두꺼운 박스) 기반 픽킹
+		// ========================================================
 
-		float bestRayT = 0.0f; //near point에서 광선방향으로 얼마나 이동했냐
+		const float axisLength = mAxisLength * mGizmoScale;
+		const float hitRadius = mHitRadius * mGizmoScale; // 클릭을 넉넉하게 받아줄 두께
+
+		// 1. 기즈모의 월드 공간을 로컬 공간으로 변환하는 역행렬
+		FMatrix WorldToLocal =  FMatrix::Translation(mLocation).Inverse();
+
+		// Ray를 기즈모의 로컬 공간으로 변환 (우리가 아까 썼던 방식과 동일!)
+		FVector LocalOrigin = WorldToLocal.TransformPosition(nearPoint);
+		FVector LocalDir = WorldToLocal.TransformVector(norm_ray);
+
+		// 2. 기즈모의 3축을 덮는 "두꺼운 투명 AABB" 3개 정의
+		FVector Centers[3] = {
+			FVector(axisLength * 0.5f, 0.0f, 0.0f), // X축 화살표 중심
+			FVector(0.0f, axisLength * 0.5f, 0.0f), // Y축 화살표 중심
+			FVector(0.0f, 0.0f, axisLength * 0.5f)  // Z축 화살표 중심
+		};
+
+		FVector Extents[3] = {
+			FVector(axisLength * 0.5f, hitRadius, hitRadius), // X축으로 길고 Y, Z는 두껍게
+			FVector(hitRadius, axisLength * 0.5f, hitRadius), // Y축으로 길고 X, Z는 두껍게
+			FVector(hitRadius, hitRadius, axisLength * 0.5f)  // Z축으로 길고 X, Y는 두껍게
+		};
+
+		float BestRayHitTime = FLT_MAX; // 가장 가까이 맞은 거리
 
 		for (int i = 0; i < 3; ++i)
 		{
-			const FVector axisDir = AxisDirection(axis[i]);
+			float HitTime;
 
-			float axisS = 0.0f;
-			if (!GetClosestAxisParam(nearPoint, farPoint, mLocation, axis[i], axisS)) continue;
-
-			axisS = FMath::Clamp(axisS, 0.0f, axisLength);  // 무한 직선 → 선분
-
-			const FVector axisPoint = mLocation + axisDir * axisS; // 현재위치에서 기즈모방향으로 얼만큼 이동했나
-
-			const float rayT = FVector::dot(norm_ray, axisPoint - nearPoint);
-			if (rayT < 0.0f) continue;                      // 카메라 뒤쪽
-
-			const FVector rayPoint = nearPoint + norm_ray * rayT;
-			const float distance = (rayPoint - axisPoint).Length();
-
-			if (distance > hitRadius) continue;             // 캡슐 밖
-
-			if (eAxis == NONE || rayT < bestRayT)           // 겹치면 카메라에 가까운 축
+			// AABB 검사 로직 재활용
+			if (FEditorViewportClient::IsRayIntersectAABB(LocalOrigin, LocalDir, Centers[i], Extents[i], HitTime))
 			{
-				bestRayT = rayT;
-				eAxis = axis[i];
+				// 가장 카메라에 가까운 축(HitT가 가장 작은 축)을 잡은 것으로 판정
+				if (HitTime >= 0.0f && HitTime < BestRayHitTime)
+				{
+					BestRayHitTime = HitTime;
+					eAxis = axis[i];
+				}
 			}
 		}
+	}
+
+	if (eAxis != NONE)
+	{
+		mbHovered = true;
 	}
 
 	return eAxis != NONE;

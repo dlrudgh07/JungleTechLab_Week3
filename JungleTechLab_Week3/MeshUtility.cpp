@@ -20,14 +20,16 @@ bool IsSameVertex(const FVertexSimple& A, const FVertexSimple& B)
 	return true;
 }
 
+// todo
+// vector를 TArray로 변경하기 
 void Welding(const FVertexSimple* InVertices, uint32 InVertexCount,
-	TArray<FVertexSimple>& OutVertices, TArray<uint32>& OutIndices)	 //Welding : 정점을 줄이고 인덱스를 만드는것
+	std::vector<FVertexSimple>& OutVertices, std::vector<uint32>& OutIndices)	 //Welding : 정점을 줄이고 인덱스를 만드는것
 {
 
 	for (uint32 i = 0;i < InVertexCount;++i) // 원본 Vertexes 순회
 	{
 		int32 FoundIndex = -1;
-		for (uint32 j = 0;j < OutVertices.Num();++j) // Indices Vertex(OutVertices)순회
+		for (uint32 j = 0;j < OutVertices.size();++j) // Indices Vertex(OutVertices)순회
 		{
 
 			if (IsSameVertex(InVertices[i], OutVertices[j])) // 같으면
@@ -39,9 +41,9 @@ void Welding(const FVertexSimple* InVertices, uint32 InVertexCount,
 
 		if (FoundIndex == -1) // OutVertices안에 중복이 없으면
 		{
-			FoundIndex = OutVertices.Num();
-			OutVertices.Add(InVertices[i]);
+			FoundIndex = static_cast<int32>(OutVertices.size());
+			OutVertices.emplace_back(InVertices[i]);
 		}
-		OutIndices.Add(FoundIndex);
+		OutIndices.emplace_back(FoundIndex);
 	}
 }
