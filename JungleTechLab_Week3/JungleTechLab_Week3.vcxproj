@@ -127,6 +127,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <PropertyGroup Condition="'$(SceneSerializationTests)'=='true'">
+    <IntDir>$(Platform)\$(Configuration)\SerializationTests\</IntDir>
+    <TargetName>SceneSerializationTests</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(SceneSerializationTests)'=='true'">
+    <ClCompile><AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+    <Link><SubSystem>Console</SubSystem></Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="Console.cpp" />
@@ -151,7 +159,10 @@
     <ClCompile Include="ImGui\imgui_tables.cpp" />
     <ClCompile Include="ImGui\imgui_widgets.cpp" />
     <ClCompile Include="EngineLoop.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main.cpp">
+      <ExcludedFromBuild Condition="'$(SceneSerializationTests)'=='true'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Test\Serialization\SceneSerializationTest.cpp" Condition="'$(SceneSerializationTests)'=='true'" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ParticleSubUVComponent.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
@@ -177,6 +188,8 @@
     <ClInclude Include="TSparseArray.inl">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="StaticMeshComponent.cpp" />
     <ClCompile Include="World.cpp" />
@@ -195,6 +208,7 @@
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="JsonUtil.h" />
     <ClInclude Include="ObjectFactory.h" />
+    <ClInclude Include="SceneSerialization.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="InputState.h" />
     <ClInclude Include="Json\json.hpp" />

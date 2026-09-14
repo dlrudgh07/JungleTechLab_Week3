@@ -12,3 +12,6 @@ json::JSON EPrimitiveToJson(const EPrimitive& Primitive);
 FVector FVectorFromJson(const json::JSON& json);
 FRotator FRotatorFromJson(const json::JSON& json);
 EPrimitive EPrimitiveFromJson(const json::JSON& json);
+
+// JSON distinguishes integer and floating tokens; scene numbers accept both.
+float NumberFromJson(const json::JSON& Value);

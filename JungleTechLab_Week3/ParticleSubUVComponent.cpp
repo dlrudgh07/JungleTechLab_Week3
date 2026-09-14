@@ -48,3 +48,43 @@ void UParticleSubUVComponent::SetScaleAndOffset(FVector4 scaleoffset)
 	offsetX = scaleoffset.z;
 	offsetY = scaleoffset.w;
 }
+
+#include "SceneSerialization.h"
+void UParticleSubUVComponent::SerializeClass(json::JSON& outJson) const
+{
+	UStaticMeshComponent::SerializeClass(outJson);
+	outJson["Properties"]["Cols"] = Cols;
+	outJson["Properties"]["Rows"] = Rows;
+	outJson["Properties"]["Elapsed"] = Elapsed;
+	outJson["Properties"]["PlayRate"] = PlayRate;
+	outJson["Properties"]["bLoop"] = bLoop;
+	outJson["Properties"]["scaleX"] = scaleX;
+	outJson["Properties"]["scaleY"] = scaleY;
+	outJson["Properties"]["offsetX"] = offsetX;
+	outJson["Properties"]["offsetY"] = offsetY;
+}
+void UParticleSubUVComponent::DeserializeClass(const json::JSON& inJson)
+{
+	UStaticMeshComponent::DeserializeClass(inJson);
+	const auto& P = inJson.at("Properties");
+	if (P.hasKey("Cols"))
+		Cols = static_cast<decltype(Cols)>(P.at("Cols").ToInt());
+	if (P.hasKey("Rows"))
+		Rows = static_cast<decltype(Rows)>(P.at("Rows").ToInt());
+	if (P.hasKey("Elapsed"))
+		Elapsed = NumberFromJson(P.at("Elapsed"));
+	if (P.hasKey("PlayRate"))
+		PlayRate = NumberFromJson(P.at("PlayRate"));
+	if (P.hasKey("bLoop"))
+		bLoop = static_cast<decltype(bLoop)>(P.at("bLoop").ToBool());
+	if (P.hasKey("scaleX"))
+		scaleX = NumberFromJson(P.at("scaleX"));
+	if (P.hasKey("scaleY"))
+		scaleY = NumberFromJson(P.at("scaleY"));
+	if (P.hasKey("offsetX"))
+		offsetX = NumberFromJson(P.at("offsetX"));
+	if (P.hasKey("offsetY"))
+		offsetY = NumberFromJson(P.at("offsetY"));
+	if (Cols <= 0 || Rows <= 0)
+		throw std::runtime_error("Invalid SubUV grid");
+}

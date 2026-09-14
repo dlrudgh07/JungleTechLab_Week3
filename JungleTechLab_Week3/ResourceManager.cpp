@@ -43,7 +43,16 @@ void FResourceManager::Initialize(ID3D11Device* InputDevice, ID3D11DeviceContext
 void FResourceManager::RegisterStaticMesh(const std::string& Name, UStaticMesh* Mesh)
 {
 	assert(Mesh != nullptr && "Cannot register a null StaticMesh!");
-	StaticMeshMap[Name] = Mesh;
+	if (Name.empty() || !Mesh)
+		throw std::runtime_error("Invalid asset registration");
+	for (const auto& [Key, Value] : StaticMeshMap)
+	{
+		if (Key == Name && Value == Mesh)
+			return;
+		if (Key == Name || Value == Mesh)
+			throw std::runtime_error("Duplicate asset registration");
+	}
+	StaticMeshMap.emplace(Name, Mesh);
 }
 
 UStaticMesh* FResourceManager::GetStaticMesh(const std::string& Name) const
@@ -59,7 +68,16 @@ UStaticMesh* FResourceManager::GetStaticMesh(const std::string& Name) const
 void FResourceManager::RegisterMaterial(const std::string& Name, UMaterial* Material)
 {
 	assert(Material != nullptr && "Cannot register a null Material!");
-	MaterialMap[Name] = Material;
+	if (Name.empty() || !Material)
+		throw std::runtime_error("Invalid asset registration");
+	for (const auto& [Key, Value] : MaterialMap)
+	{
+		if (Key == Name && Value == Material)
+			return;
+		if (Key == Name || Value == Material)
+			throw std::runtime_error("Duplicate asset registration");
+	}
+	MaterialMap.emplace(Name, Material);
 }
 
 UMaterial* FResourceManager::GetMaterial(const std::string& Name) const
@@ -75,7 +93,16 @@ UMaterial* FResourceManager::GetMaterial(const std::string& Name) const
 void FResourceManager::RegisterTexture(const std::string& Name, UTexture* Texture)
 {
 	assert(Texture != nullptr && "Cannot register a null Texture!");
-	TextureMap[Name] = Texture;
+	if (Name.empty() || !Texture)
+		throw std::runtime_error("Invalid asset registration");
+	for (const auto& [Key, Value] : TextureMap)
+	{
+		if (Key == Name && Value == Texture)
+			return;
+		if (Key == Name || Value == Texture)
+			throw std::runtime_error("Duplicate asset registration");
+	}
+	TextureMap.emplace(Name, Texture);
 }
 
 UTexture* FResourceManager::GetTexture(const std::string& Name) const
@@ -151,6 +178,7 @@ void FResourceManager::LoadTextureFromFile(const std::string& AssetName, const s
 
 	// 4. GPU 데이터(SRV)를 FTextureResource 래퍼로 묶어서 UTexture에 연결
 	NewTexture->Resource = new FTextureResource{ RawSRV };
+	NewTexture->SourcePath = FString(FilePath);
 
 	// 5. 텍스처 해상도 추출
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> Texture2D;
@@ -262,4 +290,142 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	QuadMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
 	QuadMesh->Initialize();
 	RegisterStaticMesh("Quad", QuadMesh);
+}
+
+#include "SceneSerialization.h"
+#include <unordered_set>
+void FResourceManager::InitializeForLoad(FResourceManager& Target) const
+{
+	Target.Initialize(Device.Get(), DeviceContext.Get());
+}
+void FResourceManager::SwapAssets(FResourceManager& Other)
+{
+	StaticMeshMap.swap(Other.StaticMeshMap);
+	MaterialMap.swap(Other.MaterialMap);
+	TextureMap.swap(Other.TextureMap);
+}
+void FResourceManager::SerializeAssets(json::JSON& Out) const
+{
+	Out = json::JSON::Make(json::JSON::Class::Array);
+	std::unordered_set<const UObject*> Saved;
+	auto Save = [&](const auto& Map) {
+		for (const auto& [Name, Asset] : Map)
+		{
+			if (!Asset || !Saved.insert(Asset).second)
+				throw std::runtime_error("Asset registered more than once");
+			json::JSON Data;
+			Asset->SerializeClass(Data);
+			Data["AssetName"] = Name;
+			Out.append(Data);
+		}
+	};
+	Save(TextureMap);
+	Save(MaterialMap);
+	Save(StaticMeshMap);
+	// References to unregistered resources must not silently produce broken scenes.
+	auto Check = [&](const UObject* O) {
+		if (O && !Saved.contains(O))
+			throw std::runtime_error("Register referenced asset before saving scene");
+	};
+	for (const auto& [N, M] : MaterialMap)
+		Check(M->BaseTexture);
+	for (const auto& [N, M] : StaticMeshMap)
+		for (auto* Material : M->StaticMaterials)
+			Check(Material);
+}
+void FResourceManager::DeserializeAssets(const json::JSON& In)
+{
+	std::unique_ptr<FSceneLoadScope> OwnScope;
+	if (!FSceneLoadScope::Current)
+		OwnScope = std::make_unique<FSceneLoadScope>();
+	if (!StaticMeshMap.empty() || !MaterialMap.empty() || !TextureMap.empty())
+		throw std::runtime_error("Asset load requires an empty resource manager");
+	if (In.JSONType() != json::JSON::Class::Array)
+		throw std::runtime_error("Assets requires array");
+	std::vector<std::pair<UObject*, const json::JSON*>> Pending;
+	for (const auto& Data : In.ArrayRange())
+	{
+		const auto Name = Data.at("AssetName").ToString();
+		if (Name.empty())
+			throw std::runtime_error("Empty asset name");
+		auto Object = PreloadObject<UObject>(Data);
+		auto* Raw = Object.get();
+		if (Raw->IsA<UTexture>())
+		{
+			if (TextureMap.contains(Name))
+				throw std::runtime_error("Duplicate texture name");
+			RegisterTexture(Name, static_cast<UTexture*>(Raw));
+		}
+		else if (Raw->IsA<UMaterial>())
+		{
+			if (MaterialMap.contains(Name))
+				throw std::runtime_error("Duplicate material name");
+			RegisterMaterial(Name, static_cast<UMaterial*>(Raw));
+		}
+		else if (Raw->IsA<UStaticMesh>())
+		{
+			if (StaticMeshMap.contains(Name))
+				throw std::runtime_error("Duplicate mesh name");
+			RegisterStaticMesh(Name, static_cast<UStaticMesh*>(Raw));
+		}
+		else
+			throw std::runtime_error("Unsupported asset class");
+		Object.release();
+		Pending.emplace_back(Raw, &Data);
+	}
+	for (auto [Object, Data] : Pending)
+		Object->DeserializeClass(*Data);
+	for (auto& [Name, Texture] : TextureMap)
+	{
+		if (!Device)
+			throw std::runtime_error("Texture loading requires device");
+		auto Path = FPaths::StringToWString(Texture->SourcePath.CStr());
+		Microsoft::WRL::ComPtr<ID3D11Resource> Resource;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> SRV;
+		HRESULT Result;
+		if (FPaths::GetExtension(Texture->SourcePath.CStr()).ToLower() == "dds")
+			Result = DirectX::CreateDDSTextureFromFile(Device.Get(), Path.c_str(), Resource.GetAddressOf(),
+													   SRV.GetAddressOf());
+		else
+			Result = DirectX::CreateWICTextureFromFile(Device.Get(), DeviceContext.Get(), Path.c_str(),
+													   Resource.GetAddressOf(), SRV.GetAddressOf());
+		if (FAILED(Result))
+			throw std::runtime_error("Failed to restore texture: " + std::string(Texture->SourcePath.CStr()));
+		Texture->Resource = new FTextureResource{SRV};
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> Texture2D;
+		if (SUCCEEDED(Resource.As(&Texture2D)))
+		{
+			D3D11_TEXTURE2D_DESC Desc{};
+			Texture2D->GetDesc(&Desc);
+			Texture->Width = static_cast<int32>(Desc.Width);
+			Texture->Height = static_cast<int32>(Desc.Height);
+		}
+	}
+	for (auto& [Name, Mesh] : StaticMeshMap)
+	{
+		if (Mesh->CPUVertices.empty() && Mesh->CPUIndices.empty())
+			continue;
+		if (!Device || Mesh->CPUVertices.empty() || Mesh->CPUIndices.empty())
+			throw std::runtime_error("Invalid mesh buffers");
+		auto Buffer = std::make_unique<FBuffer>();
+		auto Create = [&](const void* Data, size_t Bytes, UINT Bind, ID3D11Buffer** Out) {
+			if (Bytes > UINT_MAX)
+				throw std::runtime_error("Mesh buffer too large");
+			D3D11_BUFFER_DESC Desc{};
+			Desc.ByteWidth = static_cast<UINT>(Bytes);
+			Desc.Usage = D3D11_USAGE_DEFAULT;
+			Desc.BindFlags = Bind;
+			D3D11_SUBRESOURCE_DATA Initial{};
+			Initial.pSysMem = Data;
+			if (FAILED(Device->CreateBuffer(&Desc, &Initial, Out)))
+				throw std::runtime_error("Failed to restore mesh buffer");
+		};
+		Create(Mesh->CPUVertices.data(), Mesh->CPUVertices.size() * sizeof(FVertexSimple), D3D11_BIND_VERTEX_BUFFER,
+			   Buffer->VertexBuffer.GetAddressOf());
+		Create(Mesh->CPUIndices.data(), Mesh->CPUIndices.size() * sizeof(uint32), D3D11_BIND_INDEX_BUFFER,
+			   Buffer->IndexBuffer.GetAddressOf());
+		Buffer->NumVertices = static_cast<uint32>(Mesh->CPUVertices.size());
+		Buffer->NumIndices = static_cast<uint32>(Mesh->CPUIndices.size());
+		Mesh->VertexBuffer = Buffer.release();
+	}
 }

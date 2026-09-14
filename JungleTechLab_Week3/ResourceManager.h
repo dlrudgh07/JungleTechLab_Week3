@@ -7,6 +7,10 @@
 #include <wrl/client.h>
 #include "IniConfig.h"
 
+namespace json
+{
+class JSON;
+}
 class UStaticMesh;
 class UMaterial;
 class UTexture;
@@ -39,6 +43,12 @@ public:
 	UTexture* GetDefaultWhiteTexture() const;
 
 	void ClearAll();
+	void SerializeAssets(json::JSON& Out) const;
+	void DeserializeAssets(const json::JSON& In);
+	void InitializeForLoad(FResourceManager& Target) const;
+	void SwapAssets(FResourceManager& Other);
+	FResourceManager(const FResourceManager&) = delete;
+	FResourceManager& operator=(const FResourceManager&) = delete;
 
 	FIniConfig IniConfig;
 

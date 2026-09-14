@@ -1,4 +1,4 @@
-﻿
+
 #pragma once
 
 #include <cstdint>
@@ -11,6 +11,9 @@
 #include <initializer_list>
 #include <ostream>
 #include <iostream>
+#include <charconv>
+#include <limits>
+#include <stdexcept>
 
 namespace json {
 
@@ -366,7 +369,16 @@ class JSON
                 case Class::String:
                     return "\"" + json_escape( *Internal.String ) + "\"";
                 case Class::Floating:
-                    return std::to_string( Internal.Float );
+                    {
+                    if (!std::isfinite(Internal.Float)) throw std::runtime_error("Cannot save non-finite JSON number");
+                    char Buffer[128];
+                    auto Result = std::to_chars(Buffer, Buffer + sizeof(Buffer), Internal.Float,
+                        std::chars_format::general, std::numeric_limits<double>::max_digits10);
+                    if (Result.ec != std::errc{}) throw std::runtime_error("Cannot format JSON number");
+                    std::string Number(Buffer, Result.ptr);
+                    if (Number.find_first_of(".eE") == std::string::npos) Number += ".0";
+                    return Number;
+                }
                 case Class::Integral:
                     return std::to_string( Internal.Int );
                 case Class::Boolean:
@@ -548,56 +560,27 @@ namespace {
         return std::move( String );
     }
 
-    JSON parse_number( const string &str, size_t &offset ) {
-        JSON Number;
-        string val, exp_str;
-        char c;
-        bool isDouble = false;
-        long exp = 0;
-        while( true ) {
-            c = str[offset++];
-            if( (c == '-') || (c >= '0' && c <= '9') )
-                val += c;
-            else if( c == '.' ) {
-                val += c; 
-                isDouble = true;
-            }
-            else
-                break;
+    JSON parse_number(const string& str, size_t& offset) {
+        const size_t Start = offset;
+        while (offset < str.size()) {
+            const char C = str[offset];
+            if ((C >= '0' && C <= '9') || C == '-' || C == '+' || C == '.' || C == 'e' || C == 'E') ++offset;
+            else break;
         }
-        if( c == 'E' || c == 'e' ) {
-            c = str[ offset++ ];
-            if( c == '-' ){ ++offset; exp_str += '-';}
-            while( true ) {
-                c = str[ offset++ ];
-                if( c >= '0' && c <= '9' )
-                    exp_str += c;
-                else if( !isspace( c ) && c != ',' && c != ']' && c != '}' ) {
-                    std::cerr << "ERROR: Number: Expected a number for exponent, found '" << c << "'\n";
-                    return std::move( JSON::Make( JSON::Class::Null ) );
-                }
-                else
-                    break;
-            }
-            exp = std::stol( exp_str );
+        const char* Begin = str.data() + Start;
+        const char* End = str.data() + offset;
+        if (str.find_first_of(".eE", Start) < offset) {
+            double Number = 0;
+            auto Result = std::from_chars(Begin, End, Number);
+            if (Result.ec != std::errc{} || Result.ptr != End || !std::isfinite(Number))
+                throw std::runtime_error("Invalid JSON number");
+            return JSON(Number);
         }
-        else if( !isspace( c ) && c != ',' && c != ']' && c != '}' ) {
-            std::cerr << "ERROR: Number: unexpected character '" << c << "'\n";
-            return std::move( JSON::Make( JSON::Class::Null ) );
-        }
-        --offset;
-        
-        if( isDouble )
-            Number = std::stod( val ) * std::pow( 10, exp );
-        else {
-            if( !exp_str.empty() )
-                Number = std::stol( val ) * std::pow( 10, exp );
-            else
-                Number = std::stol( val );
-        }
-        return std::move( Number );
+        long Number = 0;
+        auto Result = std::from_chars(Begin, End, Number);
+        if (Result.ec != std::errc{} || Result.ptr != End) throw std::runtime_error("Invalid JSON integer");
+        return JSON(Number);
     }
-
     JSON parse_bool( const string &str, size_t &offset ) {
         JSON Bool;
         if( str.substr( offset, 4 ) == "true" )

@@ -1,4 +1,5 @@
-﻿#include "ObjectFactory.h"
+﻿#include "ParticleSubUVComponent.h"
+#include "ObjectFactory.h"
 
 #include "Json/json.hpp"
 #include "Actor.h"
@@ -25,7 +26,15 @@ UObject* FObjectFactory::LoadObject(const FClassInfo* classInfo, const json::JSO
 
 	if (instance)
 	{
-		instance->DeserializeClass(inJson);
+		try
+		{
+			instance->DeserializeClass(inJson);
+		}
+		catch (...)
+		{
+			delete instance;
+			throw;
+		}
 	}
 	return instance;
 }
@@ -54,16 +63,16 @@ bool FObjectFactory::RegisterClassInfo(FString className, const FClassInfo* clas
 #include "World.h"
 #include "StaticMeshComponent.h"
 
-TMap<FString, std::function<const FClassInfo* ()>> FObjectFactory::mClassInfoMap = {
-	{"UObject", &UObject::GetClass },
-	{"AActor", &AActor::GetClass },
-	{"UActorComponent", &UActorComponent::GetClass },
-	{"USceneComponent", &USceneComponent::GetClass },
-	{ "UPrimitiveComponent", &UPrimitiveComponent::GetClass },
-	{ "UMeshComponent", &UMeshComponent::GetClass },
-	{ "UStaticMeshComponent", &UStaticMeshComponent::GetClass },
-	{ "UMaterial", &UMaterial::GetClass },
-	{ "UStaticMesh", &UStaticMesh::GetClass },
-	{"UTexture", &UTexture::GetClass },
-	{"UWorld", &UWorld::GetClass }
-};
+TMap<FString, std::function<const FClassInfo*()>> FObjectFactory::mClassInfoMap = {
+	{"UObject", &UObject::GetClass},
+	{"AActor", &AActor::GetClass},
+	{"UActorComponent", &UActorComponent::GetClass},
+	{"USceneComponent", &USceneComponent::GetClass},
+	{"UPrimitiveComponent", &UPrimitiveComponent::GetClass},
+	{"UMeshComponent", &UMeshComponent::GetClass},
+	{"UStaticMeshComponent", &UStaticMeshComponent::GetClass},
+	{"UMaterial", &UMaterial::GetClass},
+	{"UStaticMesh", &UStaticMesh::GetClass},
+	{"UTexture", &UTexture::GetClass},
+	{"UParticleSubUVComponent", &UParticleSubUVComponent::GetClass},
+	{"UWorld", &UWorld::GetClass}};

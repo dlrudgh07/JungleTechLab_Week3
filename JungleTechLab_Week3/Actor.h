@@ -23,6 +23,7 @@ public:
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
+	void PreloadComponents(const json::JSON& inJson);
 	void AddComponent(UActorComponent* actorComponent);
 	void AddRootSceneComponent(USceneComponent* sceneComponent);
 	USceneComponent* GetRootComponent() { return RootComponent; }
@@ -57,4 +58,3 @@ private:
 	bool bStarted = false;
 	bool bPendingKill = false;
 };
-

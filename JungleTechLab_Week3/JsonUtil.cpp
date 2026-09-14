@@ -46,7 +46,7 @@ FVector FVectorFromJson(const json::JSON& json)
 		throw std::runtime_error("Json Array expected for FVector");
 	}
 
-	return FVector(static_cast<float>(json.at(0).ToFloat()), static_cast<float>(json.at(1).ToFloat()), static_cast<float>(json.at(2).ToFloat()));
+	return FVector(NumberFromJson(json.at(0)), NumberFromJson(json.at(1)), NumberFromJson(json.at(2)));
 }
 
 FRotator FRotatorFromJson(const json::JSON& json)
@@ -56,7 +56,7 @@ FRotator FRotatorFromJson(const json::JSON& json)
 		throw std::runtime_error("Json Array expected for FRotator");
 	}
 
-	return FRotator(static_cast<float>(json.at(0).ToFloat()), static_cast<float>(json.at(1).ToFloat()), static_cast<float>(json.at(2).ToFloat()));
+	return FRotator(NumberFromJson(json.at(0)), NumberFromJson(json.at(1)), NumberFromJson(json.at(2)));
 }
 
 EPrimitive EPrimitiveFromJson(const json::JSON& json)
@@ -90,4 +90,19 @@ EPrimitive EPrimitiveFromJson(const json::JSON& json)
 	{
 		throw std::runtime_error("Unknown EPrimitive value in JSON");
 	}
+}
+
+#include <cmath>
+float NumberFromJson(const json::JSON& Value)
+{
+	double Number;
+	if (Value.JSONType() == json::JSON::Class::Integral)
+		Number = Value.ToInt();
+	else if (Value.JSONType() == json::JSON::Class::Floating)
+		Number = Value.ToFloat();
+	else
+		throw std::runtime_error("Expected a number");
+	if (!std::isfinite(Number) || std::abs(Number) > FLT_MAX)
+		throw std::runtime_error("Invalid scene number");
+	return static_cast<float>(Number);
 }

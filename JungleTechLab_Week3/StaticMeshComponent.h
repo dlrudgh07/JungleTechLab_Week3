@@ -6,6 +6,8 @@
 class UStaticMeshComponent : public UMeshComponent
 {
 public:
+	void SerializeClass(json::JSON& outJson) const override;
+	void DeserializeClass(const json::JSON& inJson) override;
 	UStaticMeshComponent() = default;
 	virtual ~UStaticMeshComponent() { StaticMesh = nullptr; }
 

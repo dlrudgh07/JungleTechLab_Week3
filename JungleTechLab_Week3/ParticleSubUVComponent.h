@@ -22,8 +22,8 @@ public:
 	void SetRows(int32 rows) { Rows = rows; }
 	int32 GetRows() { return Rows; }
 
-	//virtual void SerializeClass(json::JSON&) const override;
-	//virtual void DeserializeClass(const json::JSON&) override;
+	void SerializeClass(json::JSON&) const override;
+	void DeserializeClass(const json::JSON&) override;
 	void SetScaleAndOffset(FVector4 sclaeOffset);
 
 private:

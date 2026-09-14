@@ -1,4 +1,4 @@
-﻿template<typename TObject>
+template <typename TObject>
 	requires std::derived_from<TObject, UObject>
 TObject* FObjectFactory::ConstructUnInitializedObject()
 {
@@ -41,7 +41,15 @@ TObject* FObjectFactory::LoadObject(const json::JSON& inJson)
 	TObject* instance = ConstructUnInitializedObject<TObject>();
 	if (instance)
 	{
-		instance->DeserializeClass(inJson);
+		try
+		{
+			instance->DeserializeClass(inJson);
+		}
+		catch (...)
+		{
+			delete instance;
+			throw;
+		}
 	}
 
 	return instance;
