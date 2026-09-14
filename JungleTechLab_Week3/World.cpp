@@ -9,6 +9,7 @@
 #include "ResourceManager.h"
 #include "StaticMesh.h"
 #include "StaticMeshComponent.h"
+#include "UTextComponent.h"
 
 UWorld::~UWorld()
 {
@@ -147,6 +148,7 @@ AActor* UWorld::SpawnStaticMeshActor(const std::string& AssetName, FTransform Tr
 		return nullptr;
 	}
 
+
 	// 2. 팩토리를 통해 빈 액터와 컴포넌트 생성 후 에셋 할당
 	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
 	UStaticMeshComponent* MeshComponent = FObjectFactory::ConstructObject<UStaticMeshComponent>();
@@ -162,6 +164,28 @@ AActor* UWorld::SpawnStaticMeshActor(const std::string& AssetName, FTransform Tr
 	// 3. 씬의 액터 목록(Level 배열)에 추가
 	AddActor(NewActor);
 
+	return NewActor;
+}
+
+AActor* UWorld::SpawnTextMeshActor(FTransform Transform, const FResourceManager& ResourceManager)
+{
+	//리소스 매니저에서 굴림체 폰트 가져오기
+	FFontAsset* LoadFont = ResourceManager.GetFontAsset("Gulim");
+
+	// 2. 팩토리를 통해 빈 액터와 컴포넌트 생성 후 에셋 할당
+	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+	UTextComponent* TextComponent = FObjectFactory::ConstructObject<UTextComponent>();
+
+	TextComponent->SetRelativeLocation(Transform.Location);
+	TextComponent->SetRelativeRotation(Transform.Rotation);
+	TextComponent->SetRelativeScale3D(Transform.Scale);
+	TextComponent->SetFontAsset(LoadFont);
+	TextComponent->SetText(L"여기에 입력하세요.");
+
+	NewActor->AddRootSceneComponent(TextComponent); // 액터의 루트로 등록
+
+	// 3. 씬의 액터 목록(Level 배열)에 추가
+	AddActor(NewActor);
 	return NewActor;
 }
 

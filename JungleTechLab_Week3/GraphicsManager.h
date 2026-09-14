@@ -15,11 +15,28 @@
 class FGraphicsManager
 {
 public:
-	FGraphicsManager(HWND hWindow);
-	~FGraphicsManager();
+
+	//싱글톤
+	static FGraphicsManager& Get()
+	{
+		static FGraphicsManager Instance;
+		return Instance;
+	}
+
+	//이동, 복사 금지
+	FGraphicsManager(const FGraphicsManager&) = delete;
+	FGraphicsManager& operator=(const FGraphicsManager&) = delete;
+	FGraphicsManager(FGraphicsManager&&) = delete;
+	FGraphicsManager& operator=(FGraphicsManager&&) = delete;
+
+	//초기화
+	//한번 호출해주기 위함.
+	void Initialize(HWND hWindow);
+
+	void Release();
 
 	//void Prepare(const Camera* mCamera);
-	void Prepare(const FCamera* mCamera,EViewModeIndex viewMode);
+	void Prepare(const FCamera* mCamera, EViewModeIndex viewMode);
 	void GizmoPrepare();
 
 
@@ -43,6 +60,9 @@ public:
 	void SetCameraOrthoDistance(float distance) { mCameraOrthoDistance = distance; }
 
 	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32>& OutIndices);
+	FBuffer* CreateDynamicBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
+	void UpdateDynamicBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount);
+
 	URenderer* GetRenderer() const;
 
 	//Highlight
@@ -76,6 +96,9 @@ public:
 	void UpdateProjectionTransition(float deltaTime);
 
 private:
+	FGraphicsManager();
+	~FGraphicsManager();
+
 	URenderer* mRenderer = nullptr;
 	FMatrix mViewProjectionMatrix{};
 	FMatrix mViewOrthogonalProjectionMatrix{};

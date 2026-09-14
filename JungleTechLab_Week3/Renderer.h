@@ -63,6 +63,7 @@ public:
     D3D11_VIEWPORT ViewportInfo;
     ID3D11VertexShader* SimpleVertexShader;
     ID3D11PixelShader* SimplePixelShader;
+    ID3D11PixelShader* FontTexturePixelShader;
     ID3D11InputLayout* SimpleInputLayout;
 
 	ID3D11VertexShader* LineVertexShader;
@@ -108,6 +109,7 @@ public:
 	void CreateFrameBuffer();
 	ID3D11Buffer* CreateIndexBuffer(uint32* indices, uint32 indicesCount);
 	ID3D11Buffer* CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
+	ID3D11Buffer* CreateDynamicVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
 	void CreateLineVertexBuffer(uint32 maxVertices);
 	void CreateUUIDVertexBuffer(uint32 maxVertices);
 	void CreateRasterizerState();
@@ -137,11 +139,14 @@ public:
 
 	//Update
 	void RSUpdateState();
+	void UpdateDynamicVertexBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount);
 
 	//Rendering
 	void Prepare(EViewModeIndex viewMode);
 	void PrepareShader();
+	void PrepareFontShader();
 	void PrepareTextureShader();
+	void SetDefaultShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0),FVector4 UVTransform= FVector4(1,1,0,0));
 	void RenderPrimitive(FBuffer* pBuffer);
 	void RenderLines(const FLineVertex* vertices, uint32 numVertices);
