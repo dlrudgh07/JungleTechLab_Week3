@@ -164,3 +164,22 @@ AActor* UWorld::SpawnStaticMeshActor(const std::string& AssetName, FTransform Tr
 
 	return NewActor;
 }
+
+
+#include "ParticleSubUVComponent.h"
+AActor* UWorld::SpawnSubUVActor(FTransform Transform, const FResourceManager& RM)
+{
+	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+	UParticleSubUVComponent* Comp = FObjectFactory::ConstructObject<UParticleSubUVComponent>();
+
+	Comp->SetStaticMesh(RM.GetStaticMesh("Quad"));
+	Comp->SetMaterial(0, RM.GetMaterial("SubUVMaterial"));
+
+	Comp->SetRelativeLocation(Transform.Location);
+	Comp->SetRelativeRotation(Transform.Rotation);
+	Comp->SetRelativeScale3D(Transform.Scale);
+
+	NewActor->AddRootSceneComponent(Comp);
+	AddActor(NewActor);
+	return NewActor;
+}

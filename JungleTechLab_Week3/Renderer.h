@@ -29,6 +29,7 @@ struct FConstants
 	FMatrix World; //Model
 	FMatrix ViewProjection;
 	FVector4 Tint;          // rgb = 색, a = 섞는 비율
+	FVector4 UVTransform; // 현재 UV정보
 };
 
 class URenderer
@@ -130,7 +131,7 @@ public:
 	void Prepare(EViewModeIndex viewMode);
 	void PrepareShader();
 	void PrepareTextureShader();
-	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
+	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0),FVector4 UVTransform= FVector4(1,1,0,0));
 	void RenderPrimitive(FBuffer* pBuffer);
 	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);

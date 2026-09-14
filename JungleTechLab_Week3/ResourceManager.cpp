@@ -186,9 +186,9 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	// [2] 텍스처 에셋 로드 및 등록
 	// ==========================================
 	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)
-	LoadTextureFromFile("CrateTexture", "C:/Users/JUNGLE/Desktop/GameEngine/Week3/JungleTechLab_Week3/JungleTechLab_Week3/crate.jpg");
-
-	LoadTextureFromFile("FontTexture", "Assets/DDS/FontAtlas.dds");
+	LoadTextureFromFile("CrateTexture", "./Assets/FireAnimationTexture.png");
+	LoadTextureFromFile("FontTexture", "./Assets/DDS/FontAtlas.dds");
+	LoadTextureFromFile("FireTexture", "./Assets/FireAnimationTexture.png");
 
 	// ==========================================
 	// [3] 머티리얼 에셋 생성 및 등록
@@ -206,11 +206,16 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	RegisterMaterial("CrateMaterial", CrateMaterial);
 
 	// 3-3. Ascii 아틀라스 폰트 머티리얼
-	UMaterial* FotnMaterial = FObjectFactory::ConstructObject<UMaterial>();
-	FotnMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
-	FotnMaterial->BaseTexture = GetTexture("FontTexture");
-	RegisterMaterial("FotnMaterial", FotnMaterial);
+	UMaterial* FontTexture = FObjectFactory::ConstructObject<UMaterial>();
+	FontTexture->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	FontTexture->BaseTexture = GetTexture("FontTexture");
+	RegisterMaterial("FontTexture", FontTexture);
 
+	// 3-4. suvUV 머티리얼 
+	UMaterial* SubUVMaterial = FObjectFactory::ConstructObject<UMaterial>();
+	SubUVMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	SubUVMaterial->BaseTexture = GetTexture("FireTexture");
+	RegisterMaterial("SubUVMaterial", SubUVMaterial);
 
 	// ==========================================
 	// [4] 스태틱 메쉬 에셋 생성 및 등록

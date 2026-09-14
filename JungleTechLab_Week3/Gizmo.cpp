@@ -17,6 +17,13 @@ FVector FGizmo::AxisDirection(EGIZMO_AXIS axis) const {
 		case Z: return FVector(0.0f, 0.0f, 1.0f);
 		case Y: return Result_yaw.GetUnitAxis(EAxis::Y);
 		case X: return (Result_pitch * Result_yaw).GetUnitAxis(EAxis::X);
+
+
+		// 월드축
+		//case Z: return FVector(0.0f, 0.0f, 1.0f);
+		//case Y: return FVector(0.0f, 1.0f, 0.0f);
+		//case X: return FVector(1.0f, 0.0f, 0.0f);
+
 		default: return FVector(0);
 		}
 	}

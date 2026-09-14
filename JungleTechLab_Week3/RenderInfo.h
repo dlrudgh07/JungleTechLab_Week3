@@ -18,5 +18,5 @@ struct FRenderInfo
 	FMatrix WorldTransformMatrix;
 	FObjectID ObejctID;
 	FVector4 Color;
-
+	FVector4 UVTransform = FVector4(1, 1, 0, 0);
 };

@@ -41,7 +41,10 @@ public:
 		AddRenderInfos(OutRenderInfos);
 	}
 
+	virtual void ModifyRenderInfo(FRenderInfo& Info) const {}
+
 	// 핵심: 렌더러로 데이터 넘기기
+
 	void AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const override;
 
 	REFLECT_CLASS(UStaticMeshComponent, UMeshComponent)

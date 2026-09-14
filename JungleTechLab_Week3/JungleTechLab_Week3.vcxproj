@@ -150,6 +150,7 @@
     <ClCompile Include="EngineLoop.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ParticleSubUVComponent.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="MeshUtility.h" />
+    <ClInclude Include="ParticleSubUVComponent.h" />
     <ClInclude Include="Quad.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Texture.h" />

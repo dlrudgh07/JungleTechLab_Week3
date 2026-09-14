@@ -686,7 +686,7 @@ void URenderer::ReleaseDepthStencilState()
 	if (StencilOutlineState) { StencilOutlineState->Release();  StencilOutlineState = nullptr; }
 }
 
-void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint)
+void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint, FVector4 uvTransform)
 {
 	if (ConstantBuffer)
 	{
@@ -698,6 +698,7 @@ void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 t
 			constants->World = world;
 			constants->ViewProjection = viewProjection;
 			constants->Tint = tint;
+			constants->UVTransform = uvTransform;
 		}
 		DeviceContext->Unmap(ConstantBuffer, 0);
 	}

@@ -78,6 +78,8 @@ void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
 
 	updateControlPanelGUI(guiReference);
 	updatePropertyWindowGUI(guiReference);
+
+	//프레임드랍의 원인
 	updateObjectListPanelGUI(guiReference);
 
 	ConsoleWindow::GetInstance().Draw(mPanelWidth);
@@ -144,6 +146,14 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		}
 	}
 
+	//임시
+	if (ImGui::Button("Spawn SubUV"))
+	{
+		mCurrentWorld->SpawnSubUVActor(
+			{ FVector(0,0,0), FRotator(0,0,0), FVector(1,1,1) },
+			*guiReference.ResourceManager);
+	}
+	
 	ImGui::SameLine();
 	if (ImGui::InputInt("Number of spawn", &spawnCount))
 	{

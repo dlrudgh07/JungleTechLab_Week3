@@ -99,9 +99,6 @@
     <ClCompile Include="FEditorViewportClient.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Gizmo.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicsManager.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
@@ -149,6 +146,15 @@
     </ClCompile>
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Core\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshUtility.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSubUVComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Gizmo.cpp">
+      <Filter>Rendering\Gizmo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -325,6 +331,12 @@
     </ClInclude>
     <ClInclude Include="FPath.h">
       <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtility.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSubUVComponent.h">
+      <Filter>Core\Component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

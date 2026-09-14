@@ -98,7 +98,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
 			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color,renderInfo.UVTransform);
 
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
@@ -170,7 +170,9 @@ void FGraphicsManager::FlushLines()
 	//	mRenderer->UpdateConstant(FMatrix::Identity, mViewOrthogonalProjectionMatrix, FVector4(0, 0, 0, 0));
 	//}
 	mRenderer->UpdateConstant(FMatrix::Identity, mViewUnifiedProjectionMatrix, FVector4(0, 0, 0, 0));
+	mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());   // 도형 없어도 정점색이 나오도록 흰색 텍스처
 	mRenderer->RenderLines(&mLineVertices[0], mLineVertices.Num());
+
 
 	// 안 비우면 매 프레임 누적돼 버퍼가 넘친다. 용량은 유지한 채 개수만 0으로
 	mLineVertices.Reset(LINE_VERTEX_CAPACITY);
