@@ -22,10 +22,27 @@ void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) c
 		Info.Color = CurrentMaterial->TintColor;
 	}
 
-	Info.BoundsCenter = FVector(0.0f, 0.0f, 0.0f);
-	Info.BoundsHalfExtent = FVector(0.5f, 0.5f, 0.5f);
+	Info.LocalBoundsCenter = StaticMesh->LocalBounds.Center;
+	Info.LocalBoundsHalfExtent = StaticMesh->LocalBounds.BoxHalfExtent;
+
 	Info.WorldTransformMatrix = GetTransformMatrix().MakeMatrix();
 	Info.ObejctID = { Owner->ObjectID.GUID, Owner->ObjectID.InternalIndex };
 
 	outRenderInfos->Add(Info);
+}
+
+
+FBoxSphereBounds UStaticMeshComponent::CalculateBounds(const FMatrix& LocalToWorld) const
+{
+	if (StaticMesh == nullptr)
+		return FBoxSphereBounds();
+
+	return StaticMesh->LocalBounds.TransformBy(LocalToWorld);
+}
+
+FBoxSphereBounds UStaticMeshComponent::GetLocalBounds() const
+{
+	if (StaticMesh)
+		return StaticMesh->LocalBounds;
+	return FBoxSphereBounds{};
 }

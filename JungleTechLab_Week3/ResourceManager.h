@@ -6,6 +6,7 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include "TMap.h"
+#include "IniConfig.h"
 
 class UStaticMesh;
 class UMaterial;
@@ -60,6 +61,8 @@ public:
 	FFontAsset* GetFontAsset(const std::string& Name)const;
 
 	void ClearAll();
+
+	FIniConfig IniConfig;
 
 private:
 	FResourceManager();

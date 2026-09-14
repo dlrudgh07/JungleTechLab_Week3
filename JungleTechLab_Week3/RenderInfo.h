@@ -12,6 +12,7 @@ enum class EBlendMode
 struct FRenderInfo
 {
 	struct FBuffer* VertexBuffer = nullptr;
+	
 	const struct FVertexSimple* CollisionVertices = nullptr;
 	uint32 CollisionVertexCount = 0;
 
@@ -20,11 +21,11 @@ struct FRenderInfo
 	//BlendMode 임시 설정
 	//머티리얼 쪽에 있으면 좋을 거 같긴하다.
 	EBlendMode BlendMode = EBlendMode::Opaque;
-
-	FVector BoundsCenter = FVector(0.0f, 0.0f, 0.0f);
-	FVector BoundsHalfExtent = FVector(0.5f, 0.5f, 0.5f);
+	FVector LocalBoundsCenter = FVector(0.0f, 0.0f, 0.0f);
+	FVector LocalBoundsHalfExtent = FVector(0.5f, 0.5f, 0.5f);
 
 	FMatrix WorldTransformMatrix;
 	FObjectID ObejctID;
 	FVector4 Color;
+	FVector4 UVTransform = FVector4(1, 1, 0, 0);
 };

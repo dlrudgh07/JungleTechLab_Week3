@@ -111,6 +111,17 @@ public:
 	FString ToLower() const;
 	FString ToUpper() const;
 
+	bool Empty();
+
+	char*	Data() const;
+	size_t	Size() const;
+
+	size_t Find(const char c);
+	size_t FindFirstNotOf(FString str);
+	size_t FindLastNotOf(FString str);
+
+
+
 	unsigned char At(uint32 Index) const;
 
 	FString& operator+=(std::string_view str);

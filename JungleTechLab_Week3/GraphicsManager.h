@@ -10,6 +10,7 @@
 #include "RenderInfo.h"
 #include "Vector.h"
 #include "FQuad.h"
+#include "FBoxSphereBounds.h"
 
 class FGraphicsManager
 {
@@ -35,7 +36,7 @@ public:
 	void Release();
 
 	//void Prepare(const Camera* mCamera);
-	void Prepare(const FCamera* mCamera);
+	void Prepare(const FCamera* mCamera,EViewModeIndex viewMode);
 	void GizmoPrepare();
 
 
@@ -48,8 +49,6 @@ public:
 	void Update(float deltaTime);
 
 	float GetAspect() const { return mAspect; }
-	bool GetWireFrame() const { return mbWireFrame; } const
-	void SetWireFrame(bool bWireFrame) { mbWireFrame = bWireFrame; }
 
 	bool IsPerspectiveProjection() const;
 	void SetPerspectiveProjection(bool bPerspectiveProjection);
@@ -60,9 +59,10 @@ public:
 	float GetCameraOrthoDistance() const { return mCameraOrthoDistance; }
 	void SetCameraOrthoDistance(float distance) { mCameraOrthoDistance = distance; }
 
-	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
-	FBuffer* CreateDynamicBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
-	void UpdateDynamicBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount);
+FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32>& OutIndices);
+FBuffer* CreateDynamicBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
+void UpdateDynamicBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount);
+
 	URenderer* GetRenderer() const;
 
 	//Highlight
@@ -70,6 +70,10 @@ public:
 	// 호출 즉시 그리지 않고 배열에 쌓는다. FlushLines()에서 한 번에 그린다.
 	void DrawLine(const FVector& start, const FVector& end, const FVector4& color);
 	void DrawWorldAxis();
+	void DrawAABB(const FBoxSphereBounds&& WorldBounds);
+	void SetDrawAABB(const bool bInputShowAABB) { bShowAABB = bInputShowAABB; }
+	bool IsDrawAABB() const { return bShowAABB; }
+	void DrawGrid(FTransform CameraTransform, float Offset, int32 Range);
 	void FlushLines();
 
 
@@ -108,12 +112,13 @@ private:
 
 	// Graphics config
 	// 이번 프레임에 쌓인 선분. 정점 2개가 선분 하나
-	TArray<FVertexSimple> mLineVertices;
+	TArray<FLineVertex> mLineVertices;
 	TArray<FVertexSimple> mUUIDVertices;
 
-	bool mbWireFrame = false;
 	bool mbPerspectiveProjection = false;
 	bool mbShowWorldAxis = true;
+	bool bShowAABB = true;
+	bool mbShowGrid = true;
 	float mAspect = 0;
 	float mProjectionRatio = 0; // 0.0f ~ 1.0f, 0이면 직교, 1이면 원근, 그 사이면 혼합
 
@@ -123,4 +128,5 @@ private:
 	float mProjectionElapsed = 0.0f;
 	float mProjectionDuration = 1.0f;
 	bool mbProjectionTransitioning = false;
+
 };

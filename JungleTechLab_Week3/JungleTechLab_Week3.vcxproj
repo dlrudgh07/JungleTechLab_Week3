@@ -132,11 +132,15 @@
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="FFontAsset.cpp" />
+    <ClCompile Include="FBoxSphereBounds.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Guid.cpp" />
+    <ClCompile Include="IniConfig.cpp" />
+    <ClCompile Include="IniParser.cpp" />
     <ClCompile Include="JsonUtil.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
+    <ClCompile Include="MeshUtility.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
     <ClCompile Include="FEditorViewportClient.cpp" />
     <ClCompile Include="GraphicsManager.cpp" />
@@ -150,6 +154,7 @@
     <ClCompile Include="EngineLoop.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ParticleSubUVComponent.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
@@ -157,8 +162,13 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClInclude Include="Circle.h" />
     <ClInclude Include="FFontAsset.h" />
+    <ClInclude Include="FBoxSphereBounds.h" />
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
+    <ClInclude Include="MeshUtility.h" />
+    <ClInclude Include="ParticleSubUVComponent.h" />
+    <ClInclude Include="IniConfig.h" />
+    <ClInclude Include="IniParser.h" />
     <ClInclude Include="Quad.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Texture.h" />
@@ -169,6 +179,7 @@
     <ClInclude Include="TSparseArray.inl">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="StaticMeshComponent.cpp" />
     <ClCompile Include="UTextComponent.cpp" />
     <ClCompile Include="World.cpp" />
@@ -228,6 +239,9 @@
     <ClInclude Include="WindowApplication.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="ShaderLine.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="ShaderW0.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

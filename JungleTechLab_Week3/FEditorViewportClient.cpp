@@ -11,6 +11,7 @@
 #include "SceneManager.h"
 #include "MathUtility.h"
 #include "GraphicsManager.h"
+#include "StaticMeshComponent.h"
 
 // 정점 배열이 보이는 스코프라 sizeof 로 개수가 나온다.
 // 포인터로 받으면 배열 크기 정보가 사라지므로 여기서 개수를 같이 넘긴다.
@@ -43,6 +44,7 @@ static bool GetPrimitiveMesh(EPrimitive ePrimitive, const FVertexSimple*& OutVer
 	return false;
 }
 
+
 void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, float perspectiveRatio)
 {
 	bMouseHit = false;
@@ -51,23 +53,13 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 
 	// 투영 방식에 따라 광선을 만드는 법만 다르다. 두 점을 구하고 나면 이후 판정은 완전히 같다
 	FVector NearPoint, FarPoint;
-	//if (bPerspectiveProjection)
-	//{
-	//	DeprojectScreenToWorld(WindowApplication.Input.CursorX - ViewportInfo.TopLeftX, WindowApplication.Input.CursorY - ViewportInfo.TopLeftY,
-	//		ViewportInfo.Width, ViewportInfo.Height, 0.1f, 100.f, NearPoint, FarPoint);
-	//}
-	//else
-	//{
-	//	DeprojectScreenToWorldForOrtho(WindowApplication.Input.CursorX - ViewportInfo.TopLeftX, WindowApplication.Input.CursorY - ViewportInfo.TopLeftY,
-	//		ViewportInfo.Width, ViewportInfo.Height, 0.1f, 100.f, NearPoint, FarPoint);
-	//}
+
 	DeprojectScreenToWorldForUnified(WindowApplication.Input.CursorX - static_cast<int32>(ViewportInfo.TopLeftX), WindowApplication.Input.CursorY - static_cast<int32>(ViewportInfo.TopLeftY),
 		ViewportInfo.Width, ViewportInfo.Height, 0.1f, 100.f, mCamera.mOrthoDistance, perspectiveRatio, NearPoint, FarPoint);
 
 	mRayNear = NearPoint;
 	mRayFar = FarPoint;
 
-	float NearlistT = FLT_MAX;
 
 	// 드래그 중에는 히트 판정을 하지 않는다.
 	// 빠르게 끌면 커서가 축 캡슐을 벗어나는데, 그때 eAxis가 NONE이 되면 드래그가 끊긴다.
@@ -89,44 +81,79 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 	}
 
 	// Object 탐색
-	const TArray<FRenderInfo>& RenderInfos = World->GetRenderInfos();
-	for (const FRenderInfo& RI : RenderInfos)
+	// 광선의 출발점과 방향(정규화)을 월드 공간 기준으로 구합니다.
+	FVector RayOrigin = NearPoint;
+	FVector RayDirection = FarPoint - NearPoint;
+	RayDirection.Normalize();
+
+	float HitTimeActualTriangle = FLT_MAX;		// 삼각형검사를 통해 확인한 ray가 triangle을 통과한 시간
+	float MaxRayWorldDistance = (FarPoint - NearPoint).Length();
+
+	// Object 탐색 (FRenderInfo 배열 대신 Scene의 Actor나 Component를 순회)
+	const TArray<AActor*>& Actors = World->GetActors();
+	for (AActor* CurrentActor : Actors)
 	{
-		// RI 안에 CPU 데이터가 없으면 레이캐스트 통과 (예: 빈 렌더인포)
-		if (RI.CollisionVertices == nullptr || RI.CollisionVertexCount == 0)
-		{
+		// 컴포넌트 정보 가져오기
+		USceneComponent* RootCompnent = CurrentActor->GetRootComponent();
+		if (RootCompnent == nullptr || !RootCompnent->IsA(UStaticMeshComponent::GetClass()))
 			continue;
+		UStaticMeshComponent* StaticMeshComponent = static_cast<UStaticMeshComponent*>(RootCompnent);
+		if (StaticMeshComponent->GetStaticMesh() == nullptr)
+			continue;
+
+		// ==========================================
+		// [Broad Phase]: World AABB vs World Ray
+		// ==========================================
+		FBoxSphereBounds WorldBounds = StaticMeshComponent->GetWorldBounds();
+		float HitTimeAABB;
+
+		if (!IsRayIntersectAABB(RayOrigin, RayDirection, WorldBounds.Center, WorldBounds.BoxHalfExtent, HitTimeAABB))
+		{
+			continue; // 광선이 AABB를 빗나갔다면 과감하게 버림 (Early-Out)
 		}
 
-		// 2. RI에서 꺼내 쓰기만 하면 끝
-		const FVertexSimple* vertices = RI.CollisionVertices;
-		uint32 length = RI.CollisionVertexCount;
+		// 진짜 맞은 삼각형보다 더 나중에 맞았다면 어차피 뒤에 있는거라 확인할 필요없음
+		if (HitTimeAABB > HitTimeActualTriangle)
+			continue;
 
-		const FMatrix WorldToLocal = RI.WorldTransformMatrix.Inverse();
+		// ==========================================
+		// [Narrow Phase]: Local Triangle vs Local Ray
+		// ==========================================
+		// AABB 검사를 통과한 엑터들만 비싼 Inverse 연산을 수행
+		const FMatrix WorldToLocal = StaticMeshComponent->GetTransformMatrix().MakeMatrix().Inverse();
 		if (WorldToLocal == FMatrix::Zero) continue;
 
-		const FVector LocalNear = WorldToLocal.TransformPosition(NearPoint);
-		const FVector LocalFar = WorldToLocal.TransformPosition(FarPoint);
+		// 위치(Origin)는 TransformPosition으로 변환
+		const FVector LocalOrigin = WorldToLocal.TransformPosition(RayOrigin);
 
-		for (uint32 i = 0; i + 2 < length; i += 3)
+		// 방향(Direction)은 이동(Translation)을 무시해야 하므로 TransformVector로 변환!
+		const FVector LocalDir = WorldToLocal.TransformVector(RayDirection);
+
+		const std::vector<FVertexSimple>& Vertices = StaticMeshComponent->GetStaticMesh()->CPUVertices;
+		const std::vector<uint32>& Indices = StaticMeshComponent->GetStaticMesh()->CPUIndices;
+		uint32 IndexCount = static_cast<uint32>(Indices.size());
+
+		for (uint32 CurrentIndex = 0; CurrentIndex + 2 < IndexCount; CurrentIndex += 3)
 		{
-			const FVector V0 = vertices[i].GetPosition();
-			const FVector V1 = vertices[i + 1].GetPosition();
-			const FVector V2 = vertices[i + 2].GetPosition();
+			const FVector V0 = Vertices[Indices[CurrentIndex]].GetPosition();
+			const FVector V1 = Vertices[Indices[CurrentIndex + 1]].GetPosition();
+			const FVector V2 = Vertices[Indices[CurrentIndex + 2]].GetPosition();
 
 			float OutT, OutU, OutV;
-			if (RayIntersectsTriangle(LocalNear, LocalFar, V0, V1, V2, OutT, OutU, OutV)
-				&& OutT < NearlistT)
+
+			// LocalOrigin과 LocalDir을 넘겨줍니다.
+			if (RayIntersectsTriangle(LocalOrigin, LocalDir, V0, V1, V2, OutT, OutU, OutV)
+				&& OutT < HitTimeActualTriangle)
 			{
-				NearlistT = OutT;
+				HitTimeActualTriangle = OutT;
 				bMouseHit = true;
-				mHoveredRenderInfo = RI;
+				HoveredActor = CurrentActor;
 			}
 		}
 	}
 }
 
-void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio)
+void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio, FIniConfig& IniConfig)
 {
 	const FInputState& Input = WindowApplication.Input;
 	ImGuiIO& io = ImGui::GetIO();
@@ -135,7 +162,7 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 	// 회전을 이동보다 먼저, 이번 프레임에 돌린 방향으로 바로 움직이게
 	if (!io.WantCaptureMouse && Input.IsDown(VK_RBUTTON))
 	{
-		mCamera.Rotate(Input.MouseDX, Input.MouseDY);
+		mCamera.Rotate(Input.MouseDX, Input.MouseDY, IniConfig.GetCameraSensitivity());
 	}
 
 	// Camera Velocity
@@ -180,12 +207,13 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 		//입력이 있으면 마우스 휠은 카메라 이동속도 조절
 		else
 		{
-			mCamera.Speed *= FMath::Pow(1.2f, Input.MouseWheelDelta);
-			mCamera.Speed = FMath::Clamp(mCamera.Speed, 0.1f, 100.0f);
+			IniConfig.SetCameraSpeed(IniConfig.GetCameraSpeed() * FMath::Pow(1.2f, Input.MouseWheelDelta));
 		}
 	}
 
-	const FVector TargetVelocity = MoveDir * mCamera.Speed;
+
+	//const FVector TargetVelocity = MoveDir * mCamera.Speed;
+	const FVector TargetVelocity = MoveDir * IniConfig.GetCameraSpeed();
 
 	// 지수 감쇠만큼 카메라 속도가 서서히 줄어듬
 	const float Alpha = FMath::Exp(-mCamera.Damping * deltaTime);
@@ -202,16 +230,9 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 		mGizmo.CycleGizmoType();
 	}
 
-
+	
 	RayCast(ViewportInfo, sceneManager->GetCurrentWorld(), perspectiveRatio);
 
-	//RayCast
-
-	////Editor Click 처리
-	//if (mClickedActor)
-	//{
-	//	mClickedActor->BeginFrame();
-	//}
 
 	// 누른 순간에만 선택을 갱신한다. 떼는 것으로는 선택이 풀리지 않는다.
 	if (!ImGui::GetIO().WantCaptureMouse && Input.WasPressed(VK_LBUTTON))
@@ -227,12 +248,10 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 			{
 				mGizmo.BeginDrag(mRayNear, mRayFar, sceneManager->GetSelectedActor()->GetTransform());
 			}
-
 			//Actor라면 액터를 저장
 			else
 			{
-				uint32 clickedObjectIndex = mHoveredRenderInfo.ObejctID.InternalIndex;
-				UObject* ClickedObject = UObject::GetObjectByInternalIndex(clickedObjectIndex);
+				UObject* ClickedObject = HoveredActor;
 				if (ClickedObject && ClickedObject->IsA(AActor::GetClass()))
 				{
 					Hit = static_cast<AActor*>(ClickedObject);
@@ -316,15 +335,53 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 
 }
 
-bool FEditorViewportClient::RayIntersectsTriangle(const FVector& Origin, const FVector& Dir, const FVector& V0, const FVector& V1, const FVector& V2, float& OutT, float& OutU, float& OutV)
+bool FEditorViewportClient::IsRayIntersectAABB(
+												const FVector& RayOrigin,
+												const FVector& RayDirection,
+												const FVector& BoxCenter,
+												const FVector& BoxHalfExtent,
+												float& HitTimeAABB)
 {
+	const FVector Min = BoxCenter - BoxHalfExtent;
+	const FVector Max = BoxCenter + BoxHalfExtent;
+
+	const FVector InvDir(
+		(FMath::Abs(RayDirection.x) > 1e-6f) ? 1.0f / RayDirection.x : 1e30f,
+		(FMath::Abs(RayDirection.y) > 1e-6f) ? 1.0f / RayDirection.y : 1e30f,
+		(FMath::Abs(RayDirection.z) > 1e-6f) ? 1.0f / RayDirection.z : 1e30f
+	);
+
+	// 광선의 방정식을 이용하여, 시간값 도출
+	float TimeMinCurrentAxis = (Min.x - RayOrigin.x) * InvDir.x;
+	float TimeMaxCurrentAxis = (Max.x - RayOrigin.x) * InvDir.x;
+	float TimeMin = FMath::Min(TimeMinCurrentAxis, TimeMaxCurrentAxis);
+	float TimeMax = FMath::Max(TimeMinCurrentAxis, TimeMaxCurrentAxis);
+
+	TimeMinCurrentAxis = (Min.y - RayOrigin.y) * InvDir.y;
+	TimeMaxCurrentAxis = (Max.y - RayOrigin.y) * InvDir.y;
+	TimeMin = FMath::Max(TimeMin, FMath::Min(TimeMinCurrentAxis, TimeMaxCurrentAxis));
+	TimeMax = FMath::Min(TimeMax, FMath::Max(TimeMinCurrentAxis, TimeMaxCurrentAxis));
+
+	TimeMinCurrentAxis = (Min.z - RayOrigin.z) * InvDir.z;
+	TimeMaxCurrentAxis = (Max.z - RayOrigin.z) * InvDir.z;
+	TimeMin = FMath::Max(TimeMin, FMath::Min(TimeMinCurrentAxis, TimeMaxCurrentAxis));
+	TimeMax = FMath::Min(TimeMax, FMath::Max(TimeMinCurrentAxis, TimeMaxCurrentAxis));
+
+	// Ray의 진행 방향(앞)에 Box가 있고, 교차 구간이 존재하는지 확인
+	HitTimeAABB = TimeMin;
+	return TimeMax >= FMath::Max(0.0f, TimeMin);
+}
+
+bool FEditorViewportClient::RayIntersectsTriangle(const FVector& Origin, const FVector& Dir, const FVector& V0, const FVector& V1, const FVector& V2, float& OutT, float& OutU, float& OutV) {
 	static const float EPSILON = 1e-6f;
+
 
 	//삼각형판정 => O +tD = V0+ uE1+vE2
 	// -tD + uE1 + vE2 = O - V0
 	//E2=v2-v0. E1=v1-v0
 
-	FVector D = Dir - Origin;
+
+	FVector D = Dir;
 	FVector T = Origin - V0;
 	FVector E2 = V2 - V0;
 	FVector E1 = V1 - V0;
@@ -345,7 +402,6 @@ bool FEditorViewportClient::RayIntersectsTriangle(const FVector& Origin, const F
 	OutT = FVector::dot(E2, Q) * InvDet;
 
 	return (OutT > EPSILON);                  // 광선 앞쪽만
-
 	// OutT : 맞은물체가 얼마나 가까이있나(float)
 	// OutU, OutV 정확환 클릭지점을 확인하려면 필요
 }
@@ -434,7 +490,7 @@ void FEditorViewportClient::DeprojectScreenToWorldForUnified(
 
 void FEditorViewportClient::Reset()
 {
-	mHoveredRenderInfo = FRenderInfo();
+	HoveredActor = nullptr;
 	bMouseHit = false;
 	mGizmo.Reset();
 }

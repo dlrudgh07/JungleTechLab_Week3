@@ -6,6 +6,8 @@
 #include "Camera.h"
 #include "RenderInfo.h"
 #include "Gizmo.h"
+#include "IniConfig.h"
+#include "enum.h"
 
 class AActor;
 class FSceneManager;
@@ -15,25 +17,35 @@ struct FEditorViewportClient
 public:
 	void RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, float perspectiveRatio);
 	float GetFov() const { return mCamera.mFovDegree; }
-	void Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio);
+	void Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio, FIniConfig& IniConfig);
 	bool IsMouseHit() const { return bMouseHit; }
-
-	void Reset();
+	EViewModeIndex GetViewMode() const { return ViewMode; }
+	EEngineShowFlags GetShowFlags() const { return ShowFlags; }
+	void SetViewMode(EViewModeIndex mode) { ViewMode = mode; }
+	void SetShowFlag(EEngineShowFlags showflag, bool bEnabled) //1이면 스위치켜기, 0이면 끄기
+	{
+		if (bEnabled) ShowFlags |= showflag;
+		else          ShowFlags &= ~showflag;
+	} 
+ void Reset();
 
 	FCamera& GetCamera() { return mCamera; }
 
 	FCamera mCamera;
 	FGizmo mGizmo;
 
+	// todo
+	// 다른 곳에서도 AABB처리가 필요하여 일단 뺏음
+	// 이건 별도의 namespace에서 처리하는게 좋아보임
+	static bool IsRayIntersectAABB(
+		const FVector& RayOrigin,
+		const FVector& RayDirection,
+		const FVector& BoxCenter,
+		const FVector& BoxHalfExtent,
+		float& HitTimeAABB);
+
 private:
-	//마우스 밑 무언가의
-	FRenderInfo mHoveredRenderInfo;
-
-	// 선택된 액터의 RenderInfo는 캐시하지 않는다. 필요할 때 ClickedActor->GetRenderInfos()로 그때그때 뽑는다.
-	//마우스 밑 무언가가 Actor이면 저장. RayCast 에서 채워야 함 (아직 미구현)
-	// INFO: mClickedActor moved to FSceneManager::mSelectedActor.
-	//AActor* mClickedActor = nullptr;
-
+	AActor* HoveredActor = nullptr;
 
 	bool RayIntersectsTriangle( // 두개의 
 		const FVector& Origin,
@@ -60,7 +72,11 @@ private:
 
 
 	bool bMouseHit = false;
-	
+	EViewModeIndex ViewMode = EViewModeIndex::VMI_Unlit;
+	EEngineShowFlags ShowFlags  =
+		  EEngineShowFlags::SF_Primitives
+		| EEngineShowFlags::SF_WorldAxis
+		| EEngineShowFlags::SF_Gizmo;;
 	// RayCast가 이번 프레임에 쏜 광선. 기즈모 드래그가 같은 광선을 다시 쓴다
 	FVector mRayNear;
 	FVector mRayFar;

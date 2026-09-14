@@ -7,12 +7,19 @@
 #include "RenderInfo.h"
 #include <wrl/client.h>
 #include "Console.h"
-#include "DDSTextureLoader.h"
-
+//#include "DDSTextureLoader.h"
 #pragma comment(lib, "user32")
 #pragma comment(lib, "d3d11")
 #pragma comment(lib, "d3dcompiler")
 
+struct FLineVertex
+{
+	float x, y, z;    // Position (12 byte)
+	float r, g, b, a; // Color    (16 byte)
+};
+
+// 전방선언
+struct FBuffer;
 // 1. Define the triangle vertices
 struct FVertexSimple
 {
@@ -28,8 +35,8 @@ struct FConstants
 	FMatrix World; //Model
 	FMatrix ViewProjection;
 	FVector4 Tint;          // rgb = 색, a = 섞는 비율
+	FVector4 UVTransform; // 현재 UV정보
 };
-
 
 class URenderer
 {
@@ -59,6 +66,10 @@ public:
     ID3D11PixelShader* FontTexturePixelShader;
     ID3D11InputLayout* SimpleInputLayout;
 
+	ID3D11VertexShader* LineVertexShader;
+	ID3D11PixelShader* LinePixelShader;
+	ID3D11InputLayout* LineInputLayout; // Line
+
 	ID3D11ShaderResourceView* UUIDTextureView;
 	D3D11_SAMPLER_DESC UUIDSamplerInfo;
 	ID3D11SamplerState* UUIDSamplerState;
@@ -87,6 +98,7 @@ public:
 
 
     unsigned int Stride;
+	unsigned int LineStride;
 
 public:
 
@@ -95,6 +107,7 @@ public:
 	void CreateDeviceAndSwapChain(HWND hWindow);
 	void CreateShader();
 	void CreateFrameBuffer();
+	ID3D11Buffer* CreateIndexBuffer(uint32* indices, uint32 indicesCount);
 	ID3D11Buffer* CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
 	ID3D11Buffer* CreateDynamicVertexBuffer(FVertexSimple* vertices, UINT ByteWidth);
 	void CreateLineVertexBuffer(uint32 maxVertices);
@@ -129,17 +142,18 @@ public:
 	void UpdateDynamicVertexBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount);
 
 	//Rendering
-	void Prepare(bool bWireFrame);
+	void Prepare(EViewModeIndex viewMode);
 	void PrepareShader();
 	void PrepareFontShader();
 	void PrepareTextureShader();
 	void SetDefaultShader();
-	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
-	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
-	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
+	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0),FVector4 UVTransform= FVector4(1,1,0,0));
+	void RenderPrimitive(FBuffer* pBuffer);
+	void RenderLines(const FLineVertex* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);
+	bool ReAllocateLineVertexBuffer(uint32 RequestSize);
 	bool ReAllocateUUIDVertexBuffer(uint32 RequestSize);
-	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
+	void RenderHighlight(FBuffer* pBuffer, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
 	void SwapBuffer();
 
 

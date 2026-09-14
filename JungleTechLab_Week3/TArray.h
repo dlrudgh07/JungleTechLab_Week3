@@ -231,3 +231,10 @@ inline void TArray<T>::RemoveLast()
 	mDatas.erase(mDatas.begin() + mDatas.size() - 1);
 
 }
+
+template<typename T>
+inline void TArray<T>::SetNum(int32 NewNum, bool bAllowShrinking)
+{
+	mDatas.resize(NewNum);
+	if (bAllowShrinking) mDatas.shrink_to_fit();
+}

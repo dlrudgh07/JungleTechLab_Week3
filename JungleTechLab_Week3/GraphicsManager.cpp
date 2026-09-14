@@ -6,14 +6,13 @@
 #include "StaticMesh.h"
 #include "Texture.h"
 #include "FQuad.h"
-
+#include "MeshUtility.h"
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
 static constexpr uint32 UUID_VERTEX_CAPACITY = 8192; // 초기에할당한 크기이다 용량이 꽉차면 2배로 재할당
 
 FGraphicsManager::FGraphicsManager()
-	: mbWireFrame(false)
-	, mbPerspectiveProjection(true)
+	: mbPerspectiveProjection(true)
 	, mProjectionRatio(1.0f)
 {
 	//명시적 호출로 변경
@@ -34,6 +33,8 @@ void FGraphicsManager::Initialize(HWND hWindow)
 	mRenderer->CreateUUIDVertexBuffer(UUID_VERTEX_CAPACITY);
 
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
+
+	
 }
 
 void FGraphicsManager::Release()
@@ -47,10 +48,9 @@ void FGraphicsManager::Release()
 	delete mRenderer;
 }
 
-void FGraphicsManager::Prepare(const FCamera* mCamera)
+void FGraphicsManager::Prepare(const FCamera* mCamera,EViewModeIndex viewMode)
 {
-	mRenderer->Prepare(mbWireFrame);
-
+	mRenderer->Prepare(viewMode);
 	//Shader가 나눠짐에 따라 분리
 	//mRenderer->PrepareShader();
 
@@ -124,10 +124,10 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
 			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color);
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color,renderInfo.UVTransform);
 
 
-		mRenderer->RenderPrimitive(renderInfo.VertexBuffer->VertexBuffer.Get(), renderInfo.VertexBuffer->NumVertices);
+		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
 	}
 	mRenderer->PrepareShader();
 }
@@ -182,6 +182,105 @@ void FGraphicsManager::DrawWorldAxis()
 	}
 }
 
+void FGraphicsManager::DrawAABB(const FBoxSphereBounds&& WorldBounds)
+{
+	if (!bShowAABB)
+		return;
+
+	// 1. 월드 공간에서의 Min, Max 계산
+	const FVector Min = WorldBounds.Center - WorldBounds.BoxHalfExtent;
+	const FVector Max = WorldBounds.Center + WorldBounds.BoxHalfExtent;
+
+	// 2. 월드 공간의 꼭짓점(코너) 8개 구하기
+	FVector Corners[8] =
+	{
+		FVector(Min.x, Min.y, Min.z), // 0: 좌하단 앞
+		FVector(Max.x, Min.y, Min.z), // 1: 우하단 앞
+		FVector(Max.x, Max.y, Min.z), // 2: 우하단 뒤
+		FVector(Min.x, Max.y, Min.z), // 3: 좌하단 뒤
+
+		FVector(Min.x, Min.y, Max.z), // 4: 좌상단 앞
+		FVector(Max.x, Min.y, Max.z), // 5: 우상단 앞
+		FVector(Max.x, Max.y, Max.z), // 6: 우상단 뒤
+		FVector(Min.x, Max.y, Max.z)  // 7: 좌상단 뒤
+	};
+
+	// 3. DrawLine으로 박스의 모서리(Edge) 12개 그리기
+	// 노란색
+	const FVector4 BoxColor(1.0f, 1.0f, 0.0f, 1.0f);
+
+	// 밑면(Bottom Face) 4줄
+	DrawLine(Corners[0], Corners[1], BoxColor);
+	DrawLine(Corners[1], Corners[2], BoxColor);
+	DrawLine(Corners[2], Corners[3], BoxColor);
+	DrawLine(Corners[3], Corners[0], BoxColor);
+
+	// 윗면(Top Face) 4줄
+	DrawLine(Corners[4], Corners[5], BoxColor);
+	DrawLine(Corners[5], Corners[6], BoxColor);
+	DrawLine(Corners[6], Corners[7], BoxColor);
+	DrawLine(Corners[7], Corners[4], BoxColor);
+
+	// 기둥(Vertical Pillars) 4줄
+	DrawLine(Corners[0], Corners[4], BoxColor);
+	DrawLine(Corners[1], Corners[5], BoxColor);
+	DrawLine(Corners[2], Corners[6], BoxColor);
+	DrawLine(Corners[3], Corners[7], BoxColor);
+}
+
+
+void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 Range)
+{
+	if (!mbShowGrid) return;
+
+	int RepeatNum = Range * (1.0f / Offset);
+	float GridGap = -0.001f;
+	float Extent = Offset * (RepeatNum);
+
+	FVector X1;
+	FVector X2;
+	FVector Y1;
+	FVector Y2;
+
+	FVector Origin;
+
+	Origin.x = floorf(CameraTransform.Location.x / (Offset * 5)) * Offset * 5;
+	Origin.y = floorf(CameraTransform.Location.y / (Offset * 5)) * Offset * 5;
+
+	for (int i = -RepeatNum; i <= RepeatNum; i++)
+	{
+		float CurrentOffset = Offset * i;
+		float alpha = 0.25f;
+		if (i % 5 == 0)
+		{
+			alpha = 0.8f;
+		}
+
+		X1 = { CurrentOffset, Extent , GridGap };
+		X2 = { CurrentOffset, -Extent , GridGap };
+		Y1 = { Extent, CurrentOffset , GridGap };
+		Y2 = { -Extent, CurrentOffset , GridGap };
+		X1 += Origin; X2 += Origin; Y1 += Origin; Y2 += Origin;
+
+		if (X1.x == 0)
+		{
+			DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
+			continue;
+		}
+		else if (Y1.y == 0)
+		{
+			DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
+			continue;
+		}
+		else if (X1.x == 0 && Y1.y == 0)
+		{
+			continue;
+		}
+		DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
+		DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
+	}
+}
+
 void FGraphicsManager::FlushLines()
 {
 	if (mLineVertices.Num() == 0) return;
@@ -197,7 +296,9 @@ void FGraphicsManager::FlushLines()
 	//	mRenderer->UpdateConstant(FMatrix::Identity, mViewOrthogonalProjectionMatrix, FVector4(0, 0, 0, 0));
 	//}
 	mRenderer->UpdateConstant(FMatrix::Identity, mViewUnifiedProjectionMatrix, FVector4(0, 0, 0, 0));
+	mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());   // 도형 없어도 정점색이 나오도록 흰색 텍스처
 	mRenderer->RenderLines(&mLineVertices[0], mLineVertices.Num());
+
 
 	// 안 비우면 매 프레임 누적돼 버퍼가 넘친다. 용량은 유지한 채 개수만 0으로
 	mLineVertices.Reset(LINE_VERTEX_CAPACITY);
@@ -306,15 +407,34 @@ void FGraphicsManager::SetPerspectiveProjection(bool bPerspectiveProjection)
 	mbPerspectiveProjection = bPerspectiveProjection;
 }
 
-FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize)
+// todo
+// 나중에 std::vector를 TArray로 변경해야함
+FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32> & OutIndices)
 {
-	ID3D11Buffer* rawBuffer = mRenderer->CreateVertexBuffer(InputVertices, InputVerticesSize);
+	OutVertices.clear();
+	OutIndices.clear();
+
 	UINT numVertices = static_cast<UINT>(InputVerticesSize / sizeof(FVertexSimple));
+	Welding(InputVertices, numVertices, OutVertices, OutIndices);
 
+	uint32 indicesCount = static_cast<uint32>(OutIndices.size());
+	uint32 verticesCount = static_cast<uint32>(OutVertices.size());
+	if (OutVertices.size() == 0)
+	{
+		return nullptr;
+	}
+
+	ID3D11Buffer* vertexBuffer = mRenderer->CreateVertexBuffer(&OutVertices[0], verticesCount *sizeof(FVertexSimple));
+	ID3D11Buffer* indexBuffer= mRenderer->CreateIndexBuffer(&OutIndices[0], indicesCount);
 	FBuffer* newBuffer = new FBuffer();
-	newBuffer->VertexBuffer = rawBuffer;
-	newBuffer->NumVertices = numVertices;
 
+	// VertexBuffer 설정
+	newBuffer->VertexBuffer.Attach(vertexBuffer);  //소유권이전
+	newBuffer->NumVertices = verticesCount;
+
+	// IndexBuffer 설정
+	newBuffer->IndexBuffer.Attach(indexBuffer); //소유권이전
+	newBuffer->NumIndices = indicesCount;
 	return newBuffer;
 }
 
@@ -364,8 +484,8 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		return;
 
 	// EPrimitive 하드코딩을 제거하고 RI에서 정보를 가져옴
-	const FVector Center = RI.BoundsCenter;
-	const FVector HalfExtent = RI.BoundsHalfExtent;
+	const FVector Center = RI.LocalBoundsCenter;
+	const FVector HalfExtent = RI.LocalBoundsHalfExtent;
 
 	const FVector ObjectLocation = RI.WorldTransformMatrix.TransformPosition(Center);
 	const float Depth = FVector::dot(ObjectLocation - mCameraLocation, mCameraForward);
@@ -383,19 +503,18 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		RI.WorldTransformMatrix.GetUnitAxis(EAxis::Z).Length());
 
 	FVector OutlineScale = {
-		GetOutlineAxisScale(HalfExtent.x * WorldScale.x, WorldThickness),
-		GetOutlineAxisScale(HalfExtent.y * WorldScale.y, WorldThickness),
-		GetOutlineAxisScale(HalfExtent.z * WorldScale.z, WorldThickness) };
+			GetOutlineAxisScale(HalfExtent.x * WorldScale.x, WorldThickness),
+			GetOutlineAxisScale(HalfExtent.y * WorldScale.y, WorldThickness),
+			GetOutlineAxisScale(HalfExtent.z * WorldScale.z, WorldThickness)
+	};
 
 	const FMatrix Outline = FMatrix::Translation(FVector(-Center.x, -Center.y, -Center.z))
 		* FMatrix::Scale(OutlineScale)
 		* FMatrix::Translation(Center)
 		* RI.WorldTransformMatrix;
 
-	// 맵 캐싱 제거 및 ComPtr의 원시 포인터 전달
 	mRenderer->RenderHighlight(
-		RI.VertexBuffer->VertexBuffer.Get(),
-		RI.VertexBuffer->NumVertices,
+		RI.VertexBuffer,
 		mViewUnifiedProjectionMatrix,
 		Outline,
 		RI

@@ -99,9 +99,6 @@
     <ClCompile Include="FEditorViewportClient.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Gizmo.cpp">
-      <Filter>Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicsManager.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
@@ -155,6 +152,27 @@
     </ClCompile>
     <ClCompile Include="UTextComponent.cpp">
       <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshUtility.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSubUVComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticMesh.cpp">
+      <Filter>Core\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="FBoxSphereBounds.cpp">
+      <Filter>Core\Types</Filter>
+    </ClCompile>
+    <ClCompile Include="IniParser.cpp">
+      <Filter>Core\Serialize</Filter>
+    </ClCompile>
+    <ClCompile Include="IniConfig.cpp">
+      <Filter>Core\Serialize</Filter>
+    </ClCompile>
+    <ClCompile Include="Gizmo.cpp">
+      <Filter>Rendering\Gizmo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -338,12 +356,30 @@
     <ClInclude Include="UTextComponent.h">
       <Filter>Core\Component</Filter>
     </ClInclude>
+    <ClInclude Include="MeshUtility.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSubUVComponent.h">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="FBoxSphereBounds.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="IniParser.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="IniConfig.h">
+      <Filter>Core\Serialize</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderW0.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="FontTexturePixelShader.hlsl">
+      <Filter>Rendering\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ShaderLine.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

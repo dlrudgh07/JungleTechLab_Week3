@@ -1,5 +1,5 @@
 ﻿#include "Renderer.h"
-
+#include "StaticMesh.h"
 void URenderer::Create(HWND hWindow)
 {
 	CreateDeviceAndSwapChain(hWindow);
@@ -98,6 +98,23 @@ void URenderer::ReleaseFrameBuffer()
 	}
 }
 
+ID3D11Buffer* URenderer::CreateIndexBuffer(uint32* indices,uint32 indicesCount)
+{	
+
+	D3D11_BUFFER_DESC indexbufferdesc = {};
+	//indexbufferdesc.ByteWidth = ByteWidth;
+	indexbufferdesc.ByteWidth = (indicesCount) * sizeof(uint32);  // indices개수
+	indexbufferdesc.Usage = D3D11_USAGE_IMMUTABLE;
+	indexbufferdesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA indexbufferSRD = { indices };
+
+	ID3D11Buffer* IndexBuffer=nullptr;
+	Device->CreateBuffer(&indexbufferdesc, &indexbufferSRD, &IndexBuffer);
+
+	return IndexBuffer;
+}
+
 ID3D11Buffer* URenderer::CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWidth)
 {
 	UINT numVertices = ByteWidth / sizeof(FVertexSimple);
@@ -109,7 +126,7 @@ ID3D11Buffer* URenderer::CreateVertexBuffer(FVertexSimple* vertices, UINT ByteWi
 
 	D3D11_SUBRESOURCE_DATA vertexbufferSRD = { vertices };
 
-	ID3D11Buffer* vertexBuffer;
+	ID3D11Buffer* vertexBuffer = nullptr;
 	Device->CreateBuffer(&vertexbufferdesc, &vertexbufferSRD, &vertexBuffer);
 
 	return vertexBuffer;
@@ -249,6 +266,8 @@ void URenderer::CreateShader()
 {
 	ID3DBlob* vertexshaderCSO;
 	ID3DBlob* pixelshaderCSO;
+	ID3DBlob* LineVertexshaderCSO;
+	ID3DBlob* LinePixelshaderCSO;
 
 	HRESULT hr = D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
 	if (FAILED(hr))
@@ -312,7 +331,25 @@ void URenderer::CreateShader()
 		assert(false);
 	}
 
+	//// Line용 Shader
+	D3DCompileFromFile(L"ShaderLine.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &LineVertexshaderCSO, nullptr);
+
+	Device->CreateVertexShader(LineVertexshaderCSO->GetBufferPointer(), LineVertexshaderCSO->GetBufferSize(), nullptr, &LineVertexShader);
+
+	D3DCompileFromFile(L"ShaderLine.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &LinePixelshaderCSO, nullptr);
+
+	Device->CreatePixelShader(LinePixelshaderCSO->GetBufferPointer(), LinePixelshaderCSO->GetBufferSize(), nullptr, &LinePixelShader);
+
+	D3D11_INPUT_ELEMENT_DESC LineLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	Device->CreateInputLayout(LineLayout, ARRAYSIZE(LineLayout), LineVertexshaderCSO->GetBufferPointer(), LineVertexshaderCSO->GetBufferSize(), &LineInputLayout);
+
 	Stride = sizeof(FVertexSimple);
+	LineStride = sizeof(FLineVertex);
 
 	vertexshaderCSO->Release();
 	pixelshaderCSO->Release();
@@ -337,9 +374,27 @@ void URenderer::ReleaseShader()
 		SimpleVertexShader->Release();
 		SimpleVertexShader = nullptr;
 	}
+
+	if (LineInputLayout)
+	{
+		LineInputLayout->Release();
+		LineInputLayout = nullptr;
+	}
+
+	if (LinePixelShader)
+	{
+		LinePixelShader->Release();
+		LinePixelShader = nullptr;
+	}
+
+	if (LineVertexShader)
+	{
+		LineVertexShader->Release();
+		LineVertexShader = nullptr;
+	}
 }
 
-void URenderer::Prepare(bool bWireFrame)
+void URenderer::Prepare(EViewModeIndex viewMode)
 {
 	DeviceContext->ClearRenderTargetView(FrameBufferRTV, ClearColor);
 
@@ -351,7 +406,11 @@ void URenderer::Prepare(bool bWireFrame)
 
 	DeviceContext->RSSetViewports(1, &ViewportInfo);
 
-	DeviceContext->RSSetState(RasterizerState[bWireFrame ? 1 : 0]);
+	if(viewMode==EViewModeIndex::VMI_Wireframe)
+	DeviceContext->RSSetState(RasterizerState[1]);
+
+	else
+	DeviceContext->RSSetState(RasterizerState[0]);
 
 	//세 번째 인자에 nullptr 대신 DSV를 넘긴다
 	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, DepthStencilView);
@@ -416,8 +475,6 @@ void URenderer::PrepareFontShader()
 
 void URenderer::PrepareTextureShader()
 {
-	//UUIDSamplerState가 없어서 일단 주석. 나중에 전용으로 생성할 필요 있으면 만들 것.
-	//DeviceContext->PSSetSamplers(0, 1, &UUIDSamplerState);
 	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
 
 	if (ConstantBuffer)
@@ -500,22 +557,34 @@ void URenderer::CreateDefaultWhiteTexture()
 
 
 
-void URenderer::RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices)
+void URenderer::RenderPrimitive(FBuffer* pBuffer)
 {
 	UINT offset = 0;
-	DeviceContext->IASetVertexBuffers(0, 1, &pBuffer, &Stride, &offset);
-	DeviceContext->Draw(numVertices, 0);
+	// ComPtr에 &를 붙이면 ReleaseAndGetAddressOf()가 호출되어 버퍼가 해제된다.
+	// 주소만 넘길 때는 반드시 GetAddressOf()를 써야 한다.
+	DeviceContext->IASetVertexBuffers(0, 1, pBuffer->VertexBuffer.GetAddressOf(), &Stride, &offset);
+
+	if (pBuffer->NumIndices > 0)
+	{
+		DeviceContext->IASetIndexBuffer(pBuffer->IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		DeviceContext->DrawIndexed(pBuffer->NumIndices, 0, 0);
+	}
+	else DeviceContext->Draw(pBuffer->NumVertices, 0);
+
 }
 
 // 쌓아둔 선분 전체를 한 번의 Draw로 그린다.
 // 토폴로지를 바꾸므로 반드시 이 함수 안에서 되돌린다. 안 그러면 뒤에 그리는 것들이 전부 깨진다.
-void URenderer::RenderLines(const FVertexSimple* vertices, uint32 numVertices)
+void URenderer::RenderLines(const FLineVertex* vertices, uint32 numVertices)
 {
 	if (!LineVertexBuffer || vertices == nullptr || numVertices == 0) return;
 
 	if (numVertices > LineVertexCapacity)
 	{
-		numVertices = LineVertexCapacity;   // 넘치면 자른다. 늘리려면 CreateLineVertexBuffer의 인자를 키운다
+		if (ReAllocateUUIDVertexBuffer(numVertices) == false)
+		{
+			numVertices = LineVertexCapacity;
+		}
 	}
 
 	// WRITE_DISCARD: 이전 내용을 버리고 새 메모리를 받는다.
@@ -530,12 +599,46 @@ void URenderer::RenderLines(const FVertexSimple* vertices, uint32 numVertices)
 
 	// 직전에 메시 버퍼가 물려 있으므로 갈아끼워야 한다
 	UINT offset = 0;
-	DeviceContext->IASetVertexBuffers(0, 1, &LineVertexBuffer, &Stride, &offset);
+
+	DeviceContext->VSSetShader(LineVertexShader, nullptr, 0);
+	DeviceContext->PSSetShader(LinePixelShader, nullptr, 0);
+	DeviceContext->IASetInputLayout(LineInputLayout);
+	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
+
+	DeviceContext->IASetVertexBuffers(0, 1, &LineVertexBuffer, &LineStride, &offset);
 	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	DeviceContext->Draw(numVertices, 0);
 
+
+	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
+	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
+	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+bool URenderer::ReAllocateLineVertexBuffer(uint32 RequestSize)
+{
+	uint32 NextVertexCapacity = max(RequestSize, LineVertexCapacity * 2);
+
+	ID3D11Buffer* NewLineVertexBuffer = nullptr;
+
+	D3D11_BUFFER_DESC vertexbufferdesc = {};
+	vertexbufferdesc.ByteWidth = NextVertexCapacity * sizeof(FLineVertex);
+	vertexbufferdesc.Usage = D3D11_USAGE_DYNAMIC;
+	vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	if (SUCCEEDED(Device->CreateBuffer(&vertexbufferdesc, nullptr, &NewLineVertexBuffer)))
+	{
+		LineVertexCapacity = NextVertexCapacity;
+		ReleaseUUIDVertexBuffer();
+		LineVertexBuffer = NewLineVertexBuffer;
+		return (true);
+	}
+	return(false);
+
 }
 
 bool URenderer::ReAllocateUUIDVertexBuffer(uint32 RequestSize)
@@ -590,7 +693,7 @@ void URenderer::RenderUUID(const FVertexSimple* vertices, uint32 numVertices)
 	DeviceContext->Draw(numVertices, 0);
 }
 
-void URenderer::RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI)
+void URenderer::RenderHighlight(FBuffer* pBuffer, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI)
 {
 	// (a) 스텐실에 1 마킹. 색은 쓰지 않으므로 화면 변화 없음.
 	//     다른 오브젝트에 가려진 부분도 반드시 마킹해야 한다. 여기서 빠지면
@@ -598,13 +701,13 @@ void URenderer::RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mView
 	DeviceContext->OMSetBlendState(NoColorWriteBlendState, nullptr, 0xffffffff);
 	DeviceContext->OMSetDepthStencilState(StencilMarkState, 1);
 	UpdateConstant(RI.WorldTransformMatrix, mViewProjectionMatrix);
-	RenderPrimitive(pBuffer, Num);
+	RenderPrimitive(pBuffer);
 
 	// (b) 확대판을 단색으로. 스텐실 != 1 인 곳만 통과 -> 테두리
 	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	DeviceContext->OMSetDepthStencilState(StencilOutlineState, 1);
 	UpdateConstant(Outline, mViewProjectionMatrix, FVector4(1.f, 0.6f, 0.f, 1.f));
-	RenderPrimitive(pBuffer, Num);
+	RenderPrimitive(pBuffer);
 
 	// (c) 원상복구
 	DeviceContext->OMSetDepthStencilState(DepthStencilState, 0);
@@ -765,7 +868,7 @@ void URenderer::ReleaseDepthStencilState()
 	if (StencilOutlineState) { StencilOutlineState->Release();  StencilOutlineState = nullptr; }
 }
 
-void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint)
+void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint, FVector4 uvTransform)
 {
 	if (ConstantBuffer)
 	{
@@ -777,6 +880,7 @@ void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 t
 			constants->World = world;
 			constants->ViewProjection = viewProjection;
 			constants->Tint = tint;
+			constants->UVTransform = uvTransform;
 		}
 		DeviceContext->Unmap(ConstantBuffer, 0);
 	}

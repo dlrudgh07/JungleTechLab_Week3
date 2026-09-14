@@ -79,6 +79,8 @@ void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
 
 	updateControlPanelGUI(guiReference);
 	updatePropertyWindowGUI(guiReference);
+
+	//프레임드랍의 원인
 	updateObjectListPanelGUI(guiReference);
 
 	ConsoleWindow::GetInstance().Draw(mPanelWidth);
@@ -152,6 +154,14 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		}
 	}
 
+	//임시
+	if (ImGui::Button("Spawn SubUV"))
+	{
+		mCurrentWorld->SpawnSubUVActor(
+			{ FVector(0,0,0), FRotator(0,0,0), FVector(1,1,1) },
+			*guiReference.ResourceManager);
+	}
+	
 	ImGui::SameLine();
 	if (ImGui::InputInt("Number of spawn", &spawnCount))
 	{
@@ -191,12 +201,13 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	//ImGui::SliderFloat("Speed", &Camera.Speed, -10.0f, 10.0f);
 	if (ImGui::BeginCombo("##ShowFlags", "Show Flags"))
 	{
-		bool bWireFrame = guiReference.GraphicsManager->GetWireFrame();
-		if (ImGui::Checkbox("Wire frame", &bWireFrame))
+		/* -------------사용법--------------------
+		bool b시각화대상 = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_시각화대상);
+		if (ImGui::Checkbox("BillBoard", &b시각화대상))
 		{
-			guiReference.GraphicsManager->SetWireFrame(bWireFrame);
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, b시각화대상);
 		}
-
+		*/
 		bool bShowWorldAxis = guiReference.GraphicsManager->GetShowWorldAxis();
 		if (ImGui::Checkbox("World axis", &bShowWorldAxis))
 		{
@@ -215,16 +226,85 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 			guiReference.GraphicsManager->StartProjectionTransition(bOrthographic);
 		}
+		bool bShowPrimitive = HasFlag(guiReference.ViewportClient->GetShowFlags(),EEngineShowFlags::SF_Primitives);
+		if (ImGui::Checkbox("Show Primitives", &bShowPrimitive))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bShowPrimitive);
+		}
+
+		bool bShowAABB = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BoundingBoxes);
+		if (ImGui::Checkbox("Show AABB", &bShowAABB))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BoundingBoxes, bShowAABB);
+		}
+
+		bool bShowGizmo = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Gizmo);
+		if (ImGui::Checkbox("Gizmo", &bShowGizmo))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Gizmo, bShowGizmo);
+		}
+
+		bool bBillBoard = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BillboardText);
+		if (ImGui::Checkbox("BillBoard", &bBillBoard))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BillboardText, bBillBoard);
+		}
+
+		bool bGrid = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Grid);
+		if (ImGui::Checkbox("Grid", &bGrid))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Grid, bGrid);
+		}
+
+		bool bUUID = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_UUID);
+		if (ImGui::Checkbox("UUID", &bUUID))
+		{
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_UUID, bUUID);
+		}
 
 		ImGui::EndCombo();
 	}
 
-	ImGui::Text("FOV     ");
+	// viewMode UI. 배열 순서는 EViewModeIndex 선언 순서(Lit, Unlit, Wireframe)와 맞아야 한다
+	const char* viewModeNames[] = { "Lit", "Unlit", "Wireframe" };
+	int32 viewModeIndex = static_cast<int32>(guiReference.ViewportClient->GetViewMode());
+	if (ImGui::Combo("View Mode", &viewModeIndex, viewModeNames, IM_ARRAYSIZE(viewModeNames)))
+	{
+		guiReference.ViewportClient->SetViewMode(static_cast<EViewModeIndex>(viewModeIndex));
+	}
+
+	ImGui::Text("FOV        ");
 	ImGui::SameLine();
 	ImGui::SliderFloat("##FOV", &camera.mFovDegree, 0.0f, 180.0f);
 
+
+	float Speed = guiReference.ResourceManager->IniConfig.GetCameraSpeed();
+	ImGui::Text("Speed      ");
+	ImGui::SameLine();
+	if (ImGui::SliderFloat("##Speed", &Speed, 0.1f, 100.0f))
+	{
+		guiReference.ResourceManager->IniConfig.SetCameraSpeed(Speed);
+	}
+	if (ImGui::IsItemDeactivatedAfterEdit())
+	{
+		guiReference.ResourceManager->IniConfig.Save();
+	}
+
+	float Sensitivity = guiReference.ResourceManager->IniConfig.GetCameraSensitivity();
+	ImGui::Text("Sensitivity");
+	ImGui::SameLine();
+	if (ImGui::SliderFloat("##Sensitivity", &Sensitivity, 0.01f, 0.5f))
+	{
+		guiReference.ResourceManager->IniConfig.SetCameraSensitivity(Sensitivity);
+	}
+	if (ImGui::IsItemDeactivatedAfterEdit())
+	{
+		guiReference.ResourceManager->IniConfig.Save();
+	}
+
+
 	// 1) 라벨 텍스트를 먼저 그리고 같은 줄로
-	ImGui::Text("Location");
+	ImGui::Text("Location   ");
 	ImGui::SameLine();
 
 	// 2) 텍스트를 그린 "뒤"의 남은 폭을 기준으로 계산
@@ -240,7 +320,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	ImGui::SetNextItemWidth(itemWidth);
 	ImGui::DragFloat("##CamLocZ", &camera.Transform.Location.z, 0.1f, 10.0f);
 
-	ImGui::Text("Rotation");
+	ImGui::Text("Rotation   ");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
 	ImGui::DragFloat("##CamRotX", &camera.Transform.Rotation.Roll, 0.1f, 180.0f);
@@ -276,6 +356,34 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		guiReference.ViewportClient->mGizmo.CycleGizmoType();
 	}
 
+	float Offset = guiReference.ResourceManager->IniConfig.GetGridOffset();
+
+	ImGui::SeparatorText("Grid Controll");
+	ImGui::Text("Offset ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(150);
+	if (ImGui::DragFloat("##OFFSET", &Offset, 0.01f, 0.1f, 20.0f))
+	{
+		guiReference.ResourceManager->IniConfig.SetGridOffset(Offset);
+	}
+	if (ImGui::IsItemDeactivatedAfterEdit())
+	{
+		guiReference.ResourceManager->IniConfig.Save();
+	}
+
+	int Range = guiReference.ResourceManager->IniConfig.GetGridRange();
+
+	ImGui::Text("Range  ");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(150);
+	if (ImGui::DragInt("##RANGE", &Range, 0.1f, 20, 100))
+	{
+		guiReference.ResourceManager->IniConfig.SetGridRange(Range);
+	}
+	if (ImGui::IsItemDeactivatedAfterEdit())
+	{
+		guiReference.ResourceManager->IniConfig.Save();
+	}
 
 	ImGui::End();
 }

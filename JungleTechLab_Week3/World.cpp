@@ -186,6 +186,24 @@ AActor* UWorld::SpawnTextMeshActor(FTransform Transform, const FResourceManager&
 
 	// 3. 씬의 액터 목록(Level 배열)에 추가
 	AddActor(NewActor);
+	return NewActor;
+}
 
+
+#include "ParticleSubUVComponent.h"
+AActor* UWorld::SpawnSubUVActor(FTransform Transform, const FResourceManager& RM)
+{
+	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+	UParticleSubUVComponent* Comp = FObjectFactory::ConstructObject<UParticleSubUVComponent>();
+
+	Comp->SetStaticMesh(RM.GetStaticMesh("Quad"));
+	Comp->SetMaterial(0, RM.GetMaterial("SubUVMaterial"));
+
+	Comp->SetRelativeLocation(Transform.Location);
+	Comp->SetRelativeRotation(Transform.Rotation);
+	Comp->SetRelativeScale3D(Transform.Scale);
+
+	NewActor->AddRootSceneComponent(Comp);
+	AddActor(NewActor);
 	return NewActor;
 }
