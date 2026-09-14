@@ -350,7 +350,7 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 				strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
 
 				//글자가 바뀐다면
-				if (ImGui::InputText("Text", buffer, sizeof(buffer), 0, (ImGuiInputTextCallback)1))
+				if (ImGui::InputText("Text", buffer, sizeof(buffer), 0))
 				{					
 					TextComp->SetText(StringToWString(buffer));
 					

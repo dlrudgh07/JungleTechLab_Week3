@@ -129,6 +129,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer->VertexBuffer.Get(), renderInfo.VertexBuffer->NumVertices);
 	}
+	mRenderer->PrepareShader();
 }
 
 
@@ -332,7 +333,7 @@ FBuffer* FGraphicsManager::CreateDynamicBuffer(FVertexSimple* InputVertices, uin
 void FGraphicsManager::UpdateDynamicBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount)
 {
 	if (mRenderer == nullptr) return;
-	mRenderer->UpdateDynamicVertexBuffer(Buffer, Vertices, VertexCount);
+	mRenderer->UpdateDynamicVertexBuffer(Buffer, Vertices, VertexCount); 
 }
 
 URenderer* FGraphicsManager::GetRenderer() const

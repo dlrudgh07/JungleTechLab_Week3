@@ -21,6 +21,7 @@ TArray<FVector2> FFontAsset::GetUV(const FCharacterInfo& Info) const
 	uv0.y = (float)Info.Y / (float)AtlasHeight;
 	uv1.x = (float)(Info.X + Info.Width) / (float)AtlasWidth;
 	uv1.y = (float)(Info.Y + Info.Height) / (float)AtlasHeight;
+
 	uv.Add(uv0);
 	uv.Add(uv1);
 	return uv;

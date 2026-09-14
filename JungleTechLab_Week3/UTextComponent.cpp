@@ -72,6 +72,7 @@ void UTextComponent::BuildTextQuads()
 	{
 		//한글자의 정보 가져오기
 		const FCharacterInfo* Info = FontAsset->GetCharInfo((int32)ch);
+		
 		if (Info == nullptr)
 		{
 			//UE 로그가 한글도 지원하도록 나중에 작업해보자.
