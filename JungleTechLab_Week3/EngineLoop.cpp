@@ -82,6 +82,7 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	ViewportClient = new FEditorViewportClient();
 
 	SceneManager = new FSceneManager();
+	SceneManager->SetResourceManager(ResourceManager, GraphicsManager);
 	//SceneManager->RequestNewScene();
 	SceneManager->RequestNewScene();
 }
@@ -215,6 +216,7 @@ void FEngineLoop::End()
 	delete FrameTimer;
 	delete SceneManager;
 	delete FileManager;
+	delete ResourceManager;
 
 	FGraphicsManager::Get().Release();
 }

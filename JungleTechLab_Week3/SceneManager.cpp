@@ -1,4 +1,5 @@
-﻿
+﻿#include "SceneSerialization.h"
+
 #include "SceneManager.h"
 
 #include <algorithm>
@@ -596,6 +597,12 @@ void FSceneManager::ExecuteNewScene()
 		delete mCurrentWorld;
 	}
 	mCurrentWorld = FObjectFactory::ConstructObject<UWorld>();
+	if (mResources)
+	{
+		mResources->ClearAll();
+		if (mGraphics)
+			mResources->InitializeDefaultAssets(mGraphics);
+	}
 }
 void FSceneManager::DeleteScene()
 {
@@ -607,52 +614,36 @@ void FSceneManager::DeleteScene()
 	ResetSelectedActor();
 }
 
-
-
-// todo
-// seriailze 부분 다시짜야함
-void FSceneManager::SaveScene(
-	std::string_view sceneName,
-	const FFileManager& fileManager)
+// Scene format version 1 stores assets and GUID references.
+void FSceneManager::SaveScene(std::string_view sceneName, const FFileManager& fileManager)
 {
-	FString fileName = kSceneDataDir;
-	fileName += FString("/");
-	fileName += sceneName;
-	fileName += kSceneDataSuffix;
-
-	// Read the current scene data to read the Version
-	uint32 version = 0;
-
 	try
 	{
-		FString readSceneString = fileManager.ReadFileToString(fileName);
-		json::JSON readSceneJson = json::JSON::Load(readSceneString);
+		if (!mCurrentWorld)
+			throw std::runtime_error("No world to save");
+		FString fileName = kSceneDataDir;
+		fileName += FString("/");
+		fileName += sceneName;
+		fileName += kSceneDataSuffix;
 
-		if (!readSceneJson.hasKey("Version") || readSceneJson.at("Version").JSONType() != json::JSON::Class::Integral)
-		{
-			version = 0;
-		}
-		else
-		{
-			version = readSceneJson.at("Version").ToInt();
-		}
+		json::JSON writeSceneJson = json::JSON::Make(json::JSON::Class::Object);
+		json::JSON worldJson = json::JSON::Make(json::JSON::Class::Object);
+		mCurrentWorld->SerializeClass(worldJson);
+
+		writeSceneJson["Version"] = 1;
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
+		mResources->SerializeAssets(writeSceneJson["Assets"]);
+		writeSceneJson["World"] = worldJson;
+		ValidateSceneReferences(writeSceneJson);
+
+		FString jsonString = FString(writeSceneJson.dump(1, "  "));
+		fileManager.WriteStringToFile(fileName, jsonString);
 	}
-	catch (const std::exception& e)
+	catch (const std::exception& Error)
 	{
-		// If the file does not exist or cannot be read, we can assume it's a new scene and set version to 0
-		assert(e.what());
-		version = 0;
+		UE_LOG("Failed to save scene: %s", Error.what());
 	}
-
-	json::JSON writeSceneJson = json::JSON::Make(json::JSON::Class::Object);
-	json::JSON worldJson = json::JSON::Make(json::JSON::Class::Object);
-	mCurrentWorld->SerializeClass(worldJson);
-
-	writeSceneJson["Version"] = version;
-	writeSceneJson["World"] = worldJson;
-
-	FString jsonString = FString(writeSceneJson.dump(1, "  "));
-	fileManager.WriteStringToFile(fileName, jsonString);
 }
 
 void FSceneManager::ExecuteLoadScene()
@@ -674,28 +665,41 @@ void FSceneManager::ExecuteLoadScene()
 		return;
 	}
 
-	json::JSON readSceneJson = json::JSON::Load(jsonString);
-
-	json::JSON worldJson = readSceneJson.at("World");
-
-	UWorld* newWorld = FObjectFactory::LoadObject<UWorld>(worldJson);
-	if (!newWorld)
+	try
 	{
-		throw std::runtime_error(std::format("Failed to load world from scene: {}", PendingSceneName));
+		auto Data = json::JSON::Load(jsonString);
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
+		FResourceManager StagedResources;
+		mResources->InitializeForLoad(StagedResources);
+		FSceneLoadScope Scope;
+		if (Data.hasKey("Version") &&
+			(Data.at("Version").JSONType() != json::JSON::Class::Integral || Data.at("Version").ToInt() > 1))
+			throw std::runtime_error("Unsupported scene version");
+		if (Data.hasKey("Version") && Data.at("Version").ToInt() == 1 && !Data.hasKey("Assets"))
+			throw std::runtime_error("Missing scene assets");
+		if (Data.hasKey("Assets"))
+		{
+			if (!Data.hasKey("Version") || Data.at("Version").ToInt() != 1)
+				throw std::runtime_error("Unsupported scene version");
+			StagedResources.DeserializeAssets(Data.at("Assets"));
+		}
+		else if (mGraphics)
+			StagedResources.InitializeDefaultAssets(mGraphics);
+		auto NewWorld = PreloadObject<UWorld>(Data.at("World"));
+		NewWorld->DeserializeClass(Data.at("World"));
+		ResetSelectedActor();
+		delete mCurrentWorld;
+		mCurrentWorld = NewWorld.release();
+		mResources->SwapAssets(StagedResources);
+		if (!Data.hasKey("Assets"))
+			UE_LOG("Legacy scene has no asset data; missing mesh references cannot be recovered.");
 	}
-
-	// Replace the contents of mCurrentWorld with newWorld
-	delete mCurrentWorld;
-	mCurrentWorld = newWorld;
-
-	ResetSelectedActor();
+	catch (const std::exception& Error)
+	{
+		UE_LOG("Failed to load scene %s: %s", PendingSceneName.c_str(), Error.what());
+	}
 }
-
-
-
-
-
-
 void  FSceneManager::SetSelectedActor(AActor* actor)
 {
 	if (actor == nullptr)
@@ -763,5 +767,3 @@ const TArray<FRenderInfo> FSceneManager::GetAxisRenderInfos()
 	// TODO: Implement axis render info retrieval logic
 	return TArray<FRenderInfo>();
 }
-
-

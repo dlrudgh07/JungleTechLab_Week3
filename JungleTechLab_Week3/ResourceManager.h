@@ -8,6 +8,10 @@
 #include "TMap.h"
 #include "IniConfig.h"
 
+namespace json
+{
+class JSON;
+}
 class UStaticMesh;
 class UMaterial;
 class UTexture;
@@ -61,6 +65,12 @@ public:
 	FFontAsset* GetFontAsset(const std::string& Name)const;
 
 	void ClearAll();
+	void SerializeAssets(json::JSON& Out) const;
+	void DeserializeAssets(const json::JSON& In);
+	void InitializeForLoad(FResourceManager& Target) const;
+	void SwapAssets(FResourceManager& Other);
+	FResourceManager(const FResourceManager&) = delete;
+	FResourceManager& operator=(const FResourceManager&) = delete;
 
 	FIniConfig IniConfig;
 

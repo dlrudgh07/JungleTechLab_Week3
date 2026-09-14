@@ -48,6 +48,11 @@ public:
 	FSceneManager();
 	~FSceneManager();
 
+	void SetResourceManager(FResourceManager* Resources, FGraphicsManager* Graphics)
+	{
+		mResources = Resources;
+		mGraphics = Graphics;
+	}
 	void Update(float delaTime);
 	void UpdateGUI(const FGuiReference& guiReference);
 
@@ -78,6 +83,8 @@ public:
 
 private:
 	// 예약된 씬 작업을 저장할 변수들
+	FResourceManager* mResources = nullptr;
+	FGraphicsManager* mGraphics = nullptr;
 	bool bPendingNewScene = false;
 	bool bPendingLoadScene = false;
 	std::string PendingSceneName;
