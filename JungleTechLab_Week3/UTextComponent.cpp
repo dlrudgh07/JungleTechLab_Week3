@@ -160,8 +160,8 @@ void UTextComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
 		Info.BaseTexture = FResourceManager::Get().GetTexture(FontAsset->GetPageName(page));
 		Info.BlendMode = EBlendMode::Translucent;
 		Info.WorldTransformMatrix = GetTransformMatrix().MakeMatrix();
-		Info.BoundsCenter = FVector(0.0f, 0.0f, 0.0f);
-		Info.BoundsHalfExtent = FVector(0.5f, 0.5f, 0.5f);
+		Info.LocalBoundsCenter = FVector(0.0f, 0.0f, 0.0f);
+		Info.LocalBoundsHalfExtent = FVector(0.5f, 0.5f, 0.5f);
 		Info.ObejctID = { Owner->ObjectID.GUID, Owner->ObjectID.InternalIndex };
 		Info.Color = Color;
 		outRenderInfos->Add(Info);

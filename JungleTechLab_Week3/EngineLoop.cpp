@@ -106,8 +106,8 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			SceneManager->UpdateGUI({ *FrameTimer, &FGraphicsManager::Get(), ViewportClient, &FResourceManager::Get() ,FileManager });
 		}
 
-		GraphicsManager->UpdateProjectionTransition(deltaTime);
-		ViewportClient->Update(deltaTime, FGraphicsManager::Get().GetRenderer()->ViewportInfo, SceneManager, FGraphicsManager::Get().GetPerspectiveRatio(), ResourceManager->IniConfig);
+		FGraphicsManager::Get().UpdateProjectionTransition(deltaTime);
+		ViewportClient->Update(deltaTime, FGraphicsManager::Get().GetRenderer()->ViewportInfo, SceneManager, FGraphicsManager::Get().GetPerspectiveRatio(), FResourceManager::Get().IniConfig);
 	}
 
 	//Physics Threads
@@ -133,8 +133,8 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			WindowApplication.bPendingResize = false;
 		}
 
-FGraphicsManager::Get().Update(deltaTime);
-FGraphicsManager::Get().Prepare(&ViewportClient->mCamera, ViewportClient->GetViewMode());
+		FGraphicsManager::Get().Update(deltaTime);
+		FGraphicsManager::Get().Prepare(&ViewportClient->mCamera, ViewportClient->GetViewMode());
 
 		// Show Flag에 따른 렌더 선택 분기
 		EEngineShowFlags flags = ViewportClient->GetShowFlags();
@@ -142,20 +142,20 @@ FGraphicsManager::Get().Prepare(&ViewportClient->mCamera, ViewportClient->GetVie
 
 		if (HasFlag(flags, EEngineShowFlags::SF_Primitives))
 		{
-			GFGraphicsManager::Get().Render(SceneManager->GetRenderInfos());
+			FGraphicsManager::Get().Render(SceneManager->GetRenderInfos());
 		}
 
-			//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
-			if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
-			{
-				FGraphicsManager::Get().DrawWorldAxis();
-			}
-			if (HasFlag(flags, EEngineShowFlags::SF_Grid))
-			{
-				FGraphicsManager::Get().DrawGrid(ViewportClient->GetCamera().Transform, FResourceManager::Get().IniConfig.GetGridOffset(), FResourceManager::Get().IniConfig.GetGridRange());
-			}
-			//Grid
-			FGraphicsManager::Get().FlushLines();
+		//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
+		if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
+		{
+			FGraphicsManager::Get().DrawWorldAxis();
+		}
+		if (HasFlag(flags, EEngineShowFlags::SF_Grid))
+		{
+			FGraphicsManager::Get().DrawGrid(ViewportClient->GetCamera().Transform, FResourceManager::Get().IniConfig.GetGridOffset(), FResourceManager::Get().IniConfig.GetGridRange());
+		}
+		//Grid
+		FGraphicsManager::Get().FlushLines();
 
 		//강조
 		if (auto SelectedActor = SceneManager->GetSelectedActor())
@@ -178,14 +178,15 @@ FGraphicsManager::Get().Prepare(&ViewportClient->mCamera, ViewportClient->GetVie
 		if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
 		{
 			FGraphicsManager::Get().GizmoPrepare();
-			FGraphicsManager::Get().RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(FResourceManager::Get()));
+			FGraphicsManager::Get().RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(&FResourceManager::Get()));
 		}
 
-		if (HasFlag(flags, EEngineShowFlags::SF_UUID)) {
+		if (HasFlag(flags, EEngineShowFlags::SF_UUID))
+		{
 			// UUID 텍스쳐 랜더링
 			FGraphicsManager::Get().DrawAllUUID(SceneManager->GetRenderInfos(),
-				ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
-			FGraphicsManager::Get().FlushUUID(FResourceManager::Get()GetTexture("FontTexture"));
+												ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
+			FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
 		}
 
 

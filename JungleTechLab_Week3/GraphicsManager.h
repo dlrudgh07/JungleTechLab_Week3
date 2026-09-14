@@ -36,7 +36,7 @@ public:
 	void Release();
 
 	//void Prepare(const Camera* mCamera);
-	void Prepare(const FCamera* mCamera,EViewModeIndex viewMode);
+	void Prepare(const FCamera* mCamera, EViewModeIndex viewMode);
 	void GizmoPrepare();
 
 
@@ -59,9 +59,9 @@ public:
 	float GetCameraOrthoDistance() const { return mCameraOrthoDistance; }
 	void SetCameraOrthoDistance(float distance) { mCameraOrthoDistance = distance; }
 
-FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32>& OutIndices);
-FBuffer* CreateDynamicBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
-void UpdateDynamicBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount);
+	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32>& OutIndices);
+	FBuffer* CreateDynamicBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
+	void UpdateDynamicBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount);
 
 	URenderer* GetRenderer() const;
 

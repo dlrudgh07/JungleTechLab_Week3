@@ -34,7 +34,7 @@ void FGraphicsManager::Initialize(HWND hWindow)
 
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
 
-	
+
 }
 
 void FGraphicsManager::Release()
@@ -48,7 +48,7 @@ void FGraphicsManager::Release()
 	delete mRenderer;
 }
 
-void FGraphicsManager::Prepare(const FCamera* mCamera,EViewModeIndex viewMode)
+void FGraphicsManager::Prepare(const FCamera* mCamera, EViewModeIndex viewMode)
 {
 	mRenderer->Prepare(viewMode);
 	//Shader가 나눠짐에 따라 분리
@@ -104,17 +104,17 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 	{
 		if (renderInfo.VertexBuffer == nullptr || renderInfo.VertexBuffer->VertexBuffer == nullptr)
 			continue;
-	
+
 		if (renderInfo.BaseTexture != nullptr && renderInfo.BaseTexture->Resource != nullptr)
 		{
 			if (renderInfo.BlendMode == EBlendMode::Translucent)
 			{
-				
-				mRenderer->PrepareFontShader(); 
+
+				mRenderer->PrepareFontShader();
 			}
 			else
 			{
-				mRenderer->PrepareShader();  
+				mRenderer->PrepareShader();
 			}
 			mRenderer->BindTexture(0, renderInfo.BaseTexture->Resource->SRV.Get());
 		}
@@ -124,7 +124,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
 			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color,renderInfo.UVTransform);
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.UVTransform);
 
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
@@ -308,7 +308,7 @@ void FGraphicsManager::FlushLines()
 void FGraphicsManager::DrawUUID(const FQuad& quad)
 {
 	// 월드 좌표 그대로 넣는다. 그래서 그릴 때 World 행렬이 단위행렬이다
-	mUUIDVertices.Add({ quad.LeftDown.x , quad.LeftDown.y, quad.LeftDown.z, 1.0f,1.0f,1.0f,1.0f, quad.u[0], quad.v[1]}); // 좌측하단
+	mUUIDVertices.Add({ quad.LeftDown.x , quad.LeftDown.y, quad.LeftDown.z, 1.0f,1.0f,1.0f,1.0f, quad.u[0], quad.v[1] }); // 좌측하단
 	mUUIDVertices.Add({ quad.RightUp.x, quad.RightUp.y, quad.RightUp.z, 1.0f,1.0f,1.0f,1.0f, quad.u[1], quad.v[0] }); // 우측상단
 	mUUIDVertices.Add({ quad.RightDown.x, quad.RightDown.y, quad.RightDown.z, 1.0f,1.0f,1.0f,1.0f, quad.u[1], quad.v[1] }); // 우측하단
 	mUUIDVertices.Add({ quad.RightUp.x, quad.RightUp.y, quad.RightUp.z, 1.0f,1.0f,1.0f,1.0f, quad.u[1], quad.v[0] }); // 우측상단
@@ -409,7 +409,7 @@ void FGraphicsManager::SetPerspectiveProjection(bool bPerspectiveProjection)
 
 // todo
 // 나중에 std::vector를 TArray로 변경해야함
-FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32> & OutIndices)
+FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32>& OutIndices)
 {
 	OutVertices.clear();
 	OutIndices.clear();
@@ -424,8 +424,8 @@ FBuffer* FGraphicsManager::CreateBuffer(FVertexSimple* InputVertices, uint32 Inp
 		return nullptr;
 	}
 
-	ID3D11Buffer* vertexBuffer = mRenderer->CreateVertexBuffer(&OutVertices[0], verticesCount *sizeof(FVertexSimple));
-	ID3D11Buffer* indexBuffer= mRenderer->CreateIndexBuffer(&OutIndices[0], indicesCount);
+	ID3D11Buffer* vertexBuffer = mRenderer->CreateVertexBuffer(&OutVertices[0], verticesCount * sizeof(FVertexSimple));
+	ID3D11Buffer* indexBuffer = mRenderer->CreateIndexBuffer(&OutIndices[0], indicesCount);
 	FBuffer* newBuffer = new FBuffer();
 
 	// VertexBuffer 설정
@@ -453,7 +453,7 @@ FBuffer* FGraphicsManager::CreateDynamicBuffer(FVertexSimple* InputVertices, uin
 void FGraphicsManager::UpdateDynamicBuffer(ID3D11Buffer* Buffer, const FVertexSimple* Vertices, UINT VertexCount)
 {
 	if (mRenderer == nullptr) return;
-	mRenderer->UpdateDynamicVertexBuffer(Buffer, Vertices, VertexCount); 
+	mRenderer->UpdateDynamicVertexBuffer(Buffer, Vertices, VertexCount);
 }
 
 URenderer* FGraphicsManager::GetRenderer() const
