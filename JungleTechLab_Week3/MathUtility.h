@@ -79,4 +79,18 @@ struct FMath : FPlatformMath
 	static constexpr FORCEINLINE double RadiansToDegrees(double const& RadVal) { return RadVal * (180.0 / DOUBLE_PI); }
 	static constexpr FORCEINLINE float DegreesToRadians(float const& DegVal) { return DegVal * (PI / 180.f); }
 	static constexpr FORCEINLINE double DegreesToRadians(double const& DegVal) { return DegVal * (DOUBLE_PI / 180.0); }
+
+	template<typename T>
+	[[nodiscard]] static constexpr FORCEINLINE T Max3(const T A, const T B, const T C)
+	{
+		const T MaxAB = (A > B) ? A : B;
+		return (MaxAB > C) ? MaxAB : C;
+	}
+
+	template<typename T>
+	[[nodiscard]] static constexpr FORCEINLINE T Min3(const T A, const T B, const T C)
+	{
+		const T MinAB = (A < B) ? A : B;
+		return (MinAB < C) ? MinAB : C;
+	}
 };

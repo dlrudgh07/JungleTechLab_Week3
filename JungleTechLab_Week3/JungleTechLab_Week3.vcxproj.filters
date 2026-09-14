@@ -150,6 +150,15 @@
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Core\Asset</Filter>
     </ClCompile>
+    <ClCompile Include="MeshUtility.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticMesh.cpp">
+      <Filter>Core\Asset</Filter>
+    </ClCompile>
+    <ClCompile Include="FBoxSphereBounds.cpp">
+      <Filter>Core\Types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">
@@ -325,6 +334,12 @@
     </ClInclude>
     <ClInclude Include="FPath.h">
       <Filter>Core\Serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtility.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="FBoxSphereBounds.h">
+      <Filter>Core\Types</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

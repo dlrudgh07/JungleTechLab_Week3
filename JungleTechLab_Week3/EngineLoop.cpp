@@ -19,6 +19,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "StaticMesh.h"
+#include "PrimitiveComponent.h"
 
 #include <objbase.h>
 
@@ -140,14 +141,21 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		GraphicsManager->DrawWorldAxis();
 		GraphicsManager->FlushLines();
 
+
 		//강조
-		if (SceneManager->GetSelectedActor())
+		if (auto SelectedActor = SceneManager->GetSelectedActor())
 		{
 			FRenderInfo clickedRenderInfo;
 
-			if (SceneManager->GetSelectedActor()->GetFirstRenderInfo(clickedRenderInfo))
+			if (SelectedActor->GetFirstRenderInfo(clickedRenderInfo))
 			{
 				GraphicsManager->RenderHighLight(clickedRenderInfo);
+			}
+
+			if (GraphicsManager->IsDrawAABB())
+			{
+				GraphicsManager->DrawAABB(static_cast<UPrimitiveComponent*>(SelectedActor->GetRootComponent())->GetWorldBounds());
+				GraphicsManager->FlushLines();
 			}
 		}
 

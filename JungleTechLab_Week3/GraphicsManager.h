@@ -10,6 +10,7 @@
 #include "RenderInfo.h"
 #include "Vector.h"
 #include "FQuad.h"
+#include "FBoxSphereBounds.h"
 
 class FGraphicsManager
 {
@@ -43,7 +44,7 @@ public:
 	float GetCameraOrthoDistance() const { return mCameraOrthoDistance; }
 	void SetCameraOrthoDistance(float distance) { mCameraOrthoDistance = distance; }
 
-	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize);
+	FBuffer* CreateBuffer(FVertexSimple* InputVertices, uint32 InputVerticesSize, std::vector<FVertexSimple>& OutVertices, std::vector<uint32>& OutIndices);
 	URenderer* GetRenderer() const;
 
 	//Highlight
@@ -51,6 +52,9 @@ public:
 	// 호출 즉시 그리지 않고 배열에 쌓는다. FlushLines()에서 한 번에 그린다.
 	void DrawLine(const FVector& start, const FVector& end, const FVector4& color);
 	void DrawWorldAxis();
+	void DrawAABB(const FBoxSphereBounds&& WorldBounds);
+	void SetDrawAABB(const bool bInputShowAABB) { bShowAABB = bInputShowAABB; }
+	bool IsDrawAABB() const { return bShowAABB; }
 	void FlushLines();
 
 
@@ -92,6 +96,7 @@ private:
 	bool mbWireFrame = false;
 	bool mbPerspectiveProjection = false;
 	bool mbShowWorldAxis = true;
+	bool bShowAABB = true;
 	float mAspect = 0;
 	float mProjectionRatio = 0; // 0.0f ~ 1.0f, 0이면 직교, 1이면 원근, 그 사이면 혼합
 

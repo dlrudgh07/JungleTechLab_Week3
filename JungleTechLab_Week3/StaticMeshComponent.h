@@ -16,9 +16,15 @@ public:
 	void SetStaticMesh(UStaticMesh* NewMesh)
 	{
 		StaticMesh = NewMesh;
+		// mesh가 변경되면 bounds update
+		UpdateBounds();
 	}
 	UStaticMesh* GetStaticMesh() const { return StaticMesh; }
 
+	// AABB
+	virtual FBoxSphereBounds CalculateBounds(const FMatrix& LocalToWorld) const override;
+
+	virtual FBoxSphereBounds GetLocalBounds() const override;
 
 	// 머티리얼 가져오기 (오버라이드 확인 후, 없으면 에셋의 기본 머티리얼 반환)
 	virtual UMaterial* GetMaterial(int32 ElementIndex) const override
