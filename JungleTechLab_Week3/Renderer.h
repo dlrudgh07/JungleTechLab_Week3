@@ -12,6 +12,12 @@
 #pragma comment(lib, "d3d11")
 #pragma comment(lib, "d3dcompiler")
 
+struct FLineVertex
+{
+	float x, y, z;    // Position (12 byte)
+	float r, g, b, a; // Color    (16 byte)
+};
+
 // 1. Define the triangle vertices
 struct FVertexSimple
 {
@@ -57,6 +63,10 @@ public:
     ID3D11PixelShader* SimplePixelShader;
     ID3D11InputLayout* SimpleInputLayout;
 
+	ID3D11VertexShader* LineVertexShader;
+	ID3D11PixelShader* LinePixelShader;
+	ID3D11InputLayout* LineInputLayout; // Line
+
 	ID3D11ShaderResourceView* UUIDTextureView;
 	D3D11_SAMPLER_DESC UUIDSamplerInfo;
 	ID3D11SamplerState* UUIDSamplerState;
@@ -85,6 +95,7 @@ public:
 
 
     unsigned int Stride;
+	unsigned int LineStride;
 
 public:
 
@@ -130,8 +141,9 @@ public:
 	void PrepareTextureShader();
 	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0));
 	void RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices);
-	void RenderLines(const FVertexSimple* vertices, uint32 numVertices);
+	void RenderLines(const FLineVertex* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);
+	bool ReAllocateLineVertexBuffer(uint32 RequestSize);
 	bool ReAllocateUUIDVertexBuffer(uint32 RequestSize);
 	void RenderHighlight(ID3D11Buffer* pBuffer, uint32 Num, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI);
 	void SwapBuffer();

@@ -133,14 +133,12 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		GraphicsManager->Update(deltaTime);
 		GraphicsManager->Prepare(&ViewportClient->mCamera);
 		GraphicsManager->Render(SceneManager->GetRenderInfos());
-		
+
 
 		//월드 축. 액터 뒤에 그려서 같은 깊이 버퍼로 가려지게 한다 (기즈모와 달리 깊이를 지우지 않는다)
 		GraphicsManager->DrawWorldAxis();
-
 		//Grid
 		GraphicsManager->DrawGrid(ViewportClient->GetCamera().Transform, ResourceManager->IniConfig.GetGridOffset(), ResourceManager->IniConfig.GetGridRange());
-
 		GraphicsManager->FlushLines();
 
 		//강조
@@ -158,10 +156,13 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		GraphicsManager->GizmoPrepare();
 		GraphicsManager->RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(ResourceManager));
 
+
+
 		// UUID 텍스쳐 랜더링
 		GraphicsManager->DrawAllUUID(SceneManager->GetRenderInfos(),
 			ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
 		GraphicsManager->FlushUUID(ResourceManager->GetTexture("FontTexture"));
+
 
 		//ImGui
 		{

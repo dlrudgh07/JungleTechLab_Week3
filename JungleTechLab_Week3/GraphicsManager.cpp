@@ -158,7 +158,7 @@ void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 
 {
 	if (!mbShowGrid) return;
 
-	int RepeatNum = Range * (1 / Offset);
+	int RepeatNum = Range * (1.0f / Offset);
 	float GridGap = -0.001f;
 	float Extent = Offset * (RepeatNum);
 
@@ -169,12 +169,17 @@ void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 
 
 	FVector Origin;
 
-	Origin.x = floorf(CameraTransform.Location.x / Offset) * Offset;
-	Origin.y = floorf(CameraTransform.Location.y / Offset) * Offset;
+	Origin.x = floorf(CameraTransform.Location.x / (Offset * 5)) * Offset * 5;
+	Origin.y = floorf(CameraTransform.Location.y / (Offset * 5)) * Offset * 5;
 
 	for (int i = -RepeatNum; i <= RepeatNum; i++)
 	{
 		float CurrentOffset = Offset * i;
+		float alpha = 0.25f;
+		if (i % 5 == 0)
+		{
+			alpha = 0.8f;
+		}
 
 		X1 = { CurrentOffset, Extent , GridGap };
 		X2 = { CurrentOffset, -Extent , GridGap };
@@ -184,20 +189,20 @@ void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 
 
 		if (X1.x == 0)
 		{
-			DrawLine(Y1, Y2, FVector4(1, 1, 1, 1));
+			DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
 			continue;
 		}
 		else if (Y1.y == 0)
 		{
-			DrawLine(X1, X2, FVector4(1, 1, 1, 1));
+			DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
 			continue;
 		}
 		else if (X1.x == 0 && Y1.y == 0)
 		{
 			continue;
 		}
-		DrawLine(X1, X2, FVector4(1, 1, 1, 1));
-		DrawLine(Y1, Y2, FVector4(1, 1, 1, 1));
+		DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
+		DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
 	}
 }
 

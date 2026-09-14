@@ -32,7 +32,7 @@ float FIniConfig::GetCameraSpeed()
 
 void FIniConfig::SetGridOffset(float _Offset)
 {
-	GridOffset = std::clamp(_Offset, 1.0f, 20.0f);
+	GridOffset = std::clamp(_Offset, 0.1f, 20.0f);
 }
 
 void FIniConfig::SetGridRange(int32 _Range)

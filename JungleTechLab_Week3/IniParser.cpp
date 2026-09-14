@@ -73,7 +73,7 @@ void FIniParser::ParseLine(std::string_view Line)
 	{
 		return;
 	}
-	FString Key = Line.substr(0, Pivot - 1);
+	FString Key = Line.substr(0, Pivot);
 	Key = Trim(Key);
 	if (Key.Empty())
 		return;

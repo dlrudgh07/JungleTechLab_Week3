@@ -225,6 +225,9 @@ void URenderer::CreateShader()
 	ID3DBlob* vertexshaderCSO;
 	ID3DBlob* pixelshaderCSO;
 
+	ID3DBlob* LineVertexshaderCSO;
+	ID3DBlob* LinePixelshaderCSO;
+
 	D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
 
 	Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &SimpleVertexShader);
@@ -242,7 +245,25 @@ void URenderer::CreateShader()
 
 	Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &SimpleInputLayout);
 
+	//// Line용 Shader
+	D3DCompileFromFile(L"ShaderLine.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &LineVertexshaderCSO, nullptr);
+
+	Device->CreateVertexShader(LineVertexshaderCSO->GetBufferPointer(), LineVertexshaderCSO->GetBufferSize(), nullptr, &LineVertexShader);
+
+	D3DCompileFromFile(L"ShaderLine.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &LinePixelshaderCSO, nullptr);
+
+	Device->CreatePixelShader(LinePixelshaderCSO->GetBufferPointer(), LinePixelshaderCSO->GetBufferSize(), nullptr, &LinePixelShader);
+
+	D3D11_INPUT_ELEMENT_DESC LineLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	Device->CreateInputLayout(LineLayout, ARRAYSIZE(LineLayout), LineVertexshaderCSO->GetBufferPointer(), LineVertexshaderCSO->GetBufferSize(), &LineInputLayout);
+
 	Stride = sizeof(FVertexSimple);
+	LineStride = sizeof(FLineVertex);
 
 	vertexshaderCSO->Release();
 	pixelshaderCSO->Release();
@@ -266,6 +287,24 @@ void URenderer::ReleaseShader()
 	{
 		SimpleVertexShader->Release();
 		SimpleVertexShader = nullptr;
+	}
+
+	if (LineInputLayout)
+	{
+		LineInputLayout->Release();
+		LineInputLayout = nullptr;
+	}
+
+	if (LinePixelShader)
+	{
+		LinePixelShader->Release();
+		LinePixelShader = nullptr;
+	}
+
+	if (LineVertexShader)
+	{
+		LineVertexShader->Release();
+		LineVertexShader = nullptr;
 	}
 }
 
@@ -399,13 +438,16 @@ void URenderer::RenderPrimitive(ID3D11Buffer* pBuffer, UINT numVertices)
 
 // 쌓아둔 선분 전체를 한 번의 Draw로 그린다.
 // 토폴로지를 바꾸므로 반드시 이 함수 안에서 되돌린다. 안 그러면 뒤에 그리는 것들이 전부 깨진다.
-void URenderer::RenderLines(const FVertexSimple* vertices, uint32 numVertices)
+void URenderer::RenderLines(const FLineVertex* vertices, uint32 numVertices)
 {
 	if (!LineVertexBuffer || vertices == nullptr || numVertices == 0) return;
 
 	if (numVertices > LineVertexCapacity)
 	{
-		numVertices = LineVertexCapacity;   // 넘치면 자른다. 늘리려면 CreateLineVertexBuffer의 인자를 키운다
+		if (ReAllocateUUIDVertexBuffer(numVertices) == false)
+		{
+			numVertices = LineVertexCapacity;
+		}
 	}
 
 	// WRITE_DISCARD: 이전 내용을 버리고 새 메모리를 받는다.
@@ -420,12 +462,46 @@ void URenderer::RenderLines(const FVertexSimple* vertices, uint32 numVertices)
 
 	// 직전에 메시 버퍼가 물려 있으므로 갈아끼워야 한다
 	UINT offset = 0;
-	DeviceContext->IASetVertexBuffers(0, 1, &LineVertexBuffer, &Stride, &offset);
+
+	DeviceContext->VSSetShader(LineVertexShader, nullptr, 0);
+	DeviceContext->PSSetShader(LinePixelShader, nullptr, 0);
+	DeviceContext->IASetInputLayout(LineInputLayout);
+	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
+
+	DeviceContext->IASetVertexBuffers(0, 1, &LineVertexBuffer, &LineStride, &offset);
 	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	DeviceContext->Draw(numVertices, 0);
 
+
+	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
+	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
+	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+bool URenderer::ReAllocateLineVertexBuffer(uint32 RequestSize)
+{
+	uint32 NextVertexCapacity = max(RequestSize, LineVertexCapacity * 2);
+
+	ID3D11Buffer* NewLineVertexBuffer = nullptr;
+
+	D3D11_BUFFER_DESC vertexbufferdesc = {};
+	vertexbufferdesc.ByteWidth = NextVertexCapacity * sizeof(FLineVertex);
+	vertexbufferdesc.Usage = D3D11_USAGE_DYNAMIC;
+	vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	if (SUCCEEDED(Device->CreateBuffer(&vertexbufferdesc, nullptr, &NewLineVertexBuffer)))
+	{
+		LineVertexCapacity = NextVertexCapacity;
+		ReleaseUUIDVertexBuffer();
+		LineVertexBuffer = NewLineVertexBuffer;
+		return (true);
+	}
+	return(false);
+
 }
 
 bool URenderer::ReAllocateUUIDVertexBuffer(uint32 RequestSize)

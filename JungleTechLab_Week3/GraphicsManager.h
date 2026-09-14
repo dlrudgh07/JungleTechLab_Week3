@@ -87,7 +87,7 @@ private:
 
 	// Graphics config
 	// 이번 프레임에 쌓인 선분. 정점 2개가 선분 하나
-	TArray<FVertexSimple> mLineVertices;
+	TArray<FLineVertex> mLineVertices;
 	TArray<FVertexSimple> mUUIDVertices;
 
 	bool mbWireFrame = false;
