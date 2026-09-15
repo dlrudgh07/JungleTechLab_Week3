@@ -31,6 +31,16 @@ void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) c
 	outRenderInfos->Add(Info);
 }
 
+void UStaticMeshComponent::GetVertices(std::vector<FVertexSimple>& OutVertices) const
+{
+	OutVertices = GetStaticMesh()->CPUVertices;
+}
+
+void UStaticMeshComponent::GetIndices(std::vector<uint32>& OutIndices) const
+{
+	OutIndices = GetStaticMesh()->CPUIndices;
+}
+
 
 FBoxSphereBounds UStaticMeshComponent::CalculateBounds(const FMatrix& LocalToWorld) const
 {

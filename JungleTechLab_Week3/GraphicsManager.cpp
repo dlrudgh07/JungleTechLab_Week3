@@ -74,6 +74,8 @@ void FGraphicsManager::Prepare(const FCamera* mCamera, EViewModeIndex viewMode)
 	mViewOrthogonalProjectionMatrix = view * projection_u_o;
 	mViewUnifiedProjectionMatrix = view * projection_u;
 
+	mViewNormalProjectionMatrix = view * mCamera->GetProjectionMatrix(mAspect, mCamera->mFovDegree, nearZ, farZ);
+
 	// 하이라이트 두께를 화면 픽셀 기준으로 환산할 때 쓴다
 	mCameraLocation = mCamera->Transform.Location;
 	mCameraForward = mCamera->GetForwardVector();
@@ -536,12 +538,24 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		* FMatrix::Translation(Center)
 		* RI.WorldTransformMatrix;
 
+	/*UE_LOG_F("WorldScale=({},{},{}) Center=({},{},{}) OutlineScale=({},{},{})",
+			 WorldScale.x, WorldScale.y, WorldScale.z,
+			 Center.x, Center.y, Center.z,
+			 OutlineScale.x, OutlineScale.y, OutlineScale.z);*/
+
 	mRenderer->RenderHighlight(
 		RI.VertexBuffer,
 		mViewUnifiedProjectionMatrix,
 		Outline,
 		RI
 	);
+
+	/*mRenderer->RenderHighlight(
+		RI.VertexBuffer,
+		mViewNormalProjectionMatrix,
+		Outline,
+		RI
+	);*/
 }
 
 

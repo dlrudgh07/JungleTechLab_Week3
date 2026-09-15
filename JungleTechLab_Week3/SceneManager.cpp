@@ -142,7 +142,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 			if (SelectedName == "Text Mesh")
 			{
-				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 90, 90), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			}
 			else
 			{

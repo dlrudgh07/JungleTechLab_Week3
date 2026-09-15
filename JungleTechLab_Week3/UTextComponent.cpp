@@ -147,7 +147,17 @@ void UTextComponent::Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime
 
 FBoxSphereBounds UTextComponent::CalculateBounds(const FMatrix& LocalToWorld) const
 {
-	return Bounds.TransformBy(LocalToWorld);
+	return LocalBounds.TransformBy(LocalToWorld);
+}
+
+void UTextComponent::GetVertices(std::vector<FVertexSimple>& OutVertices) const
+{
+	OutVertices = CPUVertices;
+}
+
+void UTextComponent::GetIndices(std::vector<uint32>& OutIndices) const
+{
+	
 }
 
 void UTextComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
@@ -203,6 +213,8 @@ void UTextComponent::SetHighLightQuadRenderInfo(TArray<FRenderInfo>* outRenderIn
 {
 	if (bDirty)
 	{
+		CPUVertices.clear();
+
 		//페이지에 해당하는 버텍스 채우기
 		TArray<FVertexSimple>Vertices;
 		//문자열 quad와 같은 위치면 겹쳐버려서 0.001만큼 뒤로 밉니다.
@@ -236,8 +248,8 @@ void UTextComponent::SetHighLightQuadRenderInfo(TArray<FRenderInfo>* outRenderIn
 		HighLightInfo.VertexBuffer = HighLightBuffer;
 		HighLightInfo.BaseTexture = FResourceManager::Get().GetTexture(FontAsset->GetPageName(0));
 		HighLightInfo.BlendMode = EBlendMode::Translucent; 
-		HighLightInfo.LocalBoundsCenter = Bounds.Center;
-		HighLightInfo.LocalBoundsHalfExtent = Bounds.BoxHalfExtent;
+		HighLightInfo.LocalBoundsCenter = LocalBounds.Center;
+		HighLightInfo.LocalBoundsHalfExtent = LocalBounds.BoxHalfExtent;
 		HighLightInfo.ObejctID = { Owner->ObjectID.GUID, Owner->ObjectID.InternalIndex };
 		HighLightInfo.Color = FVector4(1.f, 1.f, 1.f, 0.f);
 	}
@@ -275,6 +287,7 @@ void UTextComponent::CalculateLocalBounds()
 	}
 
 	// 구한 Min, Max를 통해 LocalBounds 생성 (FBoxSphereBounds 생성자가 Center와 Extent를 자동 계산)
-	Bounds = FBoxSphereBounds(MinBound, MaxBound); 
+	//Bounds = FBoxSphereBounds(MinBound, MaxBound); 
+	LocalBounds = FBoxSphereBounds(MinBound, MaxBound);
 }
 

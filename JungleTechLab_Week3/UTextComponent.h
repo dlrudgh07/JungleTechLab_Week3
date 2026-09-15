@@ -25,6 +25,9 @@ public:
 	//AABB용 바운드 박스 계산
 	virtual FBoxSphereBounds CalculateBounds(const FMatrix& LocalToWorld) const override;
 
+	void GetVertices(std::vector<FVertexSimple>& OutVertices)const override;
+	void GetIndices(std::vector<uint32>& OutIndices)const override;
+
 	//저장된 글자 반환
 	const std::wstring& GetText()const;
 	//어떤 글자를 렌더할지
@@ -71,4 +74,6 @@ private:
 	FRenderInfo HighLightInfo;
 
 	std::vector<FVertexSimple> CPUVertices;
+
+	FBoxSphereBounds LocalBounds{};
 };
