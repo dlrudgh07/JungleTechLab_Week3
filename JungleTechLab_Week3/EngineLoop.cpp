@@ -140,7 +140,6 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		// Show Flag에 따른 렌더 선택 분기
 		EEngineShowFlags flags = FResourceManager::Get().IniConfig.GetShowFlags();
 
-
 		if (HasFlag(flags, EEngineShowFlags::SF_Primitives))
 		{
 			FGraphicsManager::Get().Render(SceneManager->GetRenderInfos());
@@ -172,7 +171,6 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				FGraphicsManager::Get().DrawAABB(static_cast<UPrimitiveComponent*>(SelectedActor->GetRootComponent())->GetWorldBounds());
 			}
 		}
-
 		FGraphicsManager::Get().FlushLines();
 
 		// Gizmo
@@ -195,6 +193,14 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				}
 				FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
 			}
+		}
+
+		// NDC Gizmo
+		if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
+		{
+			const FRotator CameraRotation = ViewportClient->GetCamera().Transform.Rotation;
+			const FMatrix CameraViewRotation = FMatrix::Rotate(CameraRotation).Transpose() * FMatrix::UEToDX;
+			FGraphicsManager::Get().DrawGizmoNDC(CameraViewRotation);
 		}
 
 		//ImGui

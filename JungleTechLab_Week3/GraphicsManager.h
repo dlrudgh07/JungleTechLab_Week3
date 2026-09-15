@@ -77,6 +77,7 @@ public:
 	void SetDrawAABB(const bool bInputShowAABB) { bShowAABB = bInputShowAABB; }
 	bool IsDrawAABB() const { return bShowAABB; }
 	void DrawGrid(FTransform CameraTransform, float Offset, int32 Range);
+	void DrawGizmoNDC(const FMatrix& CameraViewRotationMatrix);
 	void FlushLines();
 
 
@@ -131,5 +132,4 @@ private:
 	float mProjectionElapsed = 0.0f;
 	float mProjectionDuration = 1.0f;
 	bool mbProjectionTransitioning = false;
-
 };

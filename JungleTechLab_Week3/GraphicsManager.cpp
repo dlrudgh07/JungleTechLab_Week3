@@ -31,17 +31,17 @@ void FGraphicsManager::Initialize(HWND hWindow)
 	mRenderer->Create(hWindow);
 	mRenderer->CreateShader();
 	mRenderer->CreateConstantBuffer();
+	mRenderer->CreateConstantBufferNDC();
 	mRenderer->CreateLineVertexBuffer(LINE_VERTEX_CAPACITY);
 	mRenderer->CreateUUIDVertexBuffer(UUID_VERTEX_CAPACITY);
 
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
-
-
 }
 
 void FGraphicsManager::Release()
 {
 	mRenderer->ReleaseLineVertexBuffer();
+	mRenderer->ReleaseConstantBufferNDC();
 	mRenderer->ReleaseConstantBuffer();
 	mRenderer->ReleaseUUIDVertexBuffer();
 	mRenderer->ReleaseShader();
@@ -231,6 +231,40 @@ void FGraphicsManager::DrawAABB(const FBoxSphereBounds&& WorldBounds)
 }
 
 
+
+void FGraphicsManager::DrawGizmoNDC(const FMatrix& CameraViewRotationMatrix)
+{
+	mRenderer->UpdateConstantNDC(CameraViewRotationMatrix, mAspect);
+
+	mRenderer->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	// 버퍼리스(Bufferless) 렌더링
+	mRenderer->DeviceContext->IASetInputLayout(nullptr);
+	// Vertex Buffer와 Index Buffer 바인딩 해제
+	UINT Stride = 0;
+	UINT Offset = 0;
+	ID3D11Buffer* NullBuffer = nullptr;
+	mRenderer->DeviceContext->IASetVertexBuffers(0, 1, &NullBuffer, &Stride, &Offset);
+	mRenderer->DeviceContext->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+
+	// Depth 끄기 및 쉐이더 바인딩
+	mRenderer->DeviceContext->OMSetDepthStencilState(mRenderer->NoDepthStencilState, 0);
+
+	// 기즈모 전용 쉐이더 및 상수 버퍼(카메라 회전 등) 세팅
+	mRenderer->DeviceContext->VSSetShader(mRenderer->NDCVertexShader, nullptr, 0);
+	mRenderer->DeviceContext->PSSetShader(mRenderer->NDCPixelShader, nullptr, 0);
+	mRenderer->DeviceContext->VSSetConstantBuffers(0, 1, &mRenderer->ConstantBufferNDC);
+
+	// 인덱스나 정점 버퍼 없이 SV_VertexID 0~5를 사용해 그리기
+	mRenderer->DeviceContext->Draw(6, 0);
+
+	// 이후 패스가 NDC 렌더 상태를 물려받지 않도록 기본 3D 상태로 복원합니다.
+	mRenderer->DeviceContext->OMSetDepthStencilState(mRenderer->DepthStencilState, 0);
+	mRenderer->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mRenderer->PrepareShader();
+}
+
+
 void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 Range)
 {
 	if (!mbShowGrid) return;
@@ -293,7 +327,6 @@ void FGraphicsManager::FlushLines()
 	mRenderer->UpdateConstant(FMatrix::Identity, mViewUnifiedProjectionMatrix, FVector4(0, 0, 0, 0));
 	mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());   // 도형 없어도 정점색이 나오도록 흰색 텍스처
 	mRenderer->RenderLines(&mLineVertices[0], mLineVertices.Num());
-
 
 	// 안 비우면 매 프레임 누적돼 버퍼가 넘친다. 용량은 유지한 채 개수만 0으로
 	mLineVertices.Reset(LINE_VERTEX_CAPACITY);

@@ -6,6 +6,7 @@ void URenderer::Create(HWND hWindow)
 	CreateFrameBuffer();	
 
 	CreateDepthStencilState();
+	CreateNoDepthStencilState();
 	CreateStencilMarkState();
 	CreateStencilOutlineState();
 	CreateNoColorWriteBlendState();
@@ -268,6 +269,8 @@ void URenderer::CreateShader()
 	ID3DBlob* pixelshaderCSO;
 	ID3DBlob* LineVertexshaderCSO;
 	ID3DBlob* LinePixelshaderCSO;
+	ID3DBlob* GizmoVertexshaderCSO;
+	ID3DBlob* GizmoPixelshaderCSO;
 
 	HRESULT hr = D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
 	if (FAILED(hr))
@@ -353,6 +356,16 @@ void URenderer::CreateShader()
 
 	vertexshaderCSO->Release();
 	pixelshaderCSO->Release();
+
+
+	/// NDC draw용 Shader
+	D3DCompileFromFile(L"DrawNDC.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &GizmoVertexshaderCSO, nullptr);
+	Device->CreateVertexShader(GizmoVertexshaderCSO->GetBufferPointer(), GizmoVertexshaderCSO->GetBufferSize(), nullptr, &NDCVertexShader);
+	D3DCompileFromFile(L"DrawNDC.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &GizmoPixelshaderCSO, nullptr);
+	Device->CreatePixelShader(GizmoPixelshaderCSO->GetBufferPointer(), GizmoPixelshaderCSO->GetBufferSize(), nullptr, &NDCPixelShader);
+
+	GizmoVertexshaderCSO->Release();
+	GizmoPixelshaderCSO->Release();
 }
 
 void URenderer::ReleaseShader()
@@ -391,6 +404,18 @@ void URenderer::ReleaseShader()
 	{
 		LineVertexShader->Release();
 		LineVertexShader = nullptr;
+	}
+
+	if (NDCVertexShader)
+	{
+		NDCVertexShader->Release();
+		NDCVertexShader = nullptr;
+	}
+
+	if (NDCPixelShader)
+	{
+		NDCPixelShader->Release();
+		NDCPixelShader = nullptr;
 	}
 }
 
@@ -727,6 +752,24 @@ void URenderer::CreateConstantBuffer()
 	Device->CreateBuffer(&constantbufferdesc, nullptr, &ConstantBuffer);
 }
 
+void URenderer::CreateConstantBufferNDC()
+{
+	D3D11_BUFFER_DESC cbDesc = {};
+
+	cbDesc.ByteWidth = sizeof(FConstantsNDC);
+
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	cbDesc.MiscFlags = 0;
+	cbDesc.StructureByteStride = 0;
+
+	Device->CreateBuffer(&cbDesc, nullptr, &ConstantBufferNDC);
+}
+
+
+
 void URenderer::ReleaseConstantBuffer()
 {
 	if (ConstantBuffer)
@@ -735,6 +778,16 @@ void URenderer::ReleaseConstantBuffer()
 		ConstantBuffer = nullptr;
 	}
 }
+void URenderer::ReleaseConstantBufferNDC()
+{
+	if (ConstantBufferNDC)
+	{
+		ConstantBufferNDC->Release();
+		ConstantBufferNDC = nullptr;
+	}
+}
+
+
 
 void URenderer::CreateDepthStencilBuffer(UINT width, UINT height)
 {
@@ -769,6 +822,17 @@ void URenderer::CreateDepthStencilState()
 	desc.StencilEnable = FALSE;
 
 	Device->CreateDepthStencilState(&desc, &DepthStencilState);
+}
+
+void URenderer::CreateNoDepthStencilState()
+{
+	D3D11_DEPTH_STENCIL_DESC desc = {};
+	desc.DepthEnable = FALSE;
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	desc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	desc.StencilEnable = FALSE;
+
+	Device->CreateDepthStencilState(&desc, &NoDepthStencilState);
 }
 
 void URenderer::CreateStencilMarkState()
@@ -864,6 +928,7 @@ void URenderer::ReleaseDepthStencilBuffer()
 void URenderer::ReleaseDepthStencilState()
 {
 	if (DepthStencilState) { DepthStencilState->Release();  DepthStencilState = nullptr; }
+	if (NoDepthStencilState) { NoDepthStencilState->Release();  NoDepthStencilState = nullptr; }
 	if (StencilMarkState) { StencilMarkState->Release();  StencilMarkState = nullptr; }
 	if (StencilOutlineState) { StencilOutlineState->Release();  StencilOutlineState = nullptr; }
 }
@@ -885,6 +950,26 @@ void URenderer::UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 t
 		DeviceContext->Unmap(ConstantBuffer, 0);
 	}
 }
+
+void URenderer::UpdateConstantNDC(const FMatrix& CameraViewRotationMatrix, float AspectRatio)
+{
+	FConstantsNDC Data{};
+
+	Data.ViewRotation = CameraViewRotationMatrix;
+	Data.AspectRatio = AspectRatio;
+
+	D3D11_MAPPED_SUBRESOURCE MappedResource;
+
+	if (SUCCEEDED(DeviceContext->Map(ConstantBufferNDC, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource)))
+	{
+		memcpy(MappedResource.pData, &Data, sizeof(Data));
+
+		DeviceContext->Unmap(ConstantBufferNDC, 0);
+	}
+}
+
+
+
 
 void URenderer::OnResize(UINT width, UINT height, float viewportWidth, float viewportHeight)
 {
