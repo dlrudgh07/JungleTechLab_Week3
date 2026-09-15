@@ -44,6 +44,7 @@ public:
 
 
 	void Render(const TArray<FRenderInfo>& renderInfos);
+	void RenderList(const TArray<FRenderInfo>& renderInfos);
 	//void RenderOverlay(const TArray<FRenderInfo>& renderInfos);
 	void RenderOverlay(const TArray<FRenderInfo> renderInfos); //깊이버퍼 초기화
 	// FRenderInfo
@@ -106,6 +107,7 @@ private:
 	FMatrix mViewProjectionMatrix{};
 	FMatrix mViewOrthogonalProjectionMatrix{};
 	FMatrix mViewUnifiedProjectionMatrix{};
+	FMatrix mViewNormalProjectionMatrix{};
 
 	// Prepare에서 갱신. 하이라이트 두께의 픽셀 → 월드 환산에 쓴다
 	FVector mCameraLocation{};

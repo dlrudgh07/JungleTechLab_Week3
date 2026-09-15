@@ -76,6 +76,8 @@ void FGraphicsManager::Prepare(const FCamera* mCamera, EViewModeIndex viewMode)
 	mViewOrthogonalProjectionMatrix = view * projection_u_o;
 	mViewUnifiedProjectionMatrix = view * projection_u;
 
+	mViewNormalProjectionMatrix = view * mCamera->GetProjectionMatrix(mAspect, mCamera->mFovDegree, nearZ, farZ);
+
 	// 하이라이트 두께를 화면 픽셀 기준으로 환산할 때 쓴다
 	mCameraLocation = mCamera->Transform.Location;
 	mCameraForward = mCamera->GetForwardVector();
@@ -96,12 +98,39 @@ void FGraphicsManager::GizmoPrepare()
 
 void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 {
-	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
 	if (renderInfos.IsEmpty())
 	{
 		//없어도 일단 PrepareShader();
 		mRenderer->PrepareShader();
 	}
+	//불투명, 반투명 나누기
+	TArray<FRenderInfo> OpaqueList;
+	TArray<FRenderInfo> TranslucentList;
+
+	for (const FRenderInfo& renderInfo : renderInfos)
+	{
+		//반투명
+		if (renderInfo.BlendMode == EBlendMode::Translucent)
+		{
+			TranslucentList.Add(renderInfo);
+		}
+		else
+		{
+			OpaqueList.Add(renderInfo);			
+		}
+	}
+
+	RenderList(OpaqueList);
+	RenderList(TranslucentList);
+
+	//되돌리기
+	mRenderer->PrepareShader();
+}
+
+void FGraphicsManager::RenderList(const TArray<FRenderInfo>& renderInfos)
+{
+	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
+
 	for (const FRenderInfo& renderInfo : renderInfos)
 	{
 		if (renderInfo.VertexBuffer == nullptr || renderInfo.VertexBuffer->VertexBuffer == nullptr)
@@ -126,16 +155,12 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
 			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.UVTransform);
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.UVTransform); 
 
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
 	}
-	mRenderer->PrepareShader();
 }
-
-
-
 
 
 void FGraphicsManager::DrawLine(const FVector& start, const FVector& end, const FVector4& color)
@@ -507,12 +532,24 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		* FMatrix::Translation(Center)
 		* RI.WorldTransformMatrix;
 
+	/*UE_LOG_F("WorldScale=({},{},{}) Center=({},{},{}) OutlineScale=({},{},{})",
+			 WorldScale.x, WorldScale.y, WorldScale.z,
+			 Center.x, Center.y, Center.z,
+			 OutlineScale.x, OutlineScale.y, OutlineScale.z);*/
+
 	mRenderer->RenderHighlight(
 		RI.VertexBuffer,
 		mViewUnifiedProjectionMatrix,
 		Outline,
 		RI
 	);
+
+	/*mRenderer->RenderHighlight(
+		RI.VertexBuffer,
+		mViewNormalProjectionMatrix,
+		Outline,
+		RI
+	);*/
 }
 
 

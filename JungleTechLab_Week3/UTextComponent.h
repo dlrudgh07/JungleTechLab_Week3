@@ -3,6 +3,8 @@
 #include "Core.h"
 #include "TMap.h"
 #include "TArray.h"
+#include "FBoxSphereBounds.h"
+#include "RenderInfo.h"
 
 class FFontAsset;
 struct FBuffer;
@@ -18,7 +20,13 @@ public:
 	// factory 에서 필요함
 	void Initialize() {};
 
-	virtual void Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime) override;	
+	virtual void Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime) override;
+
+	//AABB용 바운드 박스 계산
+	virtual FBoxSphereBounds CalculateBounds(const FMatrix& LocalToWorld) const override;
+
+	void GetVertices(std::vector<FVertexSimple>& OutVertices)const override;
+	void GetIndices(std::vector<uint32>& OutIndices)const override;
 
 	//저장된 글자 반환
 	const std::wstring& GetText()const;
@@ -37,6 +45,12 @@ public:
 
 	void Release();
 
+	//하이라이트 용 쿼드 추가
+	void SetHighLightQuadRenderInfo(TArray<FRenderInfo>* outRenderInfos);
+
+	//Bounding 박스 계산
+	void CalculateLocalBounds();
+
 private:
 	std::wstring Text = L"";
 
@@ -50,4 +64,16 @@ private:
 	FVector4 Color = FVector4(1.f, 1.f, 1.f, 1.f);
 
 	float FontScale = 0.01f;
+
+	// 큰 쿼드 용 저장 penx, peny
+	float PenX = 0.f;
+	float PenY = 0.f;
+
+	//하이라이트 용 FBuffer
+	FBuffer* HighLightBuffer = nullptr;
+	FRenderInfo HighLightInfo;
+
+	std::vector<FVertexSimple> CPUVertices;
+
+	FBoxSphereBounds LocalBounds{};
 };

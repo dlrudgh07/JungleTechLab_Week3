@@ -364,7 +364,7 @@ UTexture* FResourceManager::GetDefaultWhiteTexture() const
 	return GetTexture("DefaultWhite");
 }
 
-void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager)
+void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager) 
 {
 	// ==========================================
 	// [1] 텍스처 에셋 로드 및 등록
