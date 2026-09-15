@@ -25,6 +25,9 @@
 #include "FrameTimer.h"
 #include "ActorComponent.h"
 
+HIMC FSceneManager::s_savedImc = nullptr;
+bool FSceneManager::s_imeDisabled = false;
+
 FSceneManager::FSceneManager()
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -73,6 +76,9 @@ void FSceneManager::Update(float DeltaTime)
 
 void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
 {
+	//한글 입력 버그 방지
+	UpdateImeAssociation();
+
 	//ImGui
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -489,19 +495,6 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 					TextComp->SetText(StringToWString(buffer));
 				}
 
-				//UE_LOG("IsItemDeactivated is %d", ImGui::IsItemDeactivated());
-				////포커스를 잃으면
-				//if (ImGui::IsItemDeactivated())
-				//{
-				//	HWND hwnd = GetActiveWindow();
-				//	HIMC himc = ImmGetContext(hwnd);
-				//	if (himc)
-				//	{
-				//		ImmNotifyIME(himc, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
-				//		ImmReleaseContext(hwnd, himc);
-				//	}
-				//}
-
 				//활성화 중인지 편집중이라면 1, 아니라면 0이다.
 				bWasEditingLastFrame = ImGui::IsItemActive();
 			}
@@ -863,6 +856,29 @@ std::wstring FSceneManager::StringToWString(const std::string& utf8)
 	std::wstring result(sizeNeeded, 0);
 	MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), result.data(), sizeNeeded);
 	return result;
+}
+
+void FSceneManager::SetHwnd(HWND& phwnd)
+{
+	hwnd = phwnd;
+}
+
+void FSceneManager::UpdateImeAssociation()
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	if (!io.WantTextInput && !s_imeDisabled)
+	{
+		// 지금 아무 텍스트 위젯도 입력을 원하지 않음 -> IME를 창에서 완전히 떼어냄
+		s_savedImc = ImmAssociateContext(hwnd, nullptr);
+		s_imeDisabled = true;
+	}
+	else if (io.WantTextInput && s_imeDisabled)
+	{
+		// 다시 어떤 위젯(InputText)이 텍스트 입력을 원함 -> IME를 원래대로 다시 연결
+		ImmAssociateContext(hwnd, s_savedImc);
+		s_imeDisabled = false;
+	}
 }
 
 const TArray<FRenderInfo>& FSceneManager::GetRenderInfos() const
