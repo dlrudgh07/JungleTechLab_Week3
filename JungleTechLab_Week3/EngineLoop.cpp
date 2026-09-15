@@ -124,6 +124,7 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	SceneManager->SetResourceManager(&FResourceManager::Get(), &FGraphicsManager::Get());
 	//SceneManager->RequestNewScene();
 	SceneManager->RequestNewScene();
+	SceneManager->SetHwnd(hWnd);
 
 	//로딩창 제거
 	Tick(false);

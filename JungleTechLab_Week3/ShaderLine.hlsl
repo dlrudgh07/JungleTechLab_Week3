@@ -9,14 +9,12 @@ struct VS_INPUT
 {
     float4 position : POSITION;
     float4 color : COLOR;
-    float2 uv : TEXCOORD;
 };
 
 struct PS_INPUT
 {
     float4 position : SV_POSITION;
     float4 color : COLOR;
-    float2 uv : TEXCOORD;
 };
 
 PS_INPUT mainVS(VS_INPUT input)
@@ -26,7 +24,6 @@ PS_INPUT mainVS(VS_INPUT input)
     output.position = mul(mul(float4(input.position.xyz, 1.0f), World), ViewProjection);
     //output.color = float4(lerp(input.color.rgb, Tint.rgb, Tint.a), input.color.a);
     output.color = input.color;
-    output.uv = input.uv;
     
     return output;
 }

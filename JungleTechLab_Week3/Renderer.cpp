@@ -167,7 +167,7 @@ void URenderer::ReleaseVertexBuffer(ID3D11Buffer* vertexBuffer)
 void URenderer::CreateLineVertexBuffer(uint32 maxVertices)
 {
 	D3D11_BUFFER_DESC vertexbufferdesc = {};
-	vertexbufferdesc.ByteWidth = maxVertices * sizeof(FVertexSimple);
+	vertexbufferdesc.ByteWidth = maxVertices * sizeof(FLineVertex);
 	vertexbufferdesc.Usage = D3D11_USAGE_DYNAMIC;
 	vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -372,9 +372,8 @@ void URenderer::CreateShader()
 
 	D3D11_INPUT_ELEMENT_DESC LineLayout[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	Device->CreateInputLayout(LineLayout, ARRAYSIZE(LineLayout), LineVertexshaderCSO->GetBufferPointer(), LineVertexshaderCSO->GetBufferSize(), &LineInputLayout);
@@ -644,7 +643,7 @@ void URenderer::RenderLines(const FLineVertex* vertices, uint32 numVertices)
 	{
 		return;
 	}
-	memcpy(lineBufferMSR.pData, vertices, numVertices * sizeof(FVertexSimple));
+	memcpy(lineBufferMSR.pData, vertices, numVertices * sizeof(FLineVertex));
 	DeviceContext->Unmap(LineVertexBuffer, 0);
 
 	// 직전에 메시 버퍼가 물려 있으므로 갈아끼워야 한다
