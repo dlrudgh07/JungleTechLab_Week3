@@ -66,8 +66,8 @@ public:
 	void DrawCurrentUUID(UPrimitiveComponent* RootComponent, FVector UpVector, FVector RightVector);
 	void FlushUUID(UTexture* FontTexture);
 
-	bool GetShowWorldAxis() const { return mbShowWorldAxis; }
-	void SetShowWorldAxis(bool bShow) { mbShowWorldAxis = bShow; }
+	//bool GetShowWorldAxis() const { return mbShowWorldAxis; }
+	//void SetShowWorldAxis(bool bShow) { mbShowWorldAxis = bShow; }
 
 	static FVector GetPrimitiveCenter(EPrimitive type);
 	static FVector GetPrimitiveHalfExtent(EPrimitive type);

@@ -136,7 +136,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		GraphicsManager->Prepare(&ViewportClient->mCamera, ViewportClient->GetViewMode());
 
 		// Show Flag에 따른 렌더 선택 분기
-		EEngineShowFlags flags = ViewportClient->GetShowFlags();
+		EEngineShowFlags flags = ResourceManager->IniConfig.GetShowFlags();
 
 
 		if (HasFlag(flags, EEngineShowFlags::SF_Primitives))

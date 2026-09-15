@@ -190,61 +190,69 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, b시각화대상);
 		}
 		*/
-		bool bShowWorldAxis = guiReference.GraphicsManager->GetShowWorldAxis();
+		bool bShowWorldAxis = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_WorldAxis);
 		if (ImGui::Checkbox("World axis", &bShowWorldAxis))
 		{
-			guiReference.GraphicsManager->SetShowWorldAxis(bShowWorldAxis);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_WorldAxis, bShowWorldAxis);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bOrthographic = guiReference.GraphicsManager->IsOrthographicTarget();
-		if (ImGui::Checkbox("Orthogonal", &bOrthographic))
-		{
-			if (mSelectedActor && bOrthographic && guiReference.GraphicsManager->GetPerspectiveRatio() == 1.0f)
-			{
-				const FVector offset = mSelectedActor->GetTransform().Location - camera.Transform.Location;
-				const float depth = FVector::dot(offset, camera.GetForwardVector());
-				camera.mOrthoDistance = FMath::Max(depth, 0.1f);
-			}
-
-			guiReference.GraphicsManager->StartProjectionTransition(bOrthographic);
-		}
-		bool bShowPrimitive = HasFlag(guiReference.ViewportClient->GetShowFlags(),EEngineShowFlags::SF_Primitives);
+		bool bShowPrimitive = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_Primitives);
 		if (ImGui::Checkbox("Show Primitives", &bShowPrimitive))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bShowPrimitive);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_Primitives, bShowPrimitive);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bShowAABB = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BoundingBoxes);
+		bool bShowAABB = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_BoundingBoxes);
 		if (ImGui::Checkbox("Show AABB", &bShowAABB))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BoundingBoxes, bShowAABB);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_BoundingBoxes, bShowAABB);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bShowGizmo = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Gizmo);
+		bool bShowGizmo = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_Gizmo);
 		if (ImGui::Checkbox("Gizmo", &bShowGizmo))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Gizmo, bShowGizmo);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_Gizmo, bShowGizmo);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bBillBoard = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BillboardText);
+		bool bBillBoard = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_BillboardText);
 		if (ImGui::Checkbox("BillBoard", &bBillBoard))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BillboardText, bBillBoard);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_BillboardText, bBillBoard);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bGrid = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Grid);
+		bool bGrid = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_Grid);
 		if (ImGui::Checkbox("Grid", &bGrid))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Grid, bGrid);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_Grid, bGrid);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bUUID = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_UUID);
+		bool bUUID = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_UUID);
 		if (ImGui::Checkbox("UUID", &bUUID))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_UUID, bUUID);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_UUID, bUUID);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
 		ImGui::EndCombo();
+	}
+
+	ImGui::SameLine();
+	bool bOrthographic = guiReference.GraphicsManager->IsOrthographicTarget();
+	if (ImGui::Checkbox("Orthogonal", &bOrthographic))
+	{
+		if (mSelectedActor && bOrthographic && guiReference.GraphicsManager->GetPerspectiveRatio() == 1.0f)
+		{
+			const FVector offset = mSelectedActor->GetTransform().Location - camera.Transform.Location;
+			const float depth = FVector::dot(offset, camera.GetForwardVector());
+			camera.mOrthoDistance = FMath::Max(depth, 0.1f);
+		}
+		guiReference.GraphicsManager->StartProjectionTransition(bOrthographic);
 	}
 
 	// viewMode UI. 배열 순서는 EViewModeIndex 선언 순서(Lit, Unlit, Wireframe)와 맞아야 한다

@@ -23,6 +23,43 @@ public:
 	void	WriteStringToFile(FString fileName);
 	void	ReadFileToString(FString fileName);
 
+	void	SetStringValue(FString Section, FString Key, FString Value)
+	{
+		for (FIniEntry& CurrentEntry : IniEntry)
+		{
+			if (CurrentEntry.Section == Section && CurrentEntry.Key.Equals(Key))
+			{
+				CurrentEntry.Value = Value;
+				return;
+			}
+		}
+		Add(Section, Key, Value);
+	}
+
+	bool	GetValue(FString Section, FString Key, bool DefaultValue)
+	{
+		for (const FIniEntry& CurrentEntry : IniEntry)
+		{
+			if (CurrentEntry.Section == Section && CurrentEntry.Key.Equals(Key))
+			{
+				std::string_view Value = CurrentEntry.Value;
+				FString LowerValue = CurrentEntry.Value;
+				LowerValue = LowerValue.ToLower();
+
+				if (Value == ("1") || LowerValue == "true")
+				{
+					return true;
+				}
+				else if (Value == ("0") || LowerValue == "false")
+				{
+					return false;
+				}
+				return (DefaultValue);
+			}
+		}
+		return (DefaultValue);
+	}
+
 	template <typename T>
 	void	SetValue(FString Section, FString Key, T& Value)
 	{

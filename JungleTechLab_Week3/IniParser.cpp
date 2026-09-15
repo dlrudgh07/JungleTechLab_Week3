@@ -147,5 +147,4 @@ void FIniParser::WriteStringToFile(FString FilePath)
 	
 	FFileManager FileManager;
 	FileManager.WriteStringToFile(FilePath, WriteStringView);
-
 };
