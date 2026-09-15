@@ -111,7 +111,7 @@ void FIniParser::StartParser(FString File)
 void FIniParser::ReadFileToString(FString fileName)
 {
 	try {
-		FFileManager FileManager;
+		FFileManager FileManager(nullptr);
 		FString File = FileManager.ReadFileToString(fileName);
 		StartParser(File);
 
@@ -145,7 +145,7 @@ void FIniParser::WriteStringToFile(FString FilePath)
 		WriteStringView.Append(FString(CurrentEntry.Key).Append(FString(" = ")).Append(CurrentEntry.Value).Append(FString("\n")));
 	}
 	
-	FFileManager FileManager;
+	FFileManager FileManager(nullptr);
 	FileManager.WriteStringToFile(FilePath, WriteStringView);
 
 };

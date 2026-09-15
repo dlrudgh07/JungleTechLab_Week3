@@ -73,7 +73,7 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 
 	// 매니저 할당 및 디바이스 주입	
 	FResourceManager::Get().Initialize(FGraphicsManager::Get().GetRenderer()->Device, FGraphicsManager::Get().GetRenderer()->DeviceContext);
-	FileManager = new FFileManager();
+	FileManager = new FFileManager(hWnd);
 
 	// 에셋 생성 로직을 ResourceManager에서만 처리
 	FResourceManager::Get().InitializeDefaultAssets(&FGraphicsManager::Get());

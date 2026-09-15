@@ -112,6 +112,7 @@ public:
 	FString ToUpper() const;
 
 	bool Empty();
+	bool Empty() const;
 
 	char*	Data() const;
 	size_t	Size() const;

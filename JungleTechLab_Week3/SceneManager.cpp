@@ -61,7 +61,7 @@ void FSceneManager::Update(float DeltaTime)
 	}
 	if (bPendingLoadScene && PendingFileManager)
 	{
-		ExecuteLoadScene();
+		ExecuteLoadScene(*PendingFileManager);
 		bPendingLoadScene = false;
 	}
 
@@ -646,7 +646,76 @@ void FSceneManager::SaveScene(std::string_view sceneName, const FFileManager& fi
 	}
 }
 
-void FSceneManager::ExecuteLoadScene()
+void FSceneManager::ExecuteLoadScene(const FFileManager& FileManager)
+{
+	// 파일 탐색기를 열고, 기본 파일명으로 PendingSceneName을 띄워줍니다.
+	FString absoluteFilePath = FileManager.OpenFileDialog(PendingSceneName, kSceneDataSuffix, kSceneDataDir);
+
+	// 유저가 탐색기에서 '취소'를 눌렀다면 로드를 중단합니다.
+	if (absoluteFilePath.Empty())
+	{
+		//UE_LOG("Scene load canceled by user.");
+		return;
+	}
+
+	FString jsonString;
+
+	try
+	{
+		// 탐색기에서 받아온 절대 경로(absoluteFilePath)를 이용해 바로 파일을 읽습니다.
+		jsonString = PendingFileManager->ReadFileToString(absoluteFilePath);
+	}
+	catch (...)
+	{
+		UE_LOG("Failed to load scene {}: file not found.", absoluteFilePath.CStr());
+		return;
+	}
+
+	try
+	{
+		auto Data = json::JSON::Load(jsonString);
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
+
+		FResourceManager& StagedResources = FResourceManager::Get();
+		StagedResources.ClearAll();
+		mResources->InitializeForLoad(StagedResources);
+
+		FSceneLoadScope Scope;
+		if (Data.hasKey("Version") &&
+			(Data.at("Version").JSONType() != json::JSON::Class::Integral || Data.at("Version").ToInt() > 1))
+			throw std::runtime_error("Unsupported scene version");
+
+		if (Data.hasKey("Version") && Data.at("Version").ToInt() == 1 && !Data.hasKey("Assets"))
+			throw std::runtime_error("Missing scene assets");
+
+		if (Data.hasKey("Assets"))
+		{
+			if (!Data.hasKey("Version") || Data.at("Version").ToInt() != 1)
+				throw std::runtime_error("Unsupported scene version");
+			StagedResources.DeserializeAssets(Data.at("Assets"));
+		}
+		else if (mGraphics)
+			StagedResources.InitializeDefaultAssets(mGraphics);
+
+		auto NewWorld = PreloadObject<UWorld>(Data.at("World"));
+		NewWorld->DeserializeClass(Data.at("World"));
+		ResetSelectedActor();
+		delete mCurrentWorld;
+		mCurrentWorld = NewWorld.release();
+		mResources->SwapAssets(StagedResources);
+
+		if (!Data.hasKey("Assets"))
+			UE_LOG("Legacy scene has no asset data; missing mesh references cannot be recovered.");
+	}
+	catch (const std::exception& Error)
+	{
+		UE_LOG("Failed to load scene %s: %s", absoluteFilePath.CStr(), Error.what());
+	}
+}
+
+/*
+void FSceneManager::ExecuteLoadScene(const FFileManager& FileManager)
 {
 	FString fileName = kSceneDataDir;
 	fileName += FString("/");
@@ -701,6 +770,10 @@ void FSceneManager::ExecuteLoadScene()
 		UE_LOG("Failed to load scene %s: %s", PendingSceneName.c_str(), Error.what());
 	}
 }
+*/
+
+
+
 void  FSceneManager::SetSelectedActor(AActor* actor)
 {
 	if (actor == nullptr)

@@ -91,7 +91,7 @@ private:
 	const FFileManager* PendingFileManager = nullptr;
 
 	void ExecuteNewScene();
-	void ExecuteLoadScene();
+	void ExecuteLoadScene(const FFileManager&);
 
 
 
