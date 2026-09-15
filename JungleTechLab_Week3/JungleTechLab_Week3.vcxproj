@@ -175,6 +175,7 @@
     <ClInclude Include="FFontAsset.h" />
     <ClInclude Include="FBoxSphereBounds.h" />
     <ClInclude Include="FPath.h" />
+    <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="MeshUtility.h" />
     <ClInclude Include="ParticleSubUVComponent.h" />

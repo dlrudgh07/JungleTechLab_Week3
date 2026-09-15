@@ -7,24 +7,15 @@
 #include "FEditorViewportClient.h"
 
 FVector FGizmo::AxisDirection(EGIZMO_AXIS axis) const {
-	const FMatrix Result_yaw = FMatrix::RotateZ(UpdateRotation.Yaw);
-	const FMatrix Result_pitch = FMatrix::RotateY(UpdateRotation.Pitch);
-	const FMatrix Result_roll = FMatrix::RotateX(UpdateRotation.Roll);
 	if (eType == EGIZMO_TYPE::ROTATE)
 	{
-
+		// 회전 링은 월드축. 쿼터니언은 어떤 축으로든 곱하면 되므로 오일러식 짐벌 축이 필요 없다.
+		// 로컬축 링을 원하면 UpdateRotation.ToMatrix().GetUnitAxis(...) 로 바꾸면 된다
 		switch (axis)
 		{
 		case Z: return FVector(0.0f, 0.0f, 1.0f);
-		case Y: return Result_yaw.GetUnitAxis(EAxis::Y);
-		case X: return (Result_pitch * Result_yaw).GetUnitAxis(EAxis::X);
-
-
-		// 월드축
-		//case Z: return FVector(0.0f, 0.0f, 1.0f);
-		//case Y: return FVector(0.0f, 1.0f, 0.0f);
-		//case X: return FVector(1.0f, 0.0f, 0.0f);
-
+		case Y: return FVector(0.0f, 1.0f, 0.0f);
+		case X: return FVector(1.0f, 0.0f, 0.0f);
 		default: return FVector(0);
 		}
 	}
@@ -33,9 +24,9 @@ FVector FGizmo::AxisDirection(EGIZMO_AXIS axis) const {
 	{
 		switch (axis)
 		{
-		case X:  return FMatrix::Rotate(UpdateRotation).GetUnitAxis(EAxis::X);
-		case Y:  return FMatrix::Rotate(UpdateRotation).GetUnitAxis(EAxis::Y);
-		case Z:  return FMatrix::Rotate(UpdateRotation).GetUnitAxis(EAxis::Z);
+		case X:  return UpdateRotation.ToMatrix().GetUnitAxis(EAxis::X);
+		case Y:  return UpdateRotation.ToMatrix().GetUnitAxis(EAxis::Y);
+		case Z:  return UpdateRotation.ToMatrix().GetUnitAxis(EAxis::Z);
 		default: return FVector(0.0f, 0.0f, 0.0f);
 
 		}
@@ -177,7 +168,7 @@ bool FGizmo::GetDragScale(const FVector& nearPoint, const FVector& farPoint, FVe
 	return true;
 }
 
-bool FGizmo::GetDragRotation(const FVector& nearPoint, const FVector& farPoint, FRotator& outRotation)
+bool FGizmo::GetDragRotation(const FVector& nearPoint, const FVector& farPoint, FQuaternion& outRotation)
 {
 	if (mDraggingAxis == NONE) return false;
 	if (mDragStartRingDir.Length() <= SMALL_NUMBER) return false;   // 잡을 때 평면을 못 맞췄다
@@ -202,17 +193,11 @@ bool FGizmo::GetDragRotation(const FVector& nearPoint, const FVector& farPoint, 
 	mDragAccumAngle += WrapAngle180(angle - mDragLastAngle);
 	mDragLastAngle = angle;
 
-	// FMatrix::Rotate를 미소각으로 전개해 보면 Yaw만 오른손이고 Pitch/Roll은 왼손이다.
-	// 위에서 구한 각도는 오른손 기준이라 축에 따라 부호를 뒤집는다
-	outRotation = mDragStartTransform.Rotation;
-	switch (mDraggingAxis)
-	{
-	case X: outRotation.Roll = mDragStartTransform.Rotation.Roll - mDragAccumAngle; break;
-	case Y: outRotation.Pitch = mDragStartTransform.Rotation.Pitch - mDragAccumAngle; break;
-	case Z: outRotation.Yaw = mDragStartTransform.Rotation.Yaw + mDragAccumAngle; break;
-	default: return false;
-	}
-
+	// 잡은 링 축(월드)으로 누적각만큼 회전한 것을 시작 회전에 얹는다.
+	// 월드축 회전은 왼쪽에 곱한다. 각도도 쿼터니언도 오른손이라 축별 부호 반전이 필요 없다.
+	// 시작 회전(mDragStartTransform)은 건드리지 않는다 — 매 프레임 누적각으로 다시 계산한다
+	const FVector Axis = AxisDirection(mDraggingAxis);
+	outRotation = FQuaternion(FVector4(Axis.x, Axis.y, Axis.z, mDragAccumAngle)) * mDragStartTransform.Rotation;
 	return true;
 }
 

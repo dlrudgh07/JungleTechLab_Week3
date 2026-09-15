@@ -2,6 +2,7 @@
 
 #include "Object.h"
 #include "ActorComponent.h"
+#include "Quaternion.h"
 
 class UWorld;
 struct FRenderInfo;
@@ -38,6 +39,7 @@ public:
 
 	void SetLocation(FVector location);
 	void SetRotation(FRotator rotation);
+	void SetRotation(FQuaternion rotation);
 	void SetScale(FVector scale);
 
 	bool IsPendingKill() const {

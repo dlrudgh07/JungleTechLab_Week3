@@ -764,7 +764,7 @@ void URenderer::CreateDepthStencilState()
 {
 	D3D11_DEPTH_STENCIL_DESC desc = {};
 	desc.DepthEnable = TRUE;							 // 깊이 테스트 켜기
-	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;    // 통과한 픽셀의 z를 기록
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;    // 통과한 픽셀의 z를 기록
 	desc.DepthFunc = D3D11_COMPARISON_LESS;				 // 더 가까우면(작으면) 통과
 	desc.StencilEnable = FALSE;
 

@@ -25,7 +25,7 @@ public:
 	void SerializeClass(json::JSON&) const override;
 	void DeserializeClass(const json::JSON&) override;
 	void SetScaleAndOffset(FVector4 sclaeOffset);
-
+	//AActor* SpawnSubUVActor(FTransform Transform, const FResourceManager& RM);
 private:
 	int32 Cols=4; 
 	int32 Rows=4;

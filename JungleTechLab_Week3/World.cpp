@@ -11,6 +11,7 @@
 #include "StaticMesh.h"
 #include "StaticMeshComponent.h"
 #include "UTextComponent.h"
+#include "ParticleSubUVComponent.h"
 
 UWorld::~UWorld()
 {
@@ -195,14 +196,13 @@ AActor* UWorld::SpawnTextMeshActor(FTransform Transform, const FResourceManager&
 }
 
 
-#include "ParticleSubUVComponent.h"
-AActor* UWorld::SpawnSubUVActor(FTransform Transform, const FResourceManager& RM)
+AActor* UWorld::SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager)
 {
 	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
 	UParticleSubUVComponent* Comp = FObjectFactory::ConstructObject<UParticleSubUVComponent>();
 
-	Comp->SetStaticMesh(RM.GetStaticMesh("Quad"));
-	Comp->SetMaterial(0, RM.GetMaterial("SubUVMaterial"));
+	Comp->SetStaticMesh(ResourceManager.GetStaticMesh("Quad"));
+	Comp->SetMaterial(0, ResourceManager.GetMaterial("SubUVMaterial"));
 
 	Comp->SetRelativeLocation(Transform.Location);
 	Comp->SetRelativeRotation(Transform.Rotation);

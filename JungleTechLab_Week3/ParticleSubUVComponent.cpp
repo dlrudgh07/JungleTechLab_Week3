@@ -1,4 +1,6 @@
 ﻿#include "ParticleSubUVComponent.h"
+#include "ResourceManager.h"
+#include "ObjectFactory.h"
 
 void UParticleSubUVComponent::Initialize()
 {
@@ -33,8 +35,8 @@ void UParticleSubUVComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos
 	const int32 Col = UVIndex % static_cast<int32>(Cols);
 	const int32 Row = UVIndex / static_cast<int32>(Cols);
 
-
 	FRenderInfo& Info = (*outRenderInfos)[outRenderInfos->Num() - 1];
+	Info.BlendMode = EBlendMode::Translucent;
 	Info.UVTransform.x = 1.0f/Cols;
 	Info.UVTransform.y = 1.0f/Rows;
 	Info.UVTransform.z = Col / static_cast<float>(Cols);
@@ -88,3 +90,20 @@ void UParticleSubUVComponent::DeserializeClass(const json::JSON& inJson)
 	if (Cols <= 0 || Rows <= 0)
 		throw std::runtime_error("Invalid SubUV grid");
 }
+
+//AActor* UParticleSubUVComponent::SpawnSubUVActor(FTransform Transform, const FResourceManager& RM)
+//{
+//	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+//	UParticleSubUVComponent* Comp = FObjectFactory::ConstructObject<UParticleSubUVComponent>();
+//
+//	Comp->SetStaticMesh(RM.GetStaticMesh("Quad"));
+//	Comp->SetMaterial(0, RM.GetMaterial("SubUVMaterial"));
+//
+//	Comp->SetRelativeLocation(Transform.Location);
+//	Comp->SetRelativeRotation(Transform.Rotation);
+//	Comp->SetRelativeScale3D(Transform.Scale);
+//
+//	NewActor->AddRootSceneComponent(Comp);
+//	AddActor(NewActor);
+//	return NewActor;
+//}

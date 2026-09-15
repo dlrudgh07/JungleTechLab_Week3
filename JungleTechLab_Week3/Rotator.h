@@ -3,6 +3,12 @@
 #include "Vector.h"
 #include "MathUtility.h"
 
+
+/*
+* ==========
+* 오일러 회전
+*===========
+*/
 struct TRotator
 {
 	float Pitch, Yaw, Roll;

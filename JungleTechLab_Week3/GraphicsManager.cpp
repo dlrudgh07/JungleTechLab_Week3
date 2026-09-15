@@ -375,7 +375,7 @@ void FGraphicsManager::RenderOverlay(const TArray<FRenderInfo> renderInfos) //ê¹
 void GraphicsManager::Render(FTransform worldTransformMatrix, EPrimitive ePrimitive)
 {
 	mRenderer->UpdateConstant(worldTransformMatrix.MakeMatrix(), mViewProjectionMatrix);
-
+	
 	FBuffer vertexBuffer = mBufferMap[ePrimitive];
 	mRenderer->RenderPrimitive(vertexBuffer.Buffer, vertexBuffer.SourceNum);
 }
