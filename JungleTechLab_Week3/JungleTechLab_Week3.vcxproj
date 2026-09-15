@@ -132,8 +132,12 @@
     <TargetName>SceneSerializationTests</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(SceneSerializationTests)'=='true'">
-    <ClCompile><AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
-    <Link><SubSystem>Console</SubSystem></Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
@@ -142,6 +146,7 @@
     <ClCompile Include="FFontAsset.cpp" />
     <ClCompile Include="FBoxSphereBounds.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="FName.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Guid.cpp" />
     <ClCompile Include="IniConfig.cpp" />
@@ -174,6 +179,7 @@
     <ClInclude Include="Circle.h" />
     <ClInclude Include="FFontAsset.h" />
     <ClInclude Include="FBoxSphereBounds.h" />
+    <ClInclude Include="FName.h" />
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="MeshUtility.h" />
