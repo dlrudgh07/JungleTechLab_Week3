@@ -138,7 +138,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		FGraphicsManager::Get().Prepare(&ViewportClient->mCamera, ViewportClient->GetViewMode());
 
 		// Show Flag에 따른 렌더 선택 분기
-		EEngineShowFlags flags = ResourceManager->IniConfig.GetShowFlags();
+		EEngineShowFlags flags = FResourceManager::Get().IniConfig.GetShowFlags();
 
 
 		if (HasFlag(flags, EEngineShowFlags::SF_Primitives))
@@ -156,8 +156,6 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			FGraphicsManager::Get().DrawGrid(ViewportClient->GetCamera().Transform, FResourceManager::Get().IniConfig.GetGridOffset(), FResourceManager::Get().IniConfig.GetGridRange());
 		}
 		//Grid
-		FGraphicsManager::Get().FlushLines();
-
 
 		//강조
 		if (auto SelectedActor = SceneManager->GetSelectedActor())
@@ -195,7 +193,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 					FGraphicsManager::Get().DrawCurrentUUID(RootComponent, ViewportClient->mCamera.GetUpVector(),
 						ViewportClient->mCamera.GetRightVector());
 				}
-				FGraphicsManager::Get().FlushUUID(ResourceManager->GetTexture("FontTexture"));
+				FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
 			}
 		}
 

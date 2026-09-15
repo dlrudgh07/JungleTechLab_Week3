@@ -235,7 +235,7 @@ void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 
 {
 	if (!mbShowGrid) return;
 
-	int RepeatNum = Range * (1.0f / Offset);
+	int RepeatNum = static_cast<int>(Range * (1.0f / Offset));
 	float GridGap = -0.001f;
 	float Extent = Offset * (RepeatNum);
 
@@ -264,20 +264,21 @@ void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 
 		Y2 = { -Extent, CurrentOffset , GridGap };
 		X1 += Origin; X2 += Origin; Y1 += Origin; Y2 += Origin;
 
-		if (X1.x == 0)
+		if ( fabsf(X1.x) < Offset * 0.001f && fabsf(Y1.y) < Offset * 0.001f)
+		{
+			continue;
+		}
+		else if (fabsf(X1.x) < Offset * 0.001f)
 		{
 			DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
 			continue;
 		}
-		else if (Y1.y == 0)
+		else if (fabsf(Y1.y) < Offset * 0.001f)
 		{
 			DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
 			continue;
 		}
-		else if (X1.x == 0 && Y1.y == 0)
-		{
-			continue;
-		}
+		
 		DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
 		DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
 	}
