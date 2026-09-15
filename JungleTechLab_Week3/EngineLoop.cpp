@@ -138,7 +138,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		FGraphicsManager::Get().Prepare(&ViewportClient->mCamera, ViewportClient->GetViewMode());
 
 		// Show Flag에 따른 렌더 선택 분기
-		EEngineShowFlags flags = ViewportClient->GetShowFlags();
+		EEngineShowFlags flags = FResourceManager::Get().IniConfig.GetShowFlags();
 
 
 		if (HasFlag(flags, EEngineShowFlags::SF_Primitives))
@@ -156,7 +156,6 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			FGraphicsManager::Get().DrawGrid(ViewportClient->GetCamera().Transform, FResourceManager::Get().IniConfig.GetGridOffset(), FResourceManager::Get().IniConfig.GetGridRange());
 		}
 		//Grid
-		FGraphicsManager::Get().FlushLines();
 
 		//강조
 		if (auto SelectedActor = SceneManager->GetSelectedActor())
@@ -171,9 +170,10 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			if (HasFlag(flags, EEngineShowFlags::SF_BoundingBoxes) && FGraphicsManager::Get().IsDrawAABB())
 			{
 				FGraphicsManager::Get().DrawAABB(static_cast<UPrimitiveComponent*>(SelectedActor->GetRootComponent())->GetWorldBounds());
-				FGraphicsManager::Get().FlushLines();
 			}
 		}
+
+		FGraphicsManager::Get().FlushLines();
 
 		// Gizmo
 		if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
@@ -182,14 +182,20 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			FGraphicsManager::Get().RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(&FResourceManager::Get()));
 		}
 
+		// UUID 텍스쳐 랜더링
 		if (HasFlag(flags, EEngineShowFlags::SF_UUID))
 		{
-			// UUID 텍스쳐 랜더링
-			FGraphicsManager::Get().DrawAllUUID(SceneManager->GetRenderInfos(),
-												ViewportClient->mCamera.GetUpVector(), ViewportClient->mCamera.GetRightVector());
-			FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
+			if (UWorld* World = SceneManager->GetCurrentWorld())
+			{
+				for (AActor* Actor : World->GetActors())
+				{
+					UPrimitiveComponent* RootComponent = static_cast<UPrimitiveComponent*>(Actor->GetRootComponent());
+					FGraphicsManager::Get().DrawCurrentUUID(RootComponent, ViewportClient->mCamera.GetUpVector(),
+						ViewportClient->mCamera.GetRightVector());
+				}
+				FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
+			}
 		}
-
 
 		//ImGui
 		{

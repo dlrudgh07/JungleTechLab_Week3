@@ -163,8 +163,17 @@ public:
 
 	void Rotate(long Dx, long Dy, float Sensitivity)
 	{
-		Transform.Rotation.Yaw += FMath::Fmod(Dx * Sensitivity, 360.f);
-		Transform.Rotation.Pitch -= FMath::Fmod(Dy * Sensitivity, 360.f);
+		//Transform.Rotation.Yaw += FMath::Fmod(Dx * Sensitivity, 360.f);
+		//Transform.Rotation.Pitch -= FMath::Fmod(Dy * Sensitivity, 360.f);
+
+		Transform.Rotation.Yaw += Dx * Sensitivity;
+		Transform.Rotation.Pitch -= Dy * Sensitivity;
+
+		// Yaw 는 누적값을 감아서 값이 끝없이 커지지 않게 한다
+		Transform.Rotation.Yaw = FMath::Fmod(Transform.Rotation.Yaw, 360.f);
+
+		// Pitch 는 감으면 안 되고 막아야 한다. 90 을 넘으면 시점이 뒤집힌다
+		Transform.Rotation.Pitch = FMath::Clamp(Transform.Rotation.Pitch, -89.f, 89.f);
 	}
 
 	void Update();

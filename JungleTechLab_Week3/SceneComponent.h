@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "ActorComponent.h"
-#include "GraphicsManager.h"
 
 #include "Vector.h"
 
