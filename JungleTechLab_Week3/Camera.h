@@ -20,14 +20,14 @@ public:
 		return FMatrix::Translation(FVector(-Transform.Location.x,
 			-Transform.Location.y,
 			-Transform.Location.z))
-			* FMatrix::Rotate(Transform.Rotation).Transpose()
+			* Transform.Rotation.Conjugate().ToMatrix()
 			* FMatrix::UEToDX;
 	}
 
 	// 특정 지점을 바라보도록 회전을 맞춘다.
 	void LookAt(const FVector& Target)
 	{
-		Transform.Rotation = FRotator::LookAt(Transform.Location, Target);
+		Transform.Rotation = FQuaternion::FromEuler(FRotator::LookAt(Transform.Location, Target));
 	}
 
 	FMatrix GetProjectionMatrix(float Aspect, float fovDegree, float n, float f) const
@@ -163,15 +163,18 @@ public:
 
 	void Rotate(long Dx, long Dy, float Sensitivity)
 	{
-		Transform.Rotation.Yaw += FMath::Fmod(Dx * Sensitivity, 360.f);
-		Transform.Rotation.Pitch -= FMath::Fmod(Dy * Sensitivity, 360.f);
+		// Yaw는 월드 Z(왼쪽에 곱함), Pitch는 카메라 로컬 Y(오른쪽에 곱함). 기존과 같은 방향.
+		Transform.Rotation = FQuaternion(FVector4(0, 0, 1, Dx * Sensitivity))
+			* Transform.Rotation
+			* FQuaternion(FVector4(0, 1, 0, Dy * Sensitivity));
+		Transform.Rotation.Normalize();
 	}
 
 	void Update();
 
-	FVector GetForwardVector() const { return FMatrix::Rotate(Transform.Rotation).GetUnitAxis(EAxis::X); }
-	FVector GetRightVector()   const { return FMatrix::Rotate(Transform.Rotation).GetUnitAxis(EAxis::Y); }
-	FVector GetUpVector()      const { return FMatrix::Rotate(Transform.Rotation).GetUnitAxis(EAxis::Z); }
+	FVector GetForwardVector() const { return Transform.Rotation.ToMatrix().GetUnitAxis(EAxis::X); }
+	FVector GetRightVector()   const { return Transform.Rotation.ToMatrix().GetUnitAxis(EAxis::Y); }
+	FVector GetUpVector()      const { return Transform.Rotation.ToMatrix().GetUnitAxis(EAxis::Z); }
 
 	//속력
 	float Speed = 5.f;

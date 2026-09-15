@@ -56,3 +56,17 @@ FBoxSphereBounds UStaticMeshComponent::GetLocalBounds() const
 		return StaticMesh->LocalBounds;
 	return FBoxSphereBounds{};
 }
+#include "SceneSerialization.h"
+void UStaticMeshComponent::SerializeClass(json::JSON& outJson) const
+{
+	UMeshComponent::SerializeClass(outJson);
+	outJson["Properties"]["StaticMeshGUID"] = ObjectReference(StaticMesh);
+}
+void UStaticMeshComponent::DeserializeClass(const json::JSON& inJson)
+{
+	UMeshComponent::DeserializeClass(inJson);
+	const auto& P = inJson.at("Properties");
+	if (P.hasKey("StaticMeshGUID"))
+		SetStaticMesh(ResolveReference<UStaticMesh>(P.at("StaticMeshGUID")));
+	UpdateBounds();
+}

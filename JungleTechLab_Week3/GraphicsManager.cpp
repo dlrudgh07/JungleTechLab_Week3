@@ -1,4 +1,5 @@
 ﻿#include "GraphicsManager.h"
+#include "PrimitiveComponent.h"
 
 #include "Renderer.h"
 #include "Camera.h"
@@ -7,6 +8,7 @@
 #include "Texture.h"
 #include "FQuad.h"
 #include "MeshUtility.h"
+
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
 static constexpr uint32 UUID_VERTEX_CAPACITY = 8192; // 초기에할당한 크기이다 용량이 꽉차면 2배로 재할당
@@ -258,7 +260,7 @@ void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 
 {
 	if (!mbShowGrid) return;
 
-	int RepeatNum = Range * (1.0f / Offset);
+	int RepeatNum = static_cast<int>(Range * (1.0f / Offset));
 	float GridGap = -0.001f;
 	float Extent = Offset * (RepeatNum);
 
@@ -287,20 +289,21 @@ void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 
 		Y2 = { -Extent, CurrentOffset , GridGap };
 		X1 += Origin; X2 += Origin; Y1 += Origin; Y2 += Origin;
 
-		if (X1.x == 0)
+		if ( fabsf(X1.x) < Offset * 0.001f && fabsf(Y1.y) < Offset * 0.001f)
+		{
+			continue;
+		}
+		else if (fabsf(X1.x) < Offset * 0.001f)
 		{
 			DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
 			continue;
 		}
-		else if (Y1.y == 0)
+		else if (fabsf(Y1.y) < Offset * 0.001f)
 		{
 			DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
 			continue;
 		}
-		else if (X1.x == 0 && Y1.y == 0)
-		{
-			continue;
-		}
+		
 		DrawLine(X1, X2, FVector4(1, 1, 1, alpha));
 		DrawLine(Y1, Y2, FVector4(1, 1, 1, alpha));
 	}
@@ -311,15 +314,7 @@ void FGraphicsManager::FlushLines()
 	if (mLineVertices.Num() == 0) return;
 
 	// 선분 좌표가 이미 월드 공간이라 World는 단위행렬.
-	// Tint.a = 0 이면 셰이더의 lerp가 정점 색을 그대로 통과시킨다
-	//if (mbPerspectiveProjection)
-	//{
-	//	mRenderer->UpdateConstant(FMatrix::Identity, mViewProjectionMatrix, FVector4(0, 0, 0, 0));
-	//}
-	//else
-	//{
-	//	mRenderer->UpdateConstant(FMatrix::Identity, mViewOrthogonalProjectionMatrix, FVector4(0, 0, 0, 0));
-	//}
+
 	mRenderer->UpdateConstant(FMatrix::Identity, mViewUnifiedProjectionMatrix, FVector4(0, 0, 0, 0));
 	mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());   // 도형 없어도 정점색이 나오도록 흰색 텍스처
 	mRenderer->RenderLines(&mLineVertices[0], mLineVertices.Num());
@@ -341,44 +336,43 @@ void FGraphicsManager::DrawUUID(const FQuad& quad)
 	mUUIDVertices.Add({ quad.LeftUp.x, quad.LeftUp.y, quad.LeftUp.z, 1.0f,1.0f,1.0f,1.0f, quad.u[0], quad.v[0] }); // 좌측상단
 }
 
-void FGraphicsManager::DrawAllUUID(const TArray<FRenderInfo> renderInfos, FVector UpVector, FVector RightVector)
+void FGraphicsManager::DrawCurrentUUID(UPrimitiveComponent* RootComponent, FVector UpVector, FVector RightVector)
 {
-	for (const FRenderInfo& renderInfo : renderInfos)
+	FMatrix CurrentWorldMatrix = RootComponent->GetTransformMatrix().MakeMatrix();
+	FString UUID = FString("UID:").Append(RootComponent->ObjectID.GUID.ToString());
+	FBoxSphereBounds WorldBounds = RootComponent->GetWorldBounds();
+	const FVector Max = WorldBounds.Center + WorldBounds.BoxHalfExtent;
+
+	FQuad Quad;
+
+	const float UpLength = 0.12f;
+	const float RightLength = 0.12f;
+	const float WordOffset = 0.09f;
+	const uint32 CellLine = 16;
+	const float LocalOffst = (1.0f / CellLine);
+
+	FVector ModelVector = CurrentWorldMatrix.TransformPosition(FVector(0, 0, 0));
+	FVector Origin = ModelVector - (RightVector * WordOffset * (UUID.Len() * 0.5f));
+
+	Origin.z += Max.z + 0.2f;
+
+	for (int i = 0; i < UUID.Len(); i++)
 	{
-		FMatrix CurrentWorldMatrix = renderInfo.WorldTransformMatrix;
+		unsigned char CurrentAsciiCode = UUID.At(i);
 
-		FString UUID = FString("UID:").Append(renderInfo.ObejctID.GUID.ToString());
-		FQuad Quad;
+		FVector Cursor = Origin + RightVector * (WordOffset * i);
 
-		const float UpLength = 0.12f;
-		const float RightLength = 0.12f;
-		const float WordOffset = 0.09f;
-		const uint32 CellLine = 16;
-		const float LocalOffst = (1.0f / CellLine);
+		Quad.LeftUp = Cursor + UpVector * UpLength;
+		Quad.RightUp = Cursor + RightVector * RightLength + UpVector * UpLength;
+		Quad.LeftDown = Cursor;
+		Quad.RightDown = Cursor + RightVector * RightLength;
 
-		FVector ModelVector = CurrentWorldMatrix.TransformPosition(FVector(0, 0, 0));
-		FVector Origin = ModelVector - (RightVector * WordOffset * (UUID.Len() * 0.5f));
+		Quad.u[0] = (0 * LocalOffst) + LocalOffst * (CurrentAsciiCode % CellLine);  // 좌측
+		Quad.u[1] = (1 * LocalOffst) + LocalOffst * (CurrentAsciiCode % CellLine);  // 우측
 
-		Origin.z += 1.0f;
-
-		for (int i = 0; i < UUID.Len(); i++)
-		{
-			unsigned char CurrentAsciiCode = UUID.At(i);
-
-			FVector Cursor = Origin + RightVector * (WordOffset * i);
-
-			Quad.LeftUp = Cursor + UpVector * UpLength;
-			Quad.RightUp = Cursor + RightVector * RightLength + UpVector * UpLength;
-			Quad.LeftDown = Cursor;
-			Quad.RightDown = Cursor + RightVector * RightLength;
-
-			Quad.u[0] = (0 * LocalOffst) + LocalOffst * (CurrentAsciiCode % CellLine);  // 좌측
-			Quad.u[1] = (1 * LocalOffst) + LocalOffst * (CurrentAsciiCode % CellLine);  // 우측
-
-			Quad.v[0] = (0 * LocalOffst) + LocalOffst * (CurrentAsciiCode / CellLine);  // 상단
-			Quad.v[1] = (1 * LocalOffst) + LocalOffst * (CurrentAsciiCode / CellLine);  // 하단
-			DrawUUID(Quad);
-		}
+		Quad.v[0] = (0 * LocalOffst) + LocalOffst * (CurrentAsciiCode / CellLine);  // 상단
+		Quad.v[1] = (1 * LocalOffst) + LocalOffst * (CurrentAsciiCode / CellLine);  // 하단
+		DrawUUID(Quad);
 	}
 }
 
@@ -406,7 +400,7 @@ void FGraphicsManager::RenderOverlay(const TArray<FRenderInfo> renderInfos) //�
 void GraphicsManager::Render(FTransform worldTransformMatrix, EPrimitive ePrimitive)
 {
 	mRenderer->UpdateConstant(worldTransformMatrix.MakeMatrix(), mViewProjectionMatrix);
-
+	
 	FBuffer vertexBuffer = mBufferMap[ePrimitive];
 	mRenderer->RenderPrimitive(vertexBuffer.Buffer, vertexBuffer.SourceNum);
 }

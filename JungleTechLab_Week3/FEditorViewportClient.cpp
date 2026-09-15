@@ -191,7 +191,7 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 	FVector MoveDir(0.f, 0.f, 0.f);
 	if (!io.WantCaptureKeyboard)
 	{
-		const FMatrix R = FMatrix::Rotate(mCamera.Transform.Rotation);
+		const FMatrix R = mCamera.Transform.Rotation.ToMatrix();
 		const FVector Forward = R.GetUnitAxis(EAxis::X);
 		const FVector Right = R.GetUnitAxis(EAxis::Y);
 
@@ -323,7 +323,7 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 		if (mGizmo.eType == EGIZMO_TYPE::ROTATE)
 		{
 			// 링 평면 위에서 잰 각도. 시작 회전에 누적각을 한 번만 얹는다
-			FRotator newRotation;
+			FQuaternion newRotation;
 			if (mGizmo.GetDragRotation(mRayNear, mRayFar, newRotation))
 			{
 				//ClickedActor->SetRotation(newRotation);
@@ -440,7 +440,7 @@ void FEditorViewportClient::DeprojectScreenToWorld(int32 MouseX, int32 MouseY, f
 	const float xScale = yScale / Aspect;
 
 	// 3) 카메라 기저로 월드 방향 합성. 전방 성분이 1 이므로 정규화하면 안 된다
-	const FMatrix R = FMatrix::Rotate(mCamera.Transform.Rotation);
+	const FMatrix R = mCamera.Transform.Rotation.ToMatrix();
 	FVector V = R.GetUnitAxis(EAxis::X);                    // 전방 (성분 1)
 	V += R.GetUnitAxis(EAxis::Y) * (ndcX / xScale);         // 우측
 	V += R.GetUnitAxis(EAxis::Z) * (ndcY / yScale);         // 상방
@@ -462,7 +462,7 @@ void FEditorViewportClient::DeprojectScreenToWorldForOrtho(int32 MouseX, int32 M
 	const float orthoHeight = mCamera.mOrthoHeight;
 	const float orthoWidth = orthoHeight * Aspect;
 
-	const FMatrix R = FMatrix::Rotate(mCamera.Transform.Rotation);
+	const FMatrix R = mCamera.Transform.Rotation.ToMatrix();
 	const FVector Forward = R.GetUnitAxis(EAxis::X);
 	const FVector Right = R.GetUnitAxis(EAxis::Y);
 	const FVector Up = R.GetUnitAxis(EAxis::Z);

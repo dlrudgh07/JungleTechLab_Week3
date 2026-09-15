@@ -1,4 +1,5 @@
-﻿#include "World.h"
+﻿#include "SceneSerialization.h"
+#include "World.h"
 
 #include <format>
 
@@ -10,6 +11,7 @@
 #include "StaticMesh.h"
 #include "StaticMeshComponent.h"
 #include "UTextComponent.h"
+#include "ParticleSubUVComponent.h"
 
 UWorld::~UWorld()
 {
@@ -36,6 +38,14 @@ void UWorld::SerializeClass(json::JSON& outJson) const
 
 void UWorld::DeserializeClass(const json::JSON& inJson)
 {
+	std::unique_ptr<FSceneLoadScope> OwnScope;
+	if (!FSceneLoadScope::Current)
+	{
+		OwnScope = std::make_unique<FSceneLoadScope>();
+		OwnScope->Register(this, inJson);
+	}
+	if (Actors.Num() != 0)
+		throw std::runtime_error("Deserialize world requires an empty world");
 	UObject::DeserializeClass(inJson);
 
 	const json::JSON& propertiesJson = inJson.at("Properties");
@@ -47,24 +57,20 @@ void UWorld::DeserializeClass(const json::JSON& inJson)
 
 	const json::JSON& actorsJson = propertiesJson.at("Actors");
 
-	for (const auto& actorJson : actorsJson.ArrayRange())
+	// Register every actor before preloading any components or resolving references.
+	for (const auto& Data : actorsJson.ArrayRange())
 	{
-		if (!actorJson.hasKey("ClassName") || actorJson.at("ClassName").JSONType() != json::JSON::Class::String)
-		{
-			throw std::runtime_error(std::format("{}: ClassName requires a string", GetRuntimeClass()->Name));
-		}
-		FString className(actorJson.at("ClassName").ToString());
-
-		const FClassInfo* classInfo = FObjectFactory::GetClassInfoByName(className);
-		if (!classInfo)
-		{
-			throw std::runtime_error(std::format("{}: Unknown class name: {}", GetRuntimeClass()->Name, className));
-		}
-		AActor* actor = static_cast<AActor*>(FObjectFactory::LoadObject(classInfo, actorJson));
-		AddActor(actor);
+		auto Actor = PreloadObject<AActor>(Data);
+		AddActor(Actor.get());
+		Actor.release();
 	}
+	int Index = 0;
+	for (const auto& Data : actorsJson.ArrayRange())
+		Actors[Index++]->PreloadComponents(Data);
+	Index = 0;
+	for (const auto& Data : actorsJson.ArrayRange())
+		Actors[Index++]->DeserializeClass(Data);
 }
-
 void UWorld::AddActor(AActor* Actor)
 {
 	assert(Actor != nullptr);
@@ -190,14 +196,13 @@ AActor* UWorld::SpawnTextMeshActor(FTransform Transform, const FResourceManager&
 }
 
 
-#include "ParticleSubUVComponent.h"
-AActor* UWorld::SpawnSubUVActor(FTransform Transform, const FResourceManager& RM)
+AActor* UWorld::SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager)
 {
 	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
 	UParticleSubUVComponent* Comp = FObjectFactory::ConstructObject<UParticleSubUVComponent>();
 
-	Comp->SetStaticMesh(RM.GetStaticMesh("Quad"));
-	Comp->SetMaterial(0, RM.GetMaterial("SubUVMaterial"));
+	Comp->SetStaticMesh(ResourceManager.GetStaticMesh("Quad"));
+	Comp->SetMaterial(0, ResourceManager.GetMaterial("SubUVMaterial"));
 
 	Comp->SetRelativeLocation(Transform.Location);
 	Comp->SetRelativeRotation(Transform.Rotation);

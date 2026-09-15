@@ -20,13 +20,7 @@ public:
 	void Update(float deltaTime, D3D11_VIEWPORT ViewportInfo, FSceneManager* sceneManager, float perspectiveRatio, FIniConfig& IniConfig);
 	bool IsMouseHit() const { return bMouseHit; }
 	EViewModeIndex GetViewMode() const { return ViewMode; }
-	EEngineShowFlags GetShowFlags() const { return ShowFlags; }
 	void SetViewMode(EViewModeIndex mode) { ViewMode = mode; }
-	void SetShowFlag(EEngineShowFlags showflag, bool bEnabled) //1이면 스위치켜기, 0이면 끄기
-	{
-		if (bEnabled) ShowFlags |= showflag;
-		else          ShowFlags &= ~showflag;
-	} 
  void Reset();
 
 	FCamera& GetCamera() { return mCamera; }
@@ -73,10 +67,6 @@ private:
 
 	bool bMouseHit = false;
 	EViewModeIndex ViewMode = EViewModeIndex::VMI_Unlit;
-	EEngineShowFlags ShowFlags  =
-		  EEngineShowFlags::SF_Primitives
-		| EEngineShowFlags::SF_WorldAxis
-		| EEngineShowFlags::SF_Gizmo;;
 	// RayCast가 이번 프레임에 쏜 광선. 기즈모 드래그가 같은 광선을 다시 쓴다
 	FVector mRayNear;
 	FVector mRayFar;

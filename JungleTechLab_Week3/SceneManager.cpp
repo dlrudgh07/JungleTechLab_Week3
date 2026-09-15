@@ -1,4 +1,5 @@
-﻿
+﻿#include "SceneSerialization.h"
+
 #include "SceneManager.h"
 
 #include <algorithm>
@@ -60,7 +61,7 @@ void FSceneManager::Update(float DeltaTime)
 	}
 	if (bPendingLoadScene && PendingFileManager)
 	{
-		ExecuteLoadScene();
+		ExecuteLoadScene(*PendingFileManager);
 		bPendingLoadScene = false;
 	}
 
@@ -125,7 +126,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
 	// todo : 이건 추후 자동화해야할듯함
-	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh"};
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh","SubUVMesh"};
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
 	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
@@ -144,6 +145,10 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			{
 				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 90, 90), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			}
+			else if (SelectedName == "SubUVMesh")
+			{
+				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+			}
 			else
 			{
 				// Factory를 통해 UStaticMeshComponent를 가진 진짜 액터를 스폰
@@ -154,13 +159,13 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		}
 	}
 
-	//임시
-	if (ImGui::Button("Spawn SubUV"))
-	{
-		mCurrentWorld->SpawnSubUVActor(
-			{ FVector(0,0,0), FRotator(0,0,0), FVector(1,1,1) },
-			*guiReference.ResourceManager);
-	}
+	////임시
+	//if (ImGui::Button("Spawn SubUV"))
+	//{
+	//	mCurrentWorld->SpawnSubUVActor(
+	//		{ FVector(0,0,0), FRotator(0,0,0), FVector(1,1,1) },
+	//		*guiReference.ResourceManager);
+	//}
 	
 	ImGui::SameLine();
 	if (ImGui::InputInt("Number of spawn", &spawnCount))
@@ -203,66 +208,74 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	{
 		/* -------------사용법--------------------
 		bool b시각화대상 = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_시각화대상);
-		if (ImGui::Checkbox("BillBoard", &b시각화대상))
+		if (ImGui::Checkbox("시각화대상", &b시각화대상))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, b시각화대상);
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_시각화대상, b시각화대상);
 		}
 		*/
-		bool bShowWorldAxis = guiReference.GraphicsManager->GetShowWorldAxis();
+		bool bShowWorldAxis = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_WorldAxis);
 		if (ImGui::Checkbox("World axis", &bShowWorldAxis))
 		{
-			guiReference.GraphicsManager->SetShowWorldAxis(bShowWorldAxis);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_WorldAxis, bShowWorldAxis);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bOrthographic = guiReference.GraphicsManager->IsOrthographicTarget();
-		if (ImGui::Checkbox("Orthogonal", &bOrthographic))
-		{
-			if (mSelectedActor && bOrthographic && guiReference.GraphicsManager->GetPerspectiveRatio() == 1.0f)
-			{
-				const FVector offset = mSelectedActor->GetTransform().Location - camera.Transform.Location;
-				const float depth = FVector::dot(offset, camera.GetForwardVector());
-				camera.mOrthoDistance = FMath::Max(depth, 0.1f);
-			}
-
-			guiReference.GraphicsManager->StartProjectionTransition(bOrthographic);
-		}
-		bool bShowPrimitive = HasFlag(guiReference.ViewportClient->GetShowFlags(),EEngineShowFlags::SF_Primitives);
+		bool bShowPrimitive = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_Primitives);
 		if (ImGui::Checkbox("Show Primitives", &bShowPrimitive))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, bShowPrimitive);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_Primitives, bShowPrimitive);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bShowAABB = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BoundingBoxes);
+		bool bShowAABB = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_BoundingBoxes);
 		if (ImGui::Checkbox("Show AABB", &bShowAABB))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BoundingBoxes, bShowAABB);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_BoundingBoxes, bShowAABB);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bShowGizmo = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Gizmo);
+		bool bShowGizmo = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_Gizmo);
 		if (ImGui::Checkbox("Gizmo", &bShowGizmo))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Gizmo, bShowGizmo);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_Gizmo, bShowGizmo);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bBillBoard = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_BillboardText);
+		bool bBillBoard = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_BillboardText);
 		if (ImGui::Checkbox("BillBoard", &bBillBoard))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_BillboardText, bBillBoard);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_BillboardText, bBillBoard);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bGrid = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_Grid);
+		bool bGrid = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_Grid);
 		if (ImGui::Checkbox("Grid", &bGrid))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Grid, bGrid);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_Grid, bGrid);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
-		bool bUUID = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_UUID);
+		bool bUUID = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_UUID);
 		if (ImGui::Checkbox("UUID", &bUUID))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_UUID, bUUID);
+			guiReference.ResourceManager->IniConfig.SetShowFlag(EEngineShowFlags::SF_UUID, bUUID);
+			guiReference.ResourceManager->IniConfig.Save();
 		}
 
 		ImGui::EndCombo();
+	}
+
+	ImGui::SameLine();
+	bool bOrthographic = guiReference.GraphicsManager->IsOrthographicTarget();
+	if (ImGui::Checkbox("Orthogonal", &bOrthographic))
+	{
+		if (mSelectedActor && bOrthographic && guiReference.GraphicsManager->GetPerspectiveRatio() == 1.0f)
+		{
+			const FVector offset = mSelectedActor->GetTransform().Location - camera.Transform.Location;
+			const float depth = FVector::dot(offset, camera.GetForwardVector());
+			camera.mOrthoDistance = FMath::Max(depth, 0.1f);
+		}
+		guiReference.GraphicsManager->StartProjectionTransition(bOrthographic);
 	}
 
 	// viewMode UI. 배열 순서는 EViewModeIndex 선언 순서(Lit, Unlit, Wireframe)와 맞아야 한다
@@ -320,16 +333,23 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	ImGui::SetNextItemWidth(itemWidth);
 	ImGui::DragFloat("##CamLocZ", &camera.Transform.Location.z, 0.1f, 10.0f);
 
+	// 회전은 쿼터니언으로 보관하므로 각도로 풀어서 편집하고 바뀌면 다시 변환한다
+	FRotator camEuler = camera.Transform.Rotation.ToEuler();
+	bool camRotChanged = false;
 	ImGui::Text("Rotation   ");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	ImGui::DragFloat("##CamRotX", &camera.Transform.Rotation.Roll, 0.1f, 180.0f);
+	camRotChanged |= ImGui::DragFloat("##CamRotX", &camEuler.Roll, 0.1f, 180.0f);
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	ImGui::DragFloat("##CamRotY", &camera.Transform.Rotation.Pitch, 0.1f, 180.0f);
+	camRotChanged |= ImGui::DragFloat("##CamRotY", &camEuler.Pitch, 0.1f, 180.0f);
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	ImGui::DragFloat("##CamRotZ", &camera.Transform.Rotation.Yaw, 0.1f, 180.0f);
+	camRotChanged |= ImGui::DragFloat("##CamRotZ", &camEuler.Yaw, 0.1f, 180.0f);
+	if (camRotChanged)
+	{
+		camera.Transform.Rotation = FQuaternion::FromEuler(camEuler);
+	}
 	//ImGui::Checkbox("Depth Test", &renderer->bDepthTestEnabled);
 	//ImGui::TextUnformatted(renderer->bDepthTestEnabled
 	//	? "ON : orange (near) stays in front"
@@ -416,11 +436,8 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 
 		// Get the current transform of the clicked actor
 		FVector translationInput = originalTransform.Location;
-		FVector rotationInput = {
-			originalTransform.Rotation.Roll,
-			originalTransform.Rotation.Pitch,
-			originalTransform.Rotation.Yaw
-		};
+		const FRotator euler = originalTransform.Rotation.ToEuler();   // 표시용으로만 각도로 풀어냄
+		FVector rotationInput = { euler.Roll, euler.Pitch, euler.Yaw };
 		FVector scaleInput = originalTransform.Scale;
 
 		// Display and edit the transform properties using ImGui input fields
@@ -603,6 +620,12 @@ void FSceneManager::ExecuteNewScene()
 		delete mCurrentWorld;
 	}
 	mCurrentWorld = FObjectFactory::ConstructObject<UWorld>();
+	if (mResources)
+	{
+		mResources->ClearAll();
+		if (mGraphics)
+			mResources->InitializeDefaultAssets(mGraphics);
+	}
 }
 void FSceneManager::DeleteScene()
 {
@@ -614,55 +637,108 @@ void FSceneManager::DeleteScene()
 	ResetSelectedActor();
 }
 
-
-
-// todo
-// seriailze 부분 다시짜야함
-void FSceneManager::SaveScene(
-	std::string_view sceneName,
-	const FFileManager& fileManager)
+// Scene format version 1 stores assets and GUID references.
+void FSceneManager::SaveScene(std::string_view sceneName, const FFileManager& fileManager)
 {
-	FString fileName = kSceneDataDir;
-	fileName += FString("/");
-	fileName += sceneName;
-	fileName += kSceneDataSuffix;
+	try
+	{
+		if (!mCurrentWorld)
+			throw std::runtime_error("No world to save");
+		FString fileName = kSceneDataDir;
+		fileName += FString("/");
+		fileName += sceneName;
+		fileName += kSceneDataSuffix;
 
-	// Read the current scene data to read the Version
-	uint32 version = 0;
+		json::JSON writeSceneJson = json::JSON::Make(json::JSON::Class::Object);
+		json::JSON worldJson = json::JSON::Make(json::JSON::Class::Object);
+		mCurrentWorld->SerializeClass(worldJson);
+
+		writeSceneJson["Version"] = 1;
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
+		mResources->SerializeAssets(writeSceneJson["Assets"]);
+		writeSceneJson["World"] = worldJson;
+		ValidateSceneReferences(writeSceneJson);
+
+		FString jsonString = FString(writeSceneJson.dump(1, "  "));
+		fileManager.WriteStringToFile(fileName, jsonString);
+	}
+	catch (const std::exception& Error)
+	{
+		UE_LOG("Failed to save scene: %s", Error.what());
+	}
+}
+
+void FSceneManager::ExecuteLoadScene(const FFileManager& FileManager)
+{
+	// 파일 탐색기를 열고, 기본 파일명으로 PendingSceneName을 띄워줍니다.
+	FString absoluteFilePath = FileManager.OpenFileDialog(PendingSceneName, kSceneDataSuffix, kSceneDataDir);
+
+	// 유저가 탐색기에서 '취소'를 눌렀다면 로드를 중단합니다.
+	if (absoluteFilePath.Empty())
+	{
+		//UE_LOG("Scene load canceled by user.");
+		return;
+	}
+
+	FString jsonString;
 
 	try
 	{
-		FString readSceneString = fileManager.ReadFileToString(fileName);
-		json::JSON readSceneJson = json::JSON::Load(readSceneString);
-
-		if (!readSceneJson.hasKey("Version") || readSceneJson.at("Version").JSONType() != json::JSON::Class::Integral)
-		{
-			version = 0;
-		}
-		else
-		{
-			version = readSceneJson.at("Version").ToInt();
-		}
+		// 탐색기에서 받아온 절대 경로(absoluteFilePath)를 이용해 바로 파일을 읽습니다.
+		jsonString = PendingFileManager->ReadFileToString(absoluteFilePath);
 	}
-	catch (const std::exception& e)
+	catch (...)
 	{
-		// If the file does not exist or cannot be read, we can assume it's a new scene and set version to 0
-		assert(e.what());
-		version = 0;
+		UE_LOG("Failed to load scene {}: file not found.", absoluteFilePath.CStr());
+		return;
 	}
 
-	json::JSON writeSceneJson = json::JSON::Make(json::JSON::Class::Object);
-	json::JSON worldJson = json::JSON::Make(json::JSON::Class::Object);
-	mCurrentWorld->SerializeClass(worldJson);
+	try
+	{
+		auto Data = json::JSON::Load(jsonString);
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
 
-	writeSceneJson["Version"] = version;
-	writeSceneJson["World"] = worldJson;
+		FResourceManager& StagedResources = FResourceManager::Get();
+		StagedResources.ClearAll();
+		mResources->InitializeForLoad(StagedResources);
 
-	FString jsonString = FString(writeSceneJson.dump(1, "  "));
-	fileManager.WriteStringToFile(fileName, jsonString);
+		FSceneLoadScope Scope;
+		if (Data.hasKey("Version") &&
+			(Data.at("Version").JSONType() != json::JSON::Class::Integral || Data.at("Version").ToInt() > 1))
+			throw std::runtime_error("Unsupported scene version");
+
+		if (Data.hasKey("Version") && Data.at("Version").ToInt() == 1 && !Data.hasKey("Assets"))
+			throw std::runtime_error("Missing scene assets");
+
+		if (Data.hasKey("Assets"))
+		{
+			if (!Data.hasKey("Version") || Data.at("Version").ToInt() != 1)
+				throw std::runtime_error("Unsupported scene version");
+			StagedResources.DeserializeAssets(Data.at("Assets"));
+		}
+		else if (mGraphics)
+			StagedResources.InitializeDefaultAssets(mGraphics);
+
+		auto NewWorld = PreloadObject<UWorld>(Data.at("World"));
+		NewWorld->DeserializeClass(Data.at("World"));
+		ResetSelectedActor();
+		delete mCurrentWorld;
+		mCurrentWorld = NewWorld.release();
+		mResources->SwapAssets(StagedResources);
+
+		if (!Data.hasKey("Assets"))
+			UE_LOG("Legacy scene has no asset data; missing mesh references cannot be recovered.");
+	}
+	catch (const std::exception& Error)
+	{
+		UE_LOG("Failed to load scene %s: %s", absoluteFilePath.CStr(), Error.what());
+	}
 }
 
-void FSceneManager::ExecuteLoadScene()
+/*
+void FSceneManager::ExecuteLoadScene(const FFileManager& FileManager)
 {
 	FString fileName = kSceneDataDir;
 	fileName += FString("/");
@@ -681,25 +757,43 @@ void FSceneManager::ExecuteLoadScene()
 		return;
 	}
 
-	json::JSON readSceneJson = json::JSON::Load(jsonString);
-
-	json::JSON worldJson = readSceneJson.at("World");
-
-	UWorld* newWorld = FObjectFactory::LoadObject<UWorld>(worldJson);
-	if (!newWorld)
+	try
 	{
-		throw std::runtime_error(std::format("Failed to load world from scene: {}", PendingSceneName));
+		auto Data = json::JSON::Load(jsonString);
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
+		FResourceManager &StagedResources = FResourceManager::Get();
+		StagedResources.ClearAll();
+		mResources->InitializeForLoad(StagedResources);
+		FSceneLoadScope Scope;
+		if (Data.hasKey("Version") &&
+			(Data.at("Version").JSONType() != json::JSON::Class::Integral || Data.at("Version").ToInt() > 1))
+			throw std::runtime_error("Unsupported scene version");
+		if (Data.hasKey("Version") && Data.at("Version").ToInt() == 1 && !Data.hasKey("Assets"))
+			throw std::runtime_error("Missing scene assets");
+		if (Data.hasKey("Assets"))
+		{
+			if (!Data.hasKey("Version") || Data.at("Version").ToInt() != 1)
+				throw std::runtime_error("Unsupported scene version");
+			StagedResources.DeserializeAssets(Data.at("Assets"));
+		}
+		else if (mGraphics)
+			StagedResources.InitializeDefaultAssets(mGraphics);
+		auto NewWorld = PreloadObject<UWorld>(Data.at("World"));
+		NewWorld->DeserializeClass(Data.at("World"));
+		ResetSelectedActor();
+		delete mCurrentWorld;
+		mCurrentWorld = NewWorld.release();
+		mResources->SwapAssets(StagedResources);
+		if (!Data.hasKey("Assets"))
+			UE_LOG("Legacy scene has no asset data; missing mesh references cannot be recovered.");
 	}
-
-	// Replace the contents of mCurrentWorld with newWorld
-	delete mCurrentWorld;
-	mCurrentWorld = newWorld;
-
-	ResetSelectedActor();
+	catch (const std::exception& Error)
+	{
+		UE_LOG("Failed to load scene %s: %s", PendingSceneName.c_str(), Error.what());
+	}
 }
-
-
-
+*/
 
 
 
@@ -770,5 +864,3 @@ const TArray<FRenderInfo> FSceneManager::GetAxisRenderInfos()
 	// TODO: Implement axis render info retrieval logic
 	return TArray<FRenderInfo>();
 }
-
-

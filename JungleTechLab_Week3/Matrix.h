@@ -3,7 +3,6 @@
 #include "MathUtility.h"
 #include "Rotator.h"
 #include "enum.h"
-
 struct FMatrix { 
 	float M[4][4];
 
@@ -329,3 +328,4 @@ inline const FMatrix FMatrix::UEToDX = { {
 	{0, 1, 0, 0},
 	{0, 0, 0, 1}
 } };
+

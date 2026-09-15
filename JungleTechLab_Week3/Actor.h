@@ -2,6 +2,7 @@
 
 #include "Object.h"
 #include "ActorComponent.h"
+#include "Quaternion.h"
 
 class UWorld;
 struct FRenderInfo;
@@ -23,6 +24,7 @@ public:
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
+	void PreloadComponents(const json::JSON& inJson);
 	void AddComponent(UActorComponent* actorComponent);
 	void AddRootSceneComponent(USceneComponent* sceneComponent);
 	USceneComponent* GetRootComponent() { return RootComponent; }
@@ -37,6 +39,7 @@ public:
 
 	void SetLocation(FVector location);
 	void SetRotation(FRotator rotation);
+	void SetRotation(FQuaternion rotation);
 	void SetScale(FVector scale);
 
 	bool IsPendingKill() const {
@@ -60,4 +63,3 @@ private:
 	bool bStarted = false;
 	bool bPendingKill = false;
 };
-

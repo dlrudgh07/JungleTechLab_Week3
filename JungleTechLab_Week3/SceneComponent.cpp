@@ -10,7 +10,7 @@ void USceneComponent::Initialize(FVector location, FRotator rotation, FVector sc
 	UActorComponent::Initialize();
 
 	RelativeLocation = location;
-	RelativeRotation = rotation;
+	RelativeRotation = FQuaternion::FromEuler(rotation);
 	RelativeScale3D = scale3D;
 }
 
@@ -22,7 +22,7 @@ void USceneComponent::SerializeClass(json::JSON& outJson) const
 {
 	UActorComponent::SerializeClass(outJson);
 	outJson["Properties"]["RelativeLocation"] = FVectorToJson(RelativeLocation);
-	outJson["Properties"]["RelativeRotation"] = FRotatorToJson(RelativeRotation);
+	outJson["Properties"]["RelativeRotation"] = FRotatorToJson(RelativeRotation.ToEuler());   // 파일에는 각도 3개로
 	outJson["Properties"]["RelativeScale3D"] = FVectorToJson(RelativeScale3D);
 }
 
@@ -54,7 +54,7 @@ void USceneComponent::DeserializeClass(const json::JSON& inJson)
 	}
 
 	RelativeLocation = FVectorFromJson(propertiesJson.at("RelativeLocation"));
-	RelativeRotation = FRotatorFromJson(propertiesJson.at("RelativeRotation"));
+	RelativeRotation = FQuaternion::FromEuler(FRotatorFromJson(propertiesJson.at("RelativeRotation")));
 	RelativeScale3D = FVectorFromJson(propertiesJson.at("RelativeScale3D"));
 }
 
@@ -73,12 +73,17 @@ void USceneComponent::SetRelativeLocation(FVector location)
 	}
 }
 
-FRotator USceneComponent::GetRelativeRotation() const
+FQuaternion USceneComponent::GetRelativeRotation() const
 {
 	return RelativeRotation;
 }
 
 void USceneComponent::SetRelativeRotation(FRotator rotation)
+{
+	SetRelativeRotation(FQuaternion::FromEuler(rotation));
+}
+
+void USceneComponent::SetRelativeRotation(FQuaternion rotation)
 {
 	RelativeRotation = rotation;
 

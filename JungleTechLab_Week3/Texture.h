@@ -14,6 +14,8 @@ struct FTextureResource
 class UTexture : public UObject
 {
 public:
+	void SerializeClass(json::JSON& outJson) const override;
+	void DeserializeClass(const json::JSON& inJson) override;
 	// factory 에서 필요함
 	void Initialize() {};
 
@@ -23,11 +25,15 @@ public:
 
 	// 파일 경로, 해상도 등 메타 데이터
 	// todo: 더 추가될수있음
+	FString SourcePath;
 	int32 Width = 0;
 	int32 Height = 0;
 
 	UTexture() = default;
-	~UTexture() = default;
+	~UTexture()
+	{
+		delete Resource;
+	}
 
 	REFLECT_CLASS(UTexture, UObject)
 

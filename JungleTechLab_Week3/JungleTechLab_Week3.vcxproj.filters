@@ -371,6 +371,9 @@
     <ClInclude Include="IniConfig.h">
       <Filter>Core\Serialize</Filter>
     </ClInclude>
+    <ClInclude Include="Quaternion.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderW0.hlsl">

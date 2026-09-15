@@ -1,9 +1,9 @@
 ﻿#pragma once
 
 #include "ActorComponent.h"
-#include "GraphicsManager.h"
 
 #include "Vector.h"
+#include "Quaternion.h"
 
 struct FTransform;
 
@@ -23,8 +23,9 @@ public:
 	FVector GetRelativeLocation() const;
 	void SetRelativeLocation(FVector location);
 
-	FRotator GetRelativeRotation() const;
-	void SetRelativeRotation(FRotator rotation);
+	FQuaternion GetRelativeRotation() const;
+	void SetRelativeRotation(FRotator rotation);      // 오일러 입력 -> 내부에서 쿼터니언으로 변환
+	void SetRelativeRotation(FQuaternion rotation);
 
 	FVector GetRelativeScale3D() const;
 	void SetRelativeScale3D(FVector scale);
@@ -40,6 +41,6 @@ public:
 
 private:
 	FVector RelativeLocation;
-	FRotator RelativeRotation;
+	FQuaternion RelativeRotation;
 	FVector RelativeScale3D;
 };

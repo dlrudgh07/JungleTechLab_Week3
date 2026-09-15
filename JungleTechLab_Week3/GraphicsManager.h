@@ -12,6 +12,9 @@
 #include "FQuad.h"
 #include "FBoxSphereBounds.h"
 
+class UPrimitiveComponent;
+class UTexture;
+
 class FGraphicsManager
 {
 public:
@@ -81,11 +84,11 @@ public:
 	//UUID
 	// 호출 즉시 그리지 않고 배열에 쌓는다. FlushUUID()에서 한 번에 그린다.
 	void DrawUUID(const FQuad& quad);
-	void DrawAllUUID(const TArray<FRenderInfo> renderInfos, FVector UpVector, FVector RightVector);
+	void DrawCurrentUUID(UPrimitiveComponent* RootComponent, FVector UpVector, FVector RightVector);
 	void FlushUUID(UTexture* FontTexture);
 
-	bool GetShowWorldAxis() const { return mbShowWorldAxis; }
-	void SetShowWorldAxis(bool bShow) { mbShowWorldAxis = bShow; }
+	//bool GetShowWorldAxis() const { return mbShowWorldAxis; }
+	//void SetShowWorldAxis(bool bShow) { mbShowWorldAxis = bShow; }
 
 	static FVector GetPrimitiveCenter(EPrimitive type);
 	static FVector GetPrimitiveHalfExtent(EPrimitive type);

@@ -7,6 +7,7 @@
 #include "TArray.h"
 #include "RenderInfo.h"
 #include "enum.h"
+#include "GraphicsManager.h"
 
 inline constexpr std::string_view kSceneDataDir = "SceneData\\";
 inline constexpr std::string_view kSceneDataSuffix = ".Scene";
@@ -48,6 +49,11 @@ public:
 	FSceneManager();
 	~FSceneManager();
 
+	void SetResourceManager(FResourceManager* Resources, FGraphicsManager* Graphics)
+	{
+		mResources = Resources;
+		mGraphics = Graphics;
+	}
 	void Update(float delaTime);
 	void UpdateGUI(const FGuiReference& guiReference);
 
@@ -78,13 +84,15 @@ public:
 
 private:
 	// 예약된 씬 작업을 저장할 변수들
+	FResourceManager* mResources = nullptr;
+	FGraphicsManager* mGraphics = nullptr;
 	bool bPendingNewScene = false;
 	bool bPendingLoadScene = false;
 	std::string PendingSceneName;
 	const FFileManager* PendingFileManager = nullptr;
 
 	void ExecuteNewScene();
-	void ExecuteLoadScene();
+	void ExecuteLoadScene(const FFileManager&);
 
 
 
