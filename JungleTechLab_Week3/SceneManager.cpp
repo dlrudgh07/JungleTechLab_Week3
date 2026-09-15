@@ -473,20 +473,37 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 
 				static bool bWasEditingLastFrame = false;
 
-				if (!bWasEditingLastFrame)
+				if (LastComp != TextComp || !bWasEditingLastFrame)
 				{
 					std::wstring text = TextComp->GetText();
 
 					std::string text_ToString = WStringToString(text);
 
 					strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
+
+					LastComp = TextComp;
 				}				
 				//글자가 바뀐다면
 				if (ImGui::InputText("Text", buffer, sizeof(buffer)))
 				{
 					TextComp->SetText(StringToWString(buffer));
 				}
-				bWasEditingLastFrame = ImGui::IsItemActivated();
+
+				//UE_LOG("IsItemDeactivated is %d", ImGui::IsItemDeactivated());
+				////포커스를 잃으면
+				//if (ImGui::IsItemDeactivated())
+				//{
+				//	HWND hwnd = GetActiveWindow();
+				//	HIMC himc = ImmGetContext(hwnd);
+				//	if (himc)
+				//	{
+				//		ImmNotifyIME(himc, NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+				//		ImmReleaseContext(hwnd, himc);
+				//	}
+				//}
+
+				//활성화 중인지 편집중이라면 1, 아니라면 0이다.
+				bWasEditingLastFrame = ImGui::IsItemActive();
 			}
 		}
 	}

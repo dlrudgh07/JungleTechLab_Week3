@@ -8,6 +8,7 @@
 #include "RenderInfo.h"
 #include "enum.h"
 #include "GraphicsManager.h"
+#include "ActorComponent.h"
 
 inline constexpr std::string_view kSceneDataDir = "SceneData\\";
 inline constexpr std::string_view kSceneDataSuffix = ".Scene";
@@ -110,4 +111,6 @@ private:
 	void updateControlPanelGUI(const FGuiReference& guiReference);
 	void updatePropertyWindowGUI(const FGuiReference& guiReference);
 	void updateObjectListPanelGUI(const FGuiReference& guiReference);
+
+	UActorComponent* LastComp = nullptr;
 };

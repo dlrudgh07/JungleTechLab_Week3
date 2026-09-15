@@ -186,7 +186,7 @@ AActor* UWorld::SpawnTextMeshActor(FTransform Transform, const FResourceManager&
 	TextComponent->SetRelativeRotation(Transform.Rotation);
 	TextComponent->SetRelativeScale3D(Transform.Scale);
 	TextComponent->SetFontAsset(LoadFont);
-	TextComponent->SetText(L"여기에 입력하세요.");
+	TextComponent->SetText(L"여기에 입력하세요");
 
 	NewActor->AddRootSceneComponent(TextComponent); // 액터의 루트로 등록
 

@@ -143,12 +143,12 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 		//인덱스 버퍼가 없는 거면 Vertex Buffer의 수로 한다.
 		if (Indices.size() == 0)
 		{
-			for (int i = 0; i < Vertices.size(); i++)
+			for (uint32 i = 0; i < Vertices.size(); i++)
 			{
 				Indices.push_back(i);
 			}
 
-			IndexCount = Indices.size();
+			IndexCount = static_cast<uint32>(Indices.size());
 		}
 		else
 		{

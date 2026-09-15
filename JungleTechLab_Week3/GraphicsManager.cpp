@@ -9,6 +9,7 @@
 #include "FQuad.h"
 #include "MeshUtility.h"
 
+
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
 static constexpr uint32 UUID_VERTEX_CAPACITY = 8192; // 초기에할당한 크기이다 용량이 꽉차면 2배로 재할당
@@ -121,6 +122,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 	}
 
 	RenderList(OpaqueList);
+
 	RenderList(TranslucentList);
 
 	//되돌리기
