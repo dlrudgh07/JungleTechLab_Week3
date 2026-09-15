@@ -6,6 +6,8 @@
 class UMaterial : public UObject
 {
 public:
+	void SerializeClass(json::JSON& outJson) const override;
+	void DeserializeClass(const json::JSON& inJson) override;
 	// factory 에서 필요함
 	void Initialize() {};
 

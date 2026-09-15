@@ -1,4 +1,5 @@
-﻿#include "Actor.h"
+﻿#include "SceneSerialization.h"
+#include "Actor.h"
 
 #include <format>
 
@@ -49,11 +50,17 @@ void AActor::SerializeClass(json::JSON& outJson) const
 		componentsJson.append(std::move(componentJson));
 	}
 	outJson["Properties"]["Components"] = componentsJson;
-	outJson["Properties"]["RootComponentGUID"] = RootComponent ? RootComponent->ObjectID.GUID.ToString() : std::to_string(-1);
+	outJson["Properties"]["RootComponentGUID"] = ObjectReference(RootComponent);
 }
 
 void AActor::DeserializeClass(const json::JSON& inJson)
 {
+	std::unique_ptr<FSceneLoadScope> OwnScope;
+	if (!FSceneLoadScope::Current)
+	{
+		OwnScope = std::make_unique<FSceneLoadScope>();
+		OwnScope->Register(this, inJson);
+	}
 	UObject::DeserializeClass(inJson);
 
 	const json::JSON& propertiesJson = inJson.at("Properties");
@@ -65,45 +72,22 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 
 	const json::JSON& componentsJson = propertiesJson.at("Components");
 
-	for (const auto& componentJson : componentsJson.ArrayRange())
-	{
-		if (!componentJson.hasKey("ClassName") || componentJson.at("ClassName").JSONType() != json::JSON::Class::String)
-		{
-			throw std::runtime_error(std::format("{}: ClassName requires a string", GetRuntimeClass()->Name));
-		}
-		FString className(componentJson.at("ClassName").ToString());
+	if (Components.Num() == 0)
+		PreloadComponents(inJson);
+	if (Components.Num() != componentsJson.length())
+		throw std::runtime_error("Preloaded component count mismatch");
+	int Index = 0;
+	for (const auto& Data : componentsJson.ArrayRange())
+		Components[Index++]->DeserializeClass(Data);
 
-		const FClassInfo* classInfo = FObjectFactory::GetClassInfoByName(className);
-		if (!classInfo)
-		{
-			throw std::runtime_error(std::format("{}: Unknown class name: {}", GetRuntimeClass()->Name, className));
-		}
-		UActorComponent* component = static_cast<UActorComponent*>(FObjectFactory::LoadObject(classInfo, componentJson));
-		AddComponent(component);
-	}
-
-	if (!propertiesJson.hasKey("RootComponentGUID") || propertiesJson.at("RootComponentGUID").JSONType() != json::JSON::Class::String)
-	{
-		throw std::runtime_error(std::format("{}: RootComponentGUID requires a string", GetRuntimeClass()->Name));
-	}
-	FGuid RootComponentGUID;
-	FString GUID{ propertiesJson.at("RootComponentGUID").ToString() };
-	RootComponentGUID.Parse(GUID);
-	if (RootComponentGUID.IsValid() == false)
-	{
+	const auto& Root = propertiesJson.at("RootComponentGUID");
+	if (Root.JSONType() == json::JSON::Class::String && Root.ToString() == "-1")
 		RootComponent = nullptr;
-	}
 	else
-	{
-		int32 rootComponentIndex = GetComponentIndex(RootComponentGUID);
-		if (rootComponentIndex == -1)
-		{
-			throw std::runtime_error(std::format("{}: Invalid root component GUID: {}", GetRuntimeClass()->Name, RootComponentGUID.ToString()));
-		}
-		RootComponent = static_cast<USceneComponent*>(Components[rootComponentIndex]);
-	}
+		RootComponent = ResolveReference<USceneComponent>(Root);
+	if (RootComponent && RootComponent->GetOwner() != this)
+		throw std::runtime_error("Root component belongs to another actor");
 }
-
 void AActor::AddComponent(UActorComponent* actorComponent)
 {
 	assert(actorComponent);
@@ -205,6 +189,11 @@ void AActor::SetScale(FVector scale)
 	}
 }
 
+const TArray<UActorComponent*>& AActor::GetComponents() const
+{
+	return Components;
+}
+
 int32 AActor::GetComponentIndex(FGuid TargetComponentGuid) const
 {
 	for (int32 i = 0; i < Components.Num(); ++i)
@@ -216,4 +205,17 @@ int32 AActor::GetComponentIndex(FGuid TargetComponentGuid) const
 	}
 
 	return -1;
+}
+
+void AActor::PreloadComponents(const json::JSON& inJson)
+{
+	const auto& Data = inJson.at("Properties").at("Components");
+	if (Data.JSONType() != json::JSON::Class::Array)
+		throw std::runtime_error("Components requires array");
+	for (const auto& Entry : Data.ArrayRange())
+	{
+		auto Component = PreloadObject<UActorComponent>(Entry);
+		AddComponent(Component.get());
+		Component.release();
+	}
 }

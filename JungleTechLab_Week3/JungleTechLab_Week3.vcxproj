@@ -127,10 +127,19 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <PropertyGroup Condition="'$(SceneSerializationTests)'=='true'">
+    <IntDir>$(Platform)\$(Configuration)\SerializationTests\</IntDir>
+    <TargetName>SceneSerializationTests</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(SceneSerializationTests)'=='true'">
+    <ClCompile><AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
+    <Link><SubSystem>Console</SubSystem></Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Core.cpp" />
+    <ClCompile Include="FFontAsset.cpp" />
     <ClCompile Include="FBoxSphereBounds.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="Gizmo.cpp" />
@@ -151,18 +160,24 @@
     <ClCompile Include="ImGui\imgui_tables.cpp" />
     <ClCompile Include="ImGui\imgui_widgets.cpp" />
     <ClCompile Include="EngineLoop.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main.cpp">
+      <ExcludedFromBuild Condition="'$(SceneSerializationTests)'=='true'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\Test\Serialization\SceneSerializationTest.cpp" Condition="'$(SceneSerializationTests)'=='true'" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ParticleSubUVComponent.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="SceneComponent.cpp" />
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClInclude Include="Circle.h" />
+    <ClInclude Include="FFontAsset.h" />
     <ClInclude Include="FBoxSphereBounds.h" />
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="MeshUtility.h" />
+    <ClInclude Include="ParticleSubUVComponent.h" />
     <ClInclude Include="IniConfig.h" />
     <ClInclude Include="IniParser.h" />
     <ClInclude Include="Quad.h" />
@@ -175,8 +190,11 @@
     <ClInclude Include="TSparseArray.inl">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="StaticMeshComponent.cpp" />
+    <ClCompile Include="UTextComponent.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +211,7 @@
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="JsonUtil.h" />
     <ClInclude Include="ObjectFactory.h" />
+    <ClInclude Include="SceneSerialization.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="InputState.h" />
     <ClInclude Include="Json\json.hpp" />
@@ -226,6 +245,7 @@
     <ClInclude Include="TSparseArray.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="StaticMeshComponent.h" />
+    <ClInclude Include="UTextComponent.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="Transform.h" />
@@ -239,6 +259,13 @@
     <FxCompile Include="ShaderW0.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="FontTexturePixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

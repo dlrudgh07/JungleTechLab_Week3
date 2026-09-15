@@ -23,6 +23,7 @@ public:
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
+	void PreloadComponents(const json::JSON& inJson);
 	void AddComponent(UActorComponent* actorComponent);
 	void AddRootSceneComponent(USceneComponent* sceneComponent);
 	USceneComponent* GetRootComponent() { return RootComponent; }
@@ -43,6 +44,9 @@ public:
 		return bPendingKill;
 	};
 
+	//갖고 있는 Componet들 반환
+	const TArray<UActorComponent*>& GetComponents()const;
+
 private:
 	int32 GetComponentIndex(FGuid TargetComponentGuid) const;
 
@@ -57,4 +61,3 @@ private:
 	bool bStarted = false;
 	bool bPendingKill = false;
 };
-

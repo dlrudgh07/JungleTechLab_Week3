@@ -2,7 +2,7 @@
 #include "StaticMeshComponent.h"
 #include "StaticMesh.h"
 
-void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
+void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const 
 {
 	if (StaticMesh == nullptr || StaticMesh->VertexBuffer == nullptr)
 		return;
@@ -45,4 +45,18 @@ FBoxSphereBounds UStaticMeshComponent::GetLocalBounds() const
 	if (StaticMesh)
 		return StaticMesh->LocalBounds;
 	return FBoxSphereBounds{};
+}
+#include "SceneSerialization.h"
+void UStaticMeshComponent::SerializeClass(json::JSON& outJson) const
+{
+	UMeshComponent::SerializeClass(outJson);
+	outJson["Properties"]["StaticMeshGUID"] = ObjectReference(StaticMesh);
+}
+void UStaticMeshComponent::DeserializeClass(const json::JSON& inJson)
+{
+	UMeshComponent::DeserializeClass(inJson);
+	const auto& P = inJson.at("Properties");
+	if (P.hasKey("StaticMeshGUID"))
+		SetStaticMesh(ResolveReference<UStaticMesh>(P.at("StaticMeshGUID")));
+	UpdateBounds();
 }

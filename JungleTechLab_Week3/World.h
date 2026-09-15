@@ -30,6 +30,10 @@ public:
 	void ProcessPendingKills();
 
 	AActor* SpawnStaticMeshActor(const std::string& AssetName, struct FTransform Transform, const FResourceManager& ResourceManager);
+	AActor* SpawnTextMeshActor(struct FTransform Transform, const FResourceManager& ResourceManager);
+
+	//임시
+	AActor* SpawnSubUVActor(FTransform Transform, const FResourceManager& ResourceManager);
 
 private:
 	int32 GetActorIndex(FGuid TargetGuid) const;

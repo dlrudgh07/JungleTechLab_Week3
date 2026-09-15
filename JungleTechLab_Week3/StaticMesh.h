@@ -21,6 +21,8 @@ struct FBuffer //별도 헤더로 분리필요(Vertex,Index 정보가 Mesh에 �
 class UStaticMesh : public UObject
 {
 public:
+	void SerializeClass(json::JSON& outJson) const override;
+	void DeserializeClass(const json::JSON& inJson) override;
 	// factory 에서 필요함
 	void Initialize() {
 		CalculateLocalBounds();

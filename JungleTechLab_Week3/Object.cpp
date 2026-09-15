@@ -1,4 +1,5 @@
-﻿
+﻿#include "SceneSerialization.h"
+
 #include "Object.h"
 #include "EngineStatics.h"
 #include "Json/json.hpp"
@@ -80,7 +81,9 @@ void UObject::DeserializeClass(const json::JSON& inJson)
 		throw std::runtime_error("Invalid JSON format for GUID");
 	}
 
-	ObjectID.GUID.Parse(FString{ propertiesJson.at("GUID").ToString() });
+	if (!ObjectID.GUID.Parse(FString{propertiesJson.at("GUID").ToString()}) || !ObjectID.GUID.IsValid() ||
+		ObjectID.GUID.ToString().ToLower() != FString(propertiesJson.at("GUID").ToString()).ToLower())
+		throw std::runtime_error("Invalid object GUID");
 }
 
 bool UObject::IsA(const FClassInfo* classInfo) const
@@ -99,6 +102,12 @@ bool UObject::IsA(const FClassInfo* classInfo) const
 
 UObject* UObject::GetObjectByGUID(FGuid TargetGuid)
 {
+	if (FSceneLoadScope::Current)
+	{
+		auto& Objects = FSceneLoadScope::Current->Objects;
+		auto It = Objects.find(TargetGuid.ToString().CStr());
+		return It == Objects.end() ? nullptr : It->second;
+	}
 	for (const auto& object : GUObjectArray)
 	{
 		if (object && object->ObjectID.GUID == TargetGuid)

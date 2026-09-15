@@ -1,4 +1,5 @@
-﻿
+﻿#include "SceneSerialization.h"
+
 #include "SceneManager.h"
 
 #include <algorithm>
@@ -15,6 +16,7 @@
 #include "FEditorViewportClient.h"
 #include "Camera.h"
 #include "Console.h"
+#include "UTextComponent.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
@@ -78,6 +80,8 @@ void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
 
 	updateControlPanelGUI(guiReference);
 	updatePropertyWindowGUI(guiReference);
+
+	//프레임드랍의 원인
 	updateObjectListPanelGUI(guiReference);
 
 	ConsoleWindow::GetInstance().Draw(mPanelWidth);
@@ -122,7 +126,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
 	// todo : 이건 추후 자동화해야할듯함
-	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate"};
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh"};
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
 	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
@@ -137,13 +141,28 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			// 3. 선택된 인덱스를 문자열 이름으로 변환 ("Cube", "Sphere" 등)
 			std::string SelectedName = AssetNames[mGuiInputField.SelectedMeshIndex];
 
-			// Factory를 통해 UStaticMeshComponent를 가진 진짜 액터를 스폰
-			AActor* newActor = mCurrentWorld->SpawnStaticMeshActor(SelectedName, { FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
-			if (newActor == nullptr)
-				UE_LOG("Error: Asset not found in ResourceManager!");
+			if (SelectedName == "Text Mesh")
+			{
+				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 90, 90), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+			}
+			else
+			{
+				// Factory를 통해 UStaticMeshComponent를 가진 진짜 액터를 스폰
+				AActor* newActor = mCurrentWorld->SpawnStaticMeshActor(SelectedName, { FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+				if (newActor == nullptr)
+					UE_LOG("Error: Asset not found in ResourceManager!");
+			}			
 		}
 	}
 
+	//임시
+	if (ImGui::Button("Spawn SubUV"))
+	{
+		mCurrentWorld->SpawnSubUVActor(
+			{ FVector(0,0,0), FRotator(0,0,0), FVector(1,1,1) },
+			*guiReference.ResourceManager);
+	}
+	
 	ImGui::SameLine();
 	if (ImGui::InputInt("Number of spawn", &spawnCount))
 	{
@@ -431,6 +450,30 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 		{
 			mSelectedActor->SetScale(scaleInput);
 		}
+
+		//TextComponent를 갖고 있다면
+		//UTextComponent*
+		const TArray<UActorComponent*>& AllComp = mSelectedActor->GetComponents();
+		for (auto Elem : AllComp)
+		{
+			if (Elem->IsA(UTextComponent::GetClass()))
+			{
+				UTextComponent* TextComp = Elem->Cast<UTextComponent>();
+				std::wstring text = TextComp->GetText();
+
+				std::string text_ToString = WStringToString(text);
+
+				static char buffer[256] = {};
+				strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
+
+				//글자가 바뀐다면
+				if (ImGui::InputText("Text", buffer, sizeof(buffer), 0))
+				{					
+					TextComp->SetText(StringToWString(buffer));
+					
+				}
+			}
+		}
 	}
 	ImGui::End();
 }
@@ -562,6 +605,12 @@ void FSceneManager::ExecuteNewScene()
 		delete mCurrentWorld;
 	}
 	mCurrentWorld = FObjectFactory::ConstructObject<UWorld>();
+	if (mResources)
+	{
+		mResources->ClearAll();
+		if (mGraphics)
+			mResources->InitializeDefaultAssets(mGraphics);
+	}
 }
 void FSceneManager::DeleteScene()
 {
@@ -573,52 +622,36 @@ void FSceneManager::DeleteScene()
 	ResetSelectedActor();
 }
 
-
-
-// todo
-// seriailze 부분 다시짜야함
-void FSceneManager::SaveScene(
-	std::string_view sceneName,
-	const FFileManager& fileManager)
+// Scene format version 1 stores assets and GUID references.
+void FSceneManager::SaveScene(std::string_view sceneName, const FFileManager& fileManager)
 {
-	FString fileName = kSceneDataDir;
-	fileName += FString("/");
-	fileName += sceneName;
-	fileName += kSceneDataSuffix;
-
-	// Read the current scene data to read the Version
-	uint32 version = 0;
-
 	try
 	{
-		FString readSceneString = fileManager.ReadFileToString(fileName);
-		json::JSON readSceneJson = json::JSON::Load(readSceneString);
+		if (!mCurrentWorld)
+			throw std::runtime_error("No world to save");
+		FString fileName = kSceneDataDir;
+		fileName += FString("/");
+		fileName += sceneName;
+		fileName += kSceneDataSuffix;
 
-		if (!readSceneJson.hasKey("Version") || readSceneJson.at("Version").JSONType() != json::JSON::Class::Integral)
-		{
-			version = 0;
-		}
-		else
-		{
-			version = readSceneJson.at("Version").ToInt();
-		}
+		json::JSON writeSceneJson = json::JSON::Make(json::JSON::Class::Object);
+		json::JSON worldJson = json::JSON::Make(json::JSON::Class::Object);
+		mCurrentWorld->SerializeClass(worldJson);
+
+		writeSceneJson["Version"] = 1;
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
+		mResources->SerializeAssets(writeSceneJson["Assets"]);
+		writeSceneJson["World"] = worldJson;
+		ValidateSceneReferences(writeSceneJson);
+
+		FString jsonString = FString(writeSceneJson.dump(1, "  "));
+		fileManager.WriteStringToFile(fileName, jsonString);
 	}
-	catch (const std::exception& e)
+	catch (const std::exception& Error)
 	{
-		// If the file does not exist or cannot be read, we can assume it's a new scene and set version to 0
-		assert(e.what());
-		version = 0;
+		UE_LOG("Failed to save scene: %s", Error.what());
 	}
-
-	json::JSON writeSceneJson = json::JSON::Make(json::JSON::Class::Object);
-	json::JSON worldJson = json::JSON::Make(json::JSON::Class::Object);
-	mCurrentWorld->SerializeClass(worldJson);
-
-	writeSceneJson["Version"] = version;
-	writeSceneJson["World"] = worldJson;
-
-	FString jsonString = FString(writeSceneJson.dump(1, "  "));
-	fileManager.WriteStringToFile(fileName, jsonString);
 }
 
 void FSceneManager::ExecuteLoadScene()
@@ -640,28 +673,42 @@ void FSceneManager::ExecuteLoadScene()
 		return;
 	}
 
-	json::JSON readSceneJson = json::JSON::Load(jsonString);
-
-	json::JSON worldJson = readSceneJson.at("World");
-
-	UWorld* newWorld = FObjectFactory::LoadObject<UWorld>(worldJson);
-	if (!newWorld)
+	try
 	{
-		throw std::runtime_error(std::format("Failed to load world from scene: {}", PendingSceneName));
+		auto Data = json::JSON::Load(jsonString);
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
+		FResourceManager &StagedResources = FResourceManager::Get();
+		StagedResources.ClearAll();
+		mResources->InitializeForLoad(StagedResources);
+		FSceneLoadScope Scope;
+		if (Data.hasKey("Version") &&
+			(Data.at("Version").JSONType() != json::JSON::Class::Integral || Data.at("Version").ToInt() > 1))
+			throw std::runtime_error("Unsupported scene version");
+		if (Data.hasKey("Version") && Data.at("Version").ToInt() == 1 && !Data.hasKey("Assets"))
+			throw std::runtime_error("Missing scene assets");
+		if (Data.hasKey("Assets"))
+		{
+			if (!Data.hasKey("Version") || Data.at("Version").ToInt() != 1)
+				throw std::runtime_error("Unsupported scene version");
+			StagedResources.DeserializeAssets(Data.at("Assets"));
+		}
+		else if (mGraphics)
+			StagedResources.InitializeDefaultAssets(mGraphics);
+		auto NewWorld = PreloadObject<UWorld>(Data.at("World"));
+		NewWorld->DeserializeClass(Data.at("World"));
+		ResetSelectedActor();
+		delete mCurrentWorld;
+		mCurrentWorld = NewWorld.release();
+		mResources->SwapAssets(StagedResources);
+		if (!Data.hasKey("Assets"))
+			UE_LOG("Legacy scene has no asset data; missing mesh references cannot be recovered.");
 	}
-
-	// Replace the contents of mCurrentWorld with newWorld
-	delete mCurrentWorld;
-	mCurrentWorld = newWorld;
-
-	ResetSelectedActor();
+	catch (const std::exception& Error)
+	{
+		UE_LOG("Failed to load scene %s: %s", PendingSceneName.c_str(), Error.what());
+	}
 }
-
-
-
-
-
-
 void  FSceneManager::SetSelectedActor(AActor* actor)
 {
 	if (actor == nullptr)
@@ -685,6 +732,34 @@ float FSceneManager::GetPanelWidth() const
 	return mPanelWidth;
 }
 
+std::string FSceneManager::WStringToString(const std::wstring& wstr)
+{
+	if (wstr.empty()) return std::string("");
+
+	int sizeNeeded = WideCharToMultiByte(
+		CP_UTF8, 0, wstr.c_str(), (int)wstr.size(),
+		nullptr, 0, nullptr, nullptr
+	);
+
+	std::string result(sizeNeeded, 0);
+	WideCharToMultiByte(
+		CP_UTF8, 0, wstr.c_str(), (int)wstr.size(),
+		result.data(), sizeNeeded, nullptr, nullptr
+	);
+
+	return result;
+}
+
+std::wstring FSceneManager::StringToWString(const std::string& utf8)
+{
+	if (utf8.empty()) return std::wstring(L"");
+
+	int sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), nullptr, 0);
+	std::wstring result(sizeNeeded, 0);
+	MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), result.data(), sizeNeeded);
+	return result;
+}
+
 const TArray<FRenderInfo>& FSceneManager::GetRenderInfos() const
 {
 	if (mCurrentWorld)
@@ -701,5 +776,3 @@ const TArray<FRenderInfo> FSceneManager::GetAxisRenderInfos()
 	// TODO: Implement axis render info retrieval logic
 	return TArray<FRenderInfo>();
 }
-
-

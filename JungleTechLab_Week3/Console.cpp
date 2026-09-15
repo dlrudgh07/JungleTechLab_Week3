@@ -23,6 +23,18 @@ void ConsoleWindow::Init(std::string_view title, int maxLines)
 	mTitle = title;
 	mMaxLines = maxLines;
 	mConsoleBuffer.reserve(maxLines);
+
+	ImGuiIO& io = ImGui::GetIO();
+
+	ImFontConfig config;
+	config.MergeMode = false; // 새 폰트를 기본 폰트로 사용
+
+	io.Fonts->AddFontFromFileTTF(
+		"C:\\Windows\\Fonts\\malgun.ttf",
+		18.0f,
+		&config,
+		io.Fonts->GetGlyphRangesKorean() // 한글 글리프 범위 포함
+	);
 }
 
 void ConsoleWindow::Draw(float panelWidth)

@@ -3,6 +3,7 @@ cbuffer constants : register(b0)
     row_major float4x4 World;
     row_major float4x4 ViewProjection;
     float4 Tint;
+    float4 UVTransform; // scaleX,scaleY,offsetX,offsetY
 }
 
 Texture2D txDiffuse : register(t0);
@@ -29,7 +30,7 @@ PS_INPUT mainVS(VS_INPUT input)
     output.position = mul(mul(float4(input.position.xyz, 1.0f), World), ViewProjection);
     output.color = float4(lerp(input.color.rgb, Tint.rgb, Tint.a), 1.0f);
     
-    output.uv = input.uv; 
+    output.uv = input.uv*UVTransform.xy+UVTransform.zw; 
     
     return output;
 }
