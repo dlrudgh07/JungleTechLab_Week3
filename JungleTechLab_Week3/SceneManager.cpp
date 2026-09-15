@@ -142,7 +142,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 			if (SelectedName == "Text Mesh")
 			{
-				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 90, 90), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			}
 			else
 			{
@@ -449,20 +449,27 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 		{
 			if (Elem->IsA(UTextComponent::GetClass()))
 			{
+				//직전에 활성 상태였는지
 				UTextComponent* TextComp = Elem->Cast<UTextComponent>();
-				std::wstring text = TextComp->GetText();
-
-				std::string text_ToString = WStringToString(text);
-
+				//bool bIsEditing = ImGui::IsItemActivated();
 				static char buffer[256] = {};
-				strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
 
+				static bool bWasEditingLastFrame = false;
+
+				if (!bWasEditingLastFrame)
+				{
+					std::wstring text = TextComp->GetText();
+
+					std::string text_ToString = WStringToString(text);
+
+					strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
+				}				
 				//글자가 바뀐다면
-				if (ImGui::InputText("Text", buffer, sizeof(buffer), 0))
-				{					
+				if (ImGui::InputText("Text", buffer, sizeof(buffer)))
+				{
 					TextComp->SetText(StringToWString(buffer));
-					
 				}
+				bWasEditingLastFrame = ImGui::IsItemActivated();
 			}
 		}
 	}

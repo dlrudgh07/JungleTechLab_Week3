@@ -3,6 +3,7 @@ cbuffer constants : register(b0)
     row_major float4x4 World;
     row_major float4x4 ViewProjection;
     float4 Tint;
+    float4 UVTransform;
 }
 
 Texture2D txDiffuse : register(t0);
@@ -22,7 +23,9 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     //float4 ResultColor = input.color * texColor;
 
     //ResultColor.a = texColor.r;
-    
-    return texColor;
+    //texColor.a *= Tint.a;
+    //return float4(1.0, 0.0, 0.0, 1.0);
+    return texColor * Tint;
+    //return texColor;
     //return float4(1.0, 0.0, 0.0, 1.0);
 }

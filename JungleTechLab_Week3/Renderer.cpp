@@ -300,22 +300,6 @@ void URenderer::CreateShader()
 		assert(false);
 	}
 
-	D3DCompileFromFile(L"FontTexturePixelShader.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
-
-	if (FAILED(hr))
-	{
-		UE_LOG("FontTexturePixelShader.hlsl compile failed.");
-		assert(false);
-	}
-
-	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &FontTexturePixelShader);
-
-	if (FAILED(hr))
-	{
-		UE_LOG("Create FontTexturePixelShader failed.");
-		assert(false);
-	}
-
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -331,6 +315,52 @@ void URenderer::CreateShader()
 		assert(false);
 	}
 
+	hr = D3DCompileFromFile(L"FontVertexShader.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
+	if (FAILED(hr))
+	{
+		UE_LOG("FontVertexShader.hlsl compile failed.");
+		assert(false);
+	}
+
+	hr = Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &FontVertexShader);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create FontVertexShader failed.");
+		assert(false);
+	}
+
+	D3DCompileFromFile(L"FontTexturePixelShader.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("FontTexturePixelShader.hlsl compile failed.");
+		assert(false);
+	}
+
+	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &FontPixelShader);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create FontTexturePixelShader failed.");
+		assert(false);
+	}
+
+	D3D11_INPUT_ELEMENT_DESC Fontlayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	hr = Device->CreateInputLayout(Fontlayout, ARRAYSIZE(Fontlayout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &FontInputLayout);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create FontInputLayout failed.");
+		assert(false);
+	}
+	   
 	//// Line용 Shader
 	D3DCompileFromFile(L"ShaderLine.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &LineVertexshaderCSO, nullptr);
 
@@ -344,6 +374,7 @@ void URenderer::CreateShader()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	Device->CreateInputLayout(LineLayout, ARRAYSIZE(LineLayout), LineVertexshaderCSO->GetBufferPointer(), LineVertexshaderCSO->GetBufferSize(), &LineInputLayout);
@@ -391,6 +422,24 @@ void URenderer::ReleaseShader()
 	{
 		LineVertexShader->Release();
 		LineVertexShader = nullptr;
+	}
+
+	if (FontInputLayout)
+	{
+		FontInputLayout->Release();
+		FontInputLayout = nullptr;
+	}
+
+	if (FontVertexShader)
+	{
+		FontVertexShader->Release();
+		FontVertexShader = nullptr;
+	}
+
+	if (FontPixelShader)
+	{
+		FontPixelShader->Release();
+		FontPixelShader = nullptr;
 	}
 }
 
@@ -461,13 +510,14 @@ void URenderer::PrepareFontShader()
 {
 	ClearTextureCache(); // 프레임 렌더링 시작 전 캐시 초기화
 
-	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
-	DeviceContext->PSSetShader(FontTexturePixelShader, nullptr, 0);
-	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	DeviceContext->VSSetShader(FontVertexShader, nullptr, 0);
+	DeviceContext->PSSetShader(FontPixelShader, nullptr, 0);
+	DeviceContext->IASetInputLayout(FontInputLayout);
 	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
 	if (ConstantBuffer)
 	{
 		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
+		DeviceContext->PSSetConstantBuffers(0, 1, &ConstantBuffer); 
 	}
 
 	BindSampler(0, SamplerState.Get());	// texture mapping

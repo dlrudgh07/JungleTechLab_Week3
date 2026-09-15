@@ -212,9 +212,9 @@ struct FMatrix {
 		float sinP, sinY, sinR;
 
 		//도 -> 라디안 변환 후 sincos 호출
-		FMath::sincos<float>(sinP, cosP, r.Pitch * PI / 180);
-		FMath::sincos<float>(sinY, cosY, r.Yaw * PI / 180);
-		FMath::sincos<float>(sinR, cosR, r.Roll * PI / 180);
+		FMath::sincos<float>(sinP, cosP, r.Pitch * PI / 180.f);
+		FMath::sincos<float>(sinY, cosY, r.Yaw * PI / 180.f);
+		FMath::sincos<float>(sinR, cosR, r.Roll * PI / 180.f);
 
 		Matrix.M[0][0] = cosP * cosY;
 		Matrix.M[0][1] = cosP * sinY;

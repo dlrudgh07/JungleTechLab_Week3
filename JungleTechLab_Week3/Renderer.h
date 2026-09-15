@@ -63,12 +63,15 @@ public:
     D3D11_VIEWPORT ViewportInfo;
     ID3D11VertexShader* SimpleVertexShader;
     ID3D11PixelShader* SimplePixelShader;
-    ID3D11PixelShader* FontTexturePixelShader;
     ID3D11InputLayout* SimpleInputLayout;
 
 	ID3D11VertexShader* LineVertexShader;
 	ID3D11PixelShader* LinePixelShader;
 	ID3D11InputLayout* LineInputLayout; // Line
+
+    ID3D11VertexShader* FontVertexShader;
+    ID3D11PixelShader* FontPixelShader;
+	ID3D11InputLayout* FontInputLayout; // Line
 
 	ID3D11ShaderResourceView* UUIDTextureView;
 	D3D11_SAMPLER_DESC UUIDSamplerInfo;

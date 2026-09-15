@@ -119,6 +119,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 	RenderList(OpaqueList);
 	RenderList(TranslucentList);
 
+	//되돌리기
 	mRenderer->PrepareShader();
 }
 
@@ -150,7 +151,7 @@ void FGraphicsManager::RenderList(const TArray<FRenderInfo>& renderInfos)
 			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
 			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.UVTransform);
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.UVTransform); 
 
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
