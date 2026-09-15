@@ -420,6 +420,37 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 
 	if (mSelectedActor)
 	{
+		// 1. 유저가 타이핑하는 글자를 담아둘 임시 버퍼와, 액터 변경 감지용 포인터
+		static char NameBuffer[256] = "";
+		static AActor* LastSelectedActor = nullptr;
+
+		// 2. 다른 액터를 클릭(선택)했을 때, 입력창에 해당 액터의 이름을 불러오기
+		if (LastSelectedActor != mSelectedActor)
+		{
+			std::string CurrentName = mSelectedActor->GetName().ToString();
+			// 안전하게 문자열을 버퍼로 복사 (넘치지 않도록 사이즈 제한)
+			snprintf(NameBuffer, sizeof(NameBuffer), "%s", CurrentName.c_str());
+
+			LastSelectedActor = mSelectedActor;
+		}
+
+		// 3. UI 렌더링
+		ImGui::Text("Actor Name :");
+		ImGui::SameLine(); // 다음 UI를 밑으로 내리지 않고 오른쪽에 나란히 붙임
+
+		// 텍스트 입력창 (##을 붙이면 화면에 라벨은 안 보이고 내부 ID로만 쓰임)
+		ImGui::InputText("##ActorNameInput", NameBuffer, sizeof(NameBuffer));
+		ImGui::SameLine();
+
+		// 4. Save 버튼을 눌렀을 때의 동작 (SetName)
+		if (ImGui::Button("Save"))
+		{
+			// 버퍼에 입력된 글자로 새로운 FName을 만들어서 교체!
+			// 우리가 만든 Dual ID 아키텍처 덕분에, 대소문자까지 완벽하게 보존되어 들어갑니다.
+			mSelectedActor->SetName(FName(NameBuffer));
+		}
+
+
 		// Temporary variables to hold the values for ImGui input fields
 		const FTransform& originalTransform = mSelectedActor->GetTransform();
 
@@ -474,6 +505,7 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 				}
 			}
 		}
+
 	}
 	ImGui::End();
 }
@@ -722,65 +754,6 @@ void FSceneManager::ExecuteLoadScene(const FFileManager& FileManager)
 	}
 }
 
-/*
-void FSceneManager::ExecuteLoadScene(const FFileManager& FileManager)
-{
-	FString fileName = kSceneDataDir;
-	fileName += FString("/");
-	fileName += PendingSceneName;
-	fileName += kSceneDataSuffix;
-
-	FString jsonString;
-
-	try
-	{
-		jsonString = PendingFileManager->ReadFileToString(fileName);
-	}
-	catch (...)
-	{
-		UE_LOG_F("Failed to load scene {}: file not found.", PendingSceneName);
-		return;
-	}
-
-	try
-	{
-		auto Data = json::JSON::Load(jsonString);
-		if (!mResources)
-			throw std::runtime_error("Scene resource manager is not initialized");
-		FResourceManager &StagedResources = FResourceManager::Get();
-		StagedResources.ClearAll();
-		mResources->InitializeForLoad(StagedResources);
-		FSceneLoadScope Scope;
-		if (Data.hasKey("Version") &&
-			(Data.at("Version").JSONType() != json::JSON::Class::Integral || Data.at("Version").ToInt() > 1))
-			throw std::runtime_error("Unsupported scene version");
-		if (Data.hasKey("Version") && Data.at("Version").ToInt() == 1 && !Data.hasKey("Assets"))
-			throw std::runtime_error("Missing scene assets");
-		if (Data.hasKey("Assets"))
-		{
-			if (!Data.hasKey("Version") || Data.at("Version").ToInt() != 1)
-				throw std::runtime_error("Unsupported scene version");
-			StagedResources.DeserializeAssets(Data.at("Assets"));
-		}
-		else if (mGraphics)
-			StagedResources.InitializeDefaultAssets(mGraphics);
-		auto NewWorld = PreloadObject<UWorld>(Data.at("World"));
-		NewWorld->DeserializeClass(Data.at("World"));
-		ResetSelectedActor();
-		delete mCurrentWorld;
-		mCurrentWorld = NewWorld.release();
-		mResources->SwapAssets(StagedResources);
-		if (!Data.hasKey("Assets"))
-			UE_LOG("Legacy scene has no asset data; missing mesh references cannot be recovered.");
-	}
-	catch (const std::exception& Error)
-	{
-		UE_LOG("Failed to load scene %s: %s", PendingSceneName.c_str(), Error.what());
-	}
-}
-*/
-
-
 
 void  FSceneManager::SetSelectedActor(AActor* actor)
 {
@@ -792,11 +765,11 @@ void  FSceneManager::SetSelectedActor(AActor* actor)
 
 	if (actor == mSelectedActor)
 	{
-		UE_LOG("SetSelectedActor: Actor with GUID {%s} is already selected.", actor->ObjectID.GUID.ToString().CStr());
+		UE_LOG("SetSelectedActor: Actor with GUID {%s} is already selected.", actor->GetName().ToString().c_str());
 		return; // No change
 	}
 
-	UE_LOG("SetSelectedActor: Actor with GUID {%s} is now selected.", actor->ObjectID.GUID.ToString().CStr());
+	UE_LOG("SetSelectedActor: Actor with GUID {%s} is now selected.", actor->GetName().ToString().c_str());
 	mSelectedActor = actor;
 }
 

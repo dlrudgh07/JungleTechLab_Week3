@@ -51,6 +51,7 @@ void AActor::SerializeClass(json::JSON& outJson) const
 	}
 	outJson["Properties"]["Components"] = componentsJson;
 	outJson["Properties"]["RootComponentGUID"] = ObjectReference(RootComponent);
+	outJson["Properties"]["ActorName"] = ActorName.ToString();
 }
 
 void AActor::DeserializeClass(const json::JSON& inJson)
@@ -64,6 +65,12 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 	UObject::DeserializeClass(inJson);
 
 	const json::JSON& propertiesJson = inJson.at("Properties");
+
+	const auto& Name = propertiesJson.at("ActorName");
+	if (Name.JSONType() != json::JSON::Class::String)
+		throw std::runtime_error("Failed to load object name");
+	else
+		ActorName = FName(Name.ToString());
 
 	if (!propertiesJson.hasKey("Components") || propertiesJson.at("Components").JSONType() != json::JSON::Class::Array)
 	{
@@ -88,6 +95,7 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 	if (RootComponent && RootComponent->GetOwner() != this)
 		throw std::runtime_error("Root component belongs to another actor");
 }
+
 void AActor::AddComponent(UActorComponent* actorComponent)
 {
 	assert(actorComponent);

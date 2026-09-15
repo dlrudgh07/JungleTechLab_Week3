@@ -1,17 +1,18 @@
 ﻿#pragma once
 #include <cstdint>
 #include <string_view>
-#include "Core.h"
+#include <string>
 
-using FNameEntryId = uint32;
+using FNameEntryId = uint32_t;
 
 class FName
 {
 private:
-	FNameEntryId ID;
+	FNameEntryId ComparisonIndex; // 비교용 (소문자 전용)
+	FNameEntryId DisplayIndex;    // 출력용 (원본 대소문자 전용)
 
 public:
-	FName(std::string_view InString);
+	FName(std::string_view InputString);
 	bool operator==(const FName& Other) const;
 	std::string ToString() const;
 };

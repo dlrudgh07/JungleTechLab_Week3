@@ -2,6 +2,7 @@
 
 #include "Object.h"
 #include "ActorComponent.h"
+#include "FName.h"
 
 class UWorld;
 struct FRenderInfo;
@@ -40,6 +41,9 @@ public:
 	void SetRotation(FRotator rotation);
 	void SetScale(FVector scale);
 
+	void SetName(FName InputName) { ActorName = InputName; }
+	FName GetName() const { return ActorName; }
+
 	bool IsPendingKill() const {
 		return bPendingKill;
 	};
@@ -51,7 +55,8 @@ private:
 	int32 GetComponentIndex(FGuid TargetComponentGuid) const;
 
 private:
-	
+	FName ActorName{ "" };
+
 	USceneComponent* RootComponent = nullptr;
 	TArray<UActorComponent*> Components;
 

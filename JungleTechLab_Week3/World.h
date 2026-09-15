@@ -17,7 +17,7 @@ public:
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
-	void AddActor(AActor* actor);
+	void AddActor(AActor* Actor, std::string_view ActorName);
 	bool RemoveActor(FGuid TargetComponentGuid);
 
 	const TArray<FRenderInfo>& GetRenderInfos() const;

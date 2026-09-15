@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cctype>
 
+#include "Core.h"
+
 // ============================================================================
 // 공통 설정 및 데이터 구조체
 // ============================================================================
@@ -22,7 +24,7 @@ constexpr uint32 OFFSET_MASK = BLOCK_SIZE - 1;
 struct FNameEntry
 {
 	std::string StringData; // 원본 대소문자가 유지된 문자열 (ToString 출력용)
-	uint32 HashValue;     // 소문자 변환 후 계산된 해시값 (빠른 비교용)
+	uint32 HashValue = -1;     // 소문자 변환 후 계산된 해시값 (빠른 비교용)
 };
 
 
@@ -222,29 +224,42 @@ static FNameShard GNameShards[MAX_SHARD_COUNT];
 // ============================================================================
 FName::FName(std::string_view InputString)
 {
-	// 1. 대소문자 무시(Case-Insensitive)를 위해 임시 문자열을 전부 소문자로 변환합니다.
+	// -------------------------------------------------------------
+	// 1. ComparisonIndex (비교용 ID) 세팅: 무조건 소문자로 변환하여 처리
+	// -------------------------------------------------------------
 	std::string LowerStr(InputString);
 	std::transform(LowerStr.begin(), LowerStr.end(), LowerStr.begin(),
 		[](unsigned char c) { return std::tolower(c); });
 
-	// 2. 소문자로 변환된 문자열을 바탕으로 32비트 해시값을 뽑아냅니다.
-	uint32_t Hash = static_cast<uint32_t>(std::hash<std::string>{}(LowerStr));
+	uint32_t LowerHash = static_cast<uint32_t>(std::hash<std::string>{}(LowerStr));
+	size_t CompShardIndex = LowerHash % MAX_SHARD_COUNT;
 
-	// 3. 해시값을 이용해 이 문자가 1024개의 Shard 중 어디로 갈지 결정합니다.
-	size_t ShardIndex = Hash % MAX_SHARD_COUNT;
+	// 소문자 문자열로 Shard에서 ID를 받아옵니다. (비교용)
+	this->ComparisonIndex = GNameShards[CompShardIndex].FindOrAdd(LowerStr, LowerHash, GNamePoolData);
 
-	// 4. 해당 Shard에게 문자열과 해시값을 던져주고 4바이트 ID를 받아와 저장합니다.
-	this->ID = GNameShards[ShardIndex].FindOrAdd(InputString, Hash, GNamePoolData);
+
+	// -------------------------------------------------------------
+	// 2. DisplayIndex (출력용 ID) 세팅: 유저가 입력한 대소문자 원본 그대로 처리
+	// -------------------------------------------------------------
+	uint32_t OriginalHash = static_cast<uint32_t>(std::hash<std::string_view>{}(InputString));
+	size_t DispShardIndex = OriginalHash % MAX_SHARD_COUNT;
+
+	// 원본 문자열로 Shard에서 ID를 받아옵니다. (출력용)
+	this->DisplayIndex = GNameShards[DispShardIndex].FindOrAdd(InputString, OriginalHash, GNamePoolData);
 }
 
-// O(1) 초고속 비교: 문자열을 한 글자씩 비교하지 않고 4바이트 정수만 비교합니다.
+// -------------------------------------------------------------
+// O(1) 초고속 비교: 대소문자가 달라도 ComparisonIndex는 같으므로 정상적으로 True 반환!
+// -------------------------------------------------------------
 bool FName::operator==(const FName& Other) const
 {
-	return this->ID == Other.ID;
+	return this->ComparisonIndex == Other.ComparisonIndex;
 }
 
-// 화면에 출력하거나 로깅할 때, ID를 들고 창고(Pool)에 가서 원본 문자열을 꺼내옵니다.
+// -------------------------------------------------------------
+// 화면 출력: 원본 대소문자로 만들어진 DisplayIndex를 사용하여 출력!
+// -------------------------------------------------------------
 std::string FName::ToString() const
 {
-	return GNamePoolData.GetEntry(this->ID)->StringData;
+	return GNamePoolData.GetEntry(this->DisplayIndex)->StringData;
 }

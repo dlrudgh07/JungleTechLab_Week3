@@ -60,7 +60,7 @@ void UWorld::DeserializeClass(const json::JSON& inJson)
 	for (const auto& Data : actorsJson.ArrayRange())
 	{
 		auto Actor = PreloadObject<AActor>(Data);
-		AddActor(Actor.get());
+		AddActor(Actor.get(), "");			// preload에서 빈값으로 등록해도, 마지막에 Actor단 deserialize phase에서 제대로된 name으로 복구함
 		Actor.release();
 	}
 	int Index = 0;
@@ -70,14 +70,14 @@ void UWorld::DeserializeClass(const json::JSON& inJson)
 	for (const auto& Data : actorsJson.ArrayRange())
 		Actors[Index++]->DeserializeClass(Data);
 }
-void UWorld::AddActor(AActor* Actor)
+void UWorld::AddActor(AActor* Actor, std::string_view ActorName)
 {
 	assert(Actor != nullptr);
-	// todo : 이거 왜 안되는지 확인해야함
-	//assert(GetActorIndex(actor->ObjectID.GUID) == -1);
+	assert(GetActorIndex(Actor->ObjectID.GUID) == -1);
 
 	Actors.Add(Actor);
 	Actor->Initialize(this);
+	Actor->SetName(ActorName);
 }
 
 bool UWorld::RemoveActor(FGuid TargetComponentGuid)
@@ -167,7 +167,7 @@ AActor* UWorld::SpawnStaticMeshActor(const std::string& AssetName, FTransform Tr
 	NewActor->AddRootSceneComponent(MeshComponent); // 액터의 루트로 등록
 
 	// 3. 씬의 액터 목록(Level 배열)에 추가
-	AddActor(NewActor);
+	AddActor(NewActor, "Test_StaticMeshActor");
 
 	return NewActor;
 }
@@ -190,7 +190,7 @@ AActor* UWorld::SpawnTextMeshActor(FTransform Transform, const FResourceManager&
 	NewActor->AddRootSceneComponent(TextComponent); // 액터의 루트로 등록
 
 	// 3. 씬의 액터 목록(Level 배열)에 추가
-	AddActor(NewActor);
+	AddActor(NewActor, "Test_StaticMeshActor");
 	return NewActor;
 }
 
@@ -209,6 +209,6 @@ AActor* UWorld::SpawnSubUVActor(FTransform Transform, const FResourceManager& RM
 	Comp->SetRelativeScale3D(Transform.Scale);
 
 	NewActor->AddRootSceneComponent(Comp);
-	AddActor(NewActor);
+	AddActor(NewActor, "Test_SubUVActor");
 	return NewActor;
 }
