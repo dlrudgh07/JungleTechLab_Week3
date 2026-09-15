@@ -2,6 +2,7 @@
 
 #include "SceneComponent.h"
 #include "FBoxSphereBounds.h"
+#include "Renderer.h"
 
 class UPrimitiveComponent : public USceneComponent
 {

@@ -28,6 +28,11 @@ void UTextComponent::SetText(const std::wstring& text)
 	{
 		bDirty = true;
 		Text = text;
+		//아무 글자도 없으면 보이지도 않고 바운딩 박스도 없어서 선택이 힘들다.
+		if (Text == L"")
+		{
+			Text = L"  ";
+		}
 	}
 }
 

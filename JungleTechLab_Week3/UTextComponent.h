@@ -3,6 +3,7 @@
 #include "Core.h"
 #include "TMap.h"
 #include "TArray.h"
+#include "Vector.h"
 #include "FBoxSphereBounds.h"
 #include "RenderInfo.h"
 
