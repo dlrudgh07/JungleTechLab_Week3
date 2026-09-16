@@ -28,6 +28,6 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
     // 투명이면 버림
     clip(texColor.a * Tint.a - 0.01f);
-
+    
     return texColor * Tint;
 }
