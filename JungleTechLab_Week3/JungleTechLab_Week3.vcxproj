@@ -181,6 +181,7 @@
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClInclude Include="BlockArena.h" />
+    <ClInclude Include="Boat.h" />
     <ClInclude Include="Circle.h" />
     <ClInclude Include="FFontAsset.h" />
     <ClInclude Include="FBoxSphereBounds.h" />

@@ -132,7 +132,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
 	// todo : 이건 추후 자동화해야할듯함
-	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh", "SubUVMesh", "Rain"};
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh", "SubUVMesh", "Rain", "Boat"};
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
 	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
@@ -388,7 +388,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	float Offset = guiReference.ResourceManager->IniConfig.GetGridOffset();
 
-	ImGui::SeparatorText("Grid Controll");
+	ImGui::SeparatorText("Grid Control");
 	ImGui::Text("Offset ");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(150);

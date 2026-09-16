@@ -1,6 +1,8 @@
 ﻿#include "Actor.h"
 #include "StaticMeshComponent.h"
 #include "StaticMesh.h"
+#include <DirectXMath.h>
+
 
 void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const 
 {
@@ -16,10 +18,26 @@ void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) c
 	Info.CollisionVertices = StaticMesh->CPUVertices.data();
 	Info.CollisionVertexCount = static_cast<int32>(StaticMesh->CPUVertices.size());
 
+	Info.Color = PrimitiveColor;
+
 	if (CurrentMaterial)
 	{
 		Info.BaseTexture = CurrentMaterial->BaseTexture;
-		Info.Color = CurrentMaterial->TintColor;
+
+		// 머티리얼이 존재한다면 해당 tint color를 곱하여 블렌딩
+		// 1. 벡터(SIMD 레지스터)로 로드
+		DirectX::XMVECTOR ColorVec = DirectX::XMLoadFloat4(reinterpret_cast<const DirectX::XMFLOAT4*>(&Info.Color));
+		DirectX::XMVECTOR TintVec = DirectX::XMLoadFloat4(reinterpret_cast<const DirectX::XMFLOAT4*>(&CurrentMaterial->TintColor));
+
+		// 2. 단 한 번의 명령어로 곱셈 연산
+		DirectX::XMVECTOR ResultVec = DirectX::XMVectorMultiply(ColorVec, TintVec);
+
+		// 3. 단 한 번의 명령어로 최대값 1.0f로 Clamp
+		DirectX::XMVECTOR MaxVec = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
+		ResultVec = DirectX::XMVectorMin(ResultVec, MaxVec);
+
+		// 4. 결과를 다시 구조체에 저장
+		DirectX::XMStoreFloat4(reinterpret_cast<DirectX::XMFLOAT4*>(&Info.Color), ResultVec);
 	}
 
 	Info.LocalBoundsCenter = StaticMesh->LocalBounds.Center;

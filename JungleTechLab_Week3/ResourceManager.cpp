@@ -16,6 +16,7 @@
 #include "FFontAsset.h"
 
 #include "Cube.h"
+#include "Boat.h"
 #include "Sphere.h"
 #include "Circle.h"
 #include "Quad.h"
@@ -374,8 +375,12 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 
 	if (!LoadTextureFromFile("FireTexture", "./Assets/FireAnimationTexture.png")) UE_LOG("Load Fail FireTexture");
 
+	if (!LoadTextureFromFile("CrateTexture", "./Assets/crate.jpg")) UE_LOG("Load Fail Crate Texture");
+
+	if (!LoadTextureFromFile("BoatTexture", "./Assets/boat.png")) UE_LOG("Load Fail Boat Texture");
+
 	//굴림 폰트 아틀라스 로드
-	if (!LoadFont_FNTFile("Gulim", "Assets/Fonts/Gulim/Gulim.fnt")) UE_LOG("Load Fail CrateTexture Gulim FontAsset");
+	if (!LoadFont_FNTFile("Gulim", "Assets/Fonts/Gulim/Gulim.fnt")) UE_LOG("Load Fail Gulim FontAsset");
 
 	// ==========================================
 	// [2] 머티리얼 에셋 생성 및 등록
@@ -392,17 +397,23 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	CrateMaterial->BaseTexture = GetTexture("CrateTexture");
 	RegisterMaterial("CrateMaterial", CrateMaterial);
 
-	// 3-3. Ascii 아틀라스 폰트 머티리얼
+	// Ascii 아틀라스 폰트 머티리얼
 	UMaterial* FontTexture = FObjectFactory::ConstructObject<UMaterial>();
 	FontTexture->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	FontTexture->BaseTexture = GetTexture("FontTexture");
 	RegisterMaterial("FontTexture", FontTexture);
 
-	// 3-4. SubUV 스프라이트 머티리얼
+	// SubUV 스프라이트 머티리얼
 	UMaterial* SubUVMaterial = FObjectFactory::ConstructObject<UMaterial>();
 	SubUVMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	SubUVMaterial->BaseTexture = GetTexture("FireTexture");
 	RegisterMaterial("SubUVMaterial", SubUVMaterial);
+
+	// 보트 머티리얼
+	UMaterial* BoatMaterial = FObjectFactory::ConstructObject<UMaterial>();
+	BoatMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	BoatMaterial->BaseTexture = GetTexture("BoatTexture");
+	RegisterMaterial("BoatMaterial", BoatMaterial);
 
 	// ==========================================
 	// [3] 스태틱 메쉬 에셋 생성 및 등록
@@ -414,7 +425,7 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	UStaticMesh* CubeMesh = FObjectFactory::ConstructObject<UStaticMesh>();
 	FBuffer* CubeBuffer = GraphicsManager->CreateBuffer(Cube_vertices, sizeof(Cube_vertices), CubeMesh->CPUVertices, CubeMesh->CPUIndices);
 	CubeMesh->VertexBuffer = CubeBuffer;
-	CubeMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
+	//CubeMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
 	CubeMesh->Initialize();
 	RegisterStaticMesh("Cube", CubeMesh);
 
@@ -426,6 +437,14 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	CrateMesh->StaticMaterials.Add(GetMaterial("CrateMaterial"));
 	CrateMesh->Initialize();
 	RegisterStaticMesh("Crate", CrateMesh);
+
+	// 보트 매쉬
+	UStaticMesh* BoatMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* BoatBuffer = GraphicsManager->CreateBuffer(Boat_vertices, sizeof(Boat_vertices), BoatMesh->CPUVertices, BoatMesh->CPUIndices);
+	BoatMesh->VertexBuffer = BoatBuffer;
+	BoatMesh->StaticMaterials.Add(GetMaterial("BoatMaterial"));
+	BoatMesh->Initialize();
+	RegisterStaticMesh("Boat", BoatMesh);
 
 	// 스피어 메쉬
 	UStaticMesh* SphereMesh = FObjectFactory::ConstructObject<UStaticMesh>();
