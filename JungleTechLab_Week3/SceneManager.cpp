@@ -149,7 +149,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 			if (SelectedName == "Text Mesh")
 			{
-				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 90, 90), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			}
 			else if (SelectedName == "SubUVMesh")
 			{
@@ -488,7 +488,15 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 					strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
 
 					LastComp = TextComp;
-				}				
+				}
+
+				//빌보드 옵션
+				bool IsBillboard = TextComp->GetIsBillboard();
+				if (ImGui::Checkbox("Is Billboard", &IsBillboard))
+				{
+					TextComp->SetIsBillboard(IsBillboard);
+				}
+
 				//글자가 바뀐다면
 				if (ImGui::InputText("Text", buffer, sizeof(buffer)))
 				{

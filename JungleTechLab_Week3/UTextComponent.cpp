@@ -7,9 +7,12 @@
 #include "GraphicsManager.h"
 #include "StaticMesh.h"
 #include "Actor.h"
+#include "FEditorViewportClient.h"
+#include "FQuad.h"
 
 UTextComponent::UTextComponent()
 {
+	bIsBillboard = true;
 }
 
 UTextComponent::~UTextComponent()
@@ -103,12 +106,13 @@ void UTextComponent::BuildTextQuads()
 
 		//페이지에 해당하는 버텍스 채우기
 		TArray<FVertexSimple>& Vertices = VerticesByPage[Info->Page];
-		Vertices.Add({left, top, 0, 1,1,1,1, uv[0].x, uv[0].y});		//top left
-		Vertices.Add({right, top, 0, 1,1,1,1, uv[1].x, uv[0].y});		//top right
-		Vertices.Add({right, bottom, 0, 1,1,1,1, uv[1].x, uv[1].y});	//bottom right
-		Vertices.Add({left, top, 0, 1,1,1,1, uv[0].x, uv[0].y});		//top left
-		Vertices.Add({right, bottom, 0, 1,1,1,1, uv[1].x, uv[1].y});	//bottom right
-		Vertices.Add({left, bottom, 0, 1,1,1,1, uv[0].x, uv[1].y});		//bottom left 
+
+		Vertices.Add({ 0, left, -top, 1,1,1,1, uv[0].x, uv[0].y });		//top left
+		Vertices.Add({ 0, right, -top, 1,1,1,1, uv[1].x, uv[0].y });		//top right
+		Vertices.Add({ 0, right, -bottom, 1,1,1,1, uv[1].x, uv[1].y });	//bottom right
+		Vertices.Add({ 0, left, -top, 1,1,1,1, uv[0].x, uv[0].y });		//top left
+		Vertices.Add({ 0, right, -bottom, 1,1,1,1, uv[1].x, uv[1].y });	//bottom right
+		Vertices.Add({ 0, left, -bottom, 1,1,1,1, uv[0].x, uv[1].y });		//bottom left
 
 
 		//지점 이동
@@ -222,11 +226,13 @@ void UTextComponent::SetHighLightQuadRenderInfo(TArray<FRenderInfo>* outRenderIn
 
 		//페이지에 해당하는 버텍스 채우기
 		TArray<FVertexSimple>Vertices;
+
 		//문자열 quad와 같은 위치면 겹쳐버려서 0.001만큼 뒤로 밉니다.
-		FVertexSimple TopLeft = { 0.f, 0.f, -0.001f, 1.f, 1.f, 1.f, 1.f, 0.f, 0.f };
-		FVertexSimple TopRight = { PenX, 0.f, -0.001f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.f };
-		FVertexSimple BottomLeft = { 0.f, PenY, -0.001f, 1.f, 1.f, 1.f, 1.f, 0.f, 1.f };
-		FVertexSimple BottomRight = { PenX, PenY, -0.001f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f }; 
+		FVertexSimple TopLeft = { 0.001f, 0.f, 0.f, 1.f, 1.f, 1.f, 1.f, 0.f, 0.f };
+		FVertexSimple TopRight = { 0.001f, PenX, 0.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.f };
+		FVertexSimple BottomLeft = { 0.001f, 0.f, -PenY, 1.f, 1.f, 1.f, 1.f, 0.f, 1.f };
+		FVertexSimple BottomRight = { 0.001f, PenX, -PenY, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f };
+
 		Vertices.Add(TopLeft);		//top left
 		Vertices.Add(TopRight);		//top right
 		Vertices.Add(BottomLeft);	//bottom left
@@ -294,5 +300,17 @@ void UTextComponent::CalculateLocalBounds()
 	// 구한 Min, Max를 통해 LocalBounds 생성 (FBoxSphereBounds 생성자가 Center와 Extent를 자동 계산)
 	//Bounds = FBoxSphereBounds(MinBound, MaxBound); 
 	LocalBounds = FBoxSphereBounds(MinBound, MaxBound);
+}
+
+void UTextComponent::SetBillboardTransfom()
+{
+	//FTransform MyTransform = GetTransformMatrix();
+
+	//텍스트의 경우 component의 forward와 반대 방향으로 쿼드의 앞방향을 정의합니다.
+	//	component가 +x 방향으로 forward를 볼 때
+	//	텍스트 쿼드의 경우 -x를 바라보는 버텍스를 찍습니다.
+	//텍스트 쿼드가 반대방향이기에 빌보드 시 카메라와 같은 방향으로 넣어줘야 카메라를 바라보는 쿼드가 됩니다.
+	FQuaternion CameraRot = FEditorViewportClient::GetCamera().Transform.Rotation;
+	SetRelativeRotation(CameraRot);
 }
 
