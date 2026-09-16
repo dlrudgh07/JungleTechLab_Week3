@@ -375,10 +375,10 @@ void FGraphicsManager::DrawUUID(const FQuad& quad)
 	mUUIDVertices.Add({ quad.LeftUp.x, quad.LeftUp.y, quad.LeftUp.z, 1.0f,1.0f,1.0f,1.0f, quad.u[0], quad.v[0] }); // 좌측상단
 }
 
-void FGraphicsManager::DrawCurrentUUID(UPrimitiveComponent* RootComponent, FVector UpVector, FVector RightVector)
+void FGraphicsManager::DrawCurrentUUID(UPrimitiveComponent* RootComponent, FVector UpVector, FVector RightVector, FString ActorUUID)
 {
 	FMatrix CurrentWorldMatrix = RootComponent->GetTransformMatrix().MakeMatrix();
-	FString UUID = FString("UID:").Append(RootComponent->ObjectID.GUID.ToString());
+	FString UUID = FString("UID:").Append(ActorUUID);
 	FBoxSphereBounds WorldBounds = RootComponent->GetWorldBounds();
 	const FVector Max = WorldBounds.Center + WorldBounds.BoxHalfExtent;
 
