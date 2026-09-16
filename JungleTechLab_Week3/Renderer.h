@@ -38,6 +38,14 @@ struct FConstants
 	FVector4 UVTransform; // 현재 UV정보
 };
 
+struct FConstantsNDC
+{
+	// ViewMatrix에서 회전만 추출한 4x4 행렬 (64 바이트)
+	FMatrix ViewRotation;
+	float AspectRatio;     // 화면비 (4 바이트)
+	float Padding[3];      // (12 바이트) - 16의 배수(80)를 맞추기
+};
+
 class URenderer
 {
 public:
@@ -50,9 +58,11 @@ public:
     ID3D11RenderTargetView* FrameBufferRTV = nullptr;
 	ID3D11RasterizerState* RasterizerState[2] = {};
     ID3D11Buffer* ConstantBuffer = nullptr;
+	ID3D11Buffer* ConstantBufferNDC = nullptr;
 	ID3D11Texture2D* DepthStencilBuffer = nullptr;			// 실제 깊이값이 저장될 메모리
 	ID3D11DepthStencilView* DepthStencilView = nullptr;		// 그 메모리를 "출력 대상"으로 보는 뷰
 	ID3D11DepthStencilState* DepthStencilState = nullptr;	// 깊이 테스트용 상태
+	ID3D11DepthStencilState* NoDepthStencilState = nullptr;	// 깊이 테스트 안하는 상태
 	ID3D11DepthStencilState* StencilMarkState = nullptr;	// 스텐실에 1 마킹용 상태
 	ID3D11DepthStencilState* StencilOutlineState = nullptr; // 아웃라인 그리기용
 
@@ -63,15 +73,19 @@ public:
     D3D11_VIEWPORT ViewportInfo;
     ID3D11VertexShader* SimpleVertexShader;
     ID3D11PixelShader* SimplePixelShader;
+    ID3D11PixelShader* FontTexturePixelShader;
     ID3D11InputLayout* SimpleInputLayout;
 
 	ID3D11VertexShader* LineVertexShader;
 	ID3D11PixelShader* LinePixelShader;
 	ID3D11InputLayout* LineInputLayout; // Line
 
-    ID3D11VertexShader* FontVertexShader;
-    ID3D11PixelShader* FontPixelShader;
+	ID3D11VertexShader* FontVertexShader;
+	ID3D11PixelShader* FontPixelShader;
 	ID3D11InputLayout* FontInputLayout; // Line
+
+	ID3D11VertexShader* NDCVertexShader = nullptr;
+	ID3D11PixelShader* NDCPixelShader = nullptr;
 
 	ID3D11ShaderResourceView* UUIDTextureView;
 	D3D11_SAMPLER_DESC UUIDSamplerInfo;
@@ -84,6 +98,8 @@ public:
 	// 매 프레임 갯수가 바뀌는 UUID용. 메시 버퍼와 달리 IMMUTABLE이 아니라 DYNAMIC이다
 	ID3D11Buffer* UUIDVertexBuffer = nullptr;
 	uint32 UUIDVertexCapacity = 0;
+
+
 
 
 	// texture mapping
@@ -117,8 +133,9 @@ public:
 	void CreateUUIDVertexBuffer(uint32 maxVertices);
 	void CreateRasterizerState();
 	void CreateConstantBuffer();
+	void CreateConstantBufferNDC();
 	void CreateDepthStencilBuffer(UINT width, UINT height);
-
+	void CreateNoDepthStencilState();
 	void CreateDepthStencilState();
 	void CreateStencilMarkState();
 	void CreateStencilOutlineState();
@@ -135,6 +152,7 @@ public:
 	void ReleaseUUIDVertexBuffer();
 	void ReleaseRasterizerState();
 	void ReleaseConstantBuffer();
+	void ReleaseConstantBufferNDC();
 	void ReleaseDepthStencilBuffer();
 	void ReleaseDepthStencilState();
 	void ReleaseBlendState();
@@ -150,7 +168,8 @@ public:
 	void PrepareFontShader();
 	void PrepareTextureShader();
 	void SetDefaultShader();
-	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0),FVector4 UVTransform= FVector4(1,1,0,0));
+	void UpdateConstant(FMatrix world, FMatrix viewProjection, FVector4 tint = FVector4(0, 0, 0, 0), FVector4 UVTransform = FVector4(1, 1, 0, 0));
+	void UpdateConstantNDC(const FMatrix& CameraViewRotationMatrix, float AspectRatio);
 	void RenderPrimitive(FBuffer* pBuffer);
 	void RenderLines(const FLineVertex* vertices, uint32 numVertices);
 	void RenderUUID(const FVertexSimple* vertices, uint32 numVertices);

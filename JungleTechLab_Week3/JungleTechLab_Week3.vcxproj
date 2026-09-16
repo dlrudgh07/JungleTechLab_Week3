@@ -132,21 +132,29 @@
     <TargetName>SceneSerializationTests</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(SceneSerializationTests)'=='true'">
-    <ClCompile><AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories></ClCompile>
-    <Link><SubSystem>Console</SubSystem></Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="BlockArena.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="FFontAsset.cpp" />
     <ClCompile Include="FBoxSphereBounds.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="FName.cpp" />
+    <ClCompile Include="NamePool.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Guid.cpp" />
     <ClCompile Include="IniConfig.cpp" />
     <ClCompile Include="IniParser.cpp" />
     <ClCompile Include="JsonUtil.cpp" />
+    <ClCompile Include="NameHashTable.cpp" />
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="MeshUtility.cpp" />
     <ClCompile Include="ObjectFactory.cpp" />
@@ -171,13 +179,17 @@
     <ClCompile Include="SceneComponent.cpp" />
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
+    <ClInclude Include="BlockArena.h" />
     <ClInclude Include="Circle.h" />
     <ClInclude Include="FFontAsset.h" />
     <ClInclude Include="FBoxSphereBounds.h" />
+    <ClInclude Include="FName.h" />
     <ClInclude Include="FPath.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Guid.h" />
+    <ClInclude Include="NameHashTable.h" />
     <ClInclude Include="MeshUtility.h" />
+    <ClInclude Include="NamePool.h" />
     <ClInclude Include="ParticleSubUVComponent.h" />
     <ClInclude Include="IniConfig.h" />
     <ClInclude Include="IniParser.h" />
@@ -254,6 +266,12 @@
     <ClInclude Include="WindowApplication.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="DrawNDC.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="FontVertexShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
