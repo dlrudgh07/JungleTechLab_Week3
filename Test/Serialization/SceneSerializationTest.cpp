@@ -6,6 +6,7 @@
 #include "LineSpotLightComponent.h"
 #include "ParticleRainComponent.h"
 #include "ParticleSubUVComponent.h"
+#include "ULineRiverComponent.h"
 #include "Texture.h"
 #include <iostream>
 #include <cmath>
@@ -79,6 +80,21 @@ int main()
         SubUV->SetCols(8);
         SubUV->SetRows(2);
         SubUV->SetPlayRate(3);
+		auto* River = Add<ULineRiverComponent>(*World);
+		json::JSON RiverSettings;
+		River->SerializeClass(RiverSettings);
+		RiverSettings["Properties"]["TotalLineNum"] = 37;
+		RiverSettings["Properties"]["RiverWidth"] = 12.5f;
+		RiverSettings["Properties"]["RiverLength"] = 84.f;
+		RiverSettings["Properties"]["RiverDepth"] = 0.4f;
+		RiverSettings["Properties"]["MinLineVelocity"] = 2.f;
+		RiverSettings["Properties"]["MaxLineVelocity"] = 7.f;
+		RiverSettings["Properties"]["MinLineLength"] = 1.f;
+		RiverSettings["Properties"]["MaxLineLength"] = 4.f;
+		RiverSettings["Properties"]["LineVertexCount"] = 16;
+		RiverSettings["Properties"]["WaveSpeedWeight"] = 3.f;
+		RiverSettings["Properties"]["WavePhaseWeight"] = 2.f;
+		River->DeserializeClass(RiverSettings);
 
         json::JSON Scene;
         Resources.SerializeAssets(Scene["Assets"]);
@@ -109,6 +125,17 @@ int main()
             Check(LoadedRain->MaxRainDrops == 7 && LoadedRain->MaxSplashDrops == 12 && LoadedRain->SpawnRadius == 19, "Rain settings");
             auto* LoadedSub = Actors[4]->GetRootComponent()->Cast<UParticleSubUVComponent>();
             Check(LoadedSub->GetCols() == 8 && LoadedSub->GetRows() == 2 && LoadedSub->GetIsBillboard(), "SubUV");
+			auto* LoadedRiver = Actors[5]->GetRootComponent()->Cast<ULineRiverComponent>();
+			Check(LoadedRiver && LoadedRiver->GetRiverWidth() == 12.5f && LoadedRiver->GetRiverLength() == 84.f,
+				"Line river dimensions");
+			json::JSON LoadedRiverJson;
+			LoadedRiver->SerializeClass(LoadedRiverJson);
+			const auto& RiverProperties = LoadedRiverJson.at("Properties");
+			Check(RiverProperties.at("TotalLineNum").ToInt() == 37 &&
+				NumberFromJson(RiverProperties.at("MaxLineVelocity")) == 7.f &&
+				RiverProperties.at("LineVertexCount").ToInt() == 16 &&
+				NumberFromJson(RiverProperties.at("WavePhaseWeight")) == 2.f,
+				"Line river settings");
             json::JSON Bad;
             LoadedRain->SerializeClass(Bad);
             Bad["Properties"]["RainSpawnRate"] = 0;
@@ -116,6 +143,10 @@ int main()
             LoadedSub->SerializeClass(Bad);
             Bad["Properties"]["Cols"] = 1.5;
             Reject([&] { LoadedSub->DeserializeClass(Bad); });
+			LoadedRiver->SerializeClass(Bad);
+			Bad["Properties"]["MinLineVelocity"] = 10.f;
+			Bad["Properties"]["MaxLineVelocity"] = 1.f;
+			Reject([&] { LoadedRiver->DeserializeClass(Bad); });
             Loaded->SerializeClass(Bad);
             Bad["Properties"]["FontAssetGUID"] = ObjectReference(Resources.GetTexture("TestAtlas"));
             Reject([&] { Loaded->DeserializeClass(Bad); });
@@ -130,7 +161,7 @@ int main()
         World.reset();
         Resources.ClearAll();
         CoUninitialize();
-        std::cout << "PASS: scene round trip, Unicode, shared font/atlas GUIDs, spotlight, rain, SubUV, legacy defaults, invalid inputs\n";
+        std::cout << "PASS: scene round trip, Unicode, shared font/atlas GUIDs, spotlight, rain, SubUV, line river, legacy defaults, invalid inputs\n";
         return 0;
     }
     catch (const std::exception& Error)

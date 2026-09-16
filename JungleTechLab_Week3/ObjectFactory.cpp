@@ -66,6 +66,7 @@ bool FObjectFactory::RegisterClassInfo(FString className, const FClassInfo* clas
 #include "UTextComponent.h"
 #include "FFontAsset.h"
 #include "LineSpotLightComponent.h"
+#include "ULineRiverComponent.h"
 
 TMap<FString, std::function<const FClassInfo*()>> FObjectFactory::mClassInfoMap = {
 	{"UObject", &UObject::GetClass},
@@ -83,4 +84,5 @@ TMap<FString, std::function<const FClassInfo*()>> FObjectFactory::mClassInfoMap 
 	{"UTextComponent", &UTextComponent::GetClass},
 	{"FFontAsset", &FFontAsset::GetClass},
 	{"ULineSpotLightComponent", &ULineSpotLightComponent::GetClass},
+	{"ULineRiverComponent", &ULineRiverComponent::GetClass},
 	{"UWorld", &UWorld::GetClass}};
