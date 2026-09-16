@@ -3,15 +3,56 @@
 #include "SceneComponent.h"
 #include "MathUtility.h"
 #include "Console.h"
+#include "JsonUtil.h"
 
 void ULineRiverComponent::SerializeClass(json::JSON& outJson) const
 {
 	UPrimitiveComponent::SerializeClass(outJson);
+	auto& Properties = outJson["Properties"];
+	Properties["TotalLineNum"] = TotalLineNum;
+	Properties["RiverWidth"] = RiverWidth;
+	Properties["RiverLength"] = RiverLength;
+	Properties["RiverDepth"] = RiverDepth;
+	Properties["MinLineVelocity"] = MinLineVelocity;
+	Properties["MaxLineVelocity"] = MaxLineVelocity;
+	Properties["MinLineLength"] = MinLineLength;
+	Properties["MaxLineLength"] = MaxLineLength;
+	Properties["LineVertexCount"] = LineVertexCount;
+	Properties["WaveSpeedWeight"] = WaveSpeedWeight;
+	Properties["WavePhaseWeight"] = WavePhaseWeight;
 }
 
 void ULineRiverComponent::DeserializeClass(const json::JSON& inJson)
 {
 	UPrimitiveComponent::DeserializeClass(inJson);
+	const auto& Properties = inJson.at("Properties");
+
+	if (Properties.hasKey("TotalLineNum"))
+		TotalLineNum = IntegerFromJson(Properties.at("TotalLineNum"), 0, 100000);
+	if (Properties.hasKey("RiverWidth")) RiverWidth = NumberFromJson(Properties.at("RiverWidth"));
+	if (Properties.hasKey("RiverLength")) RiverLength = NumberFromJson(Properties.at("RiverLength"));
+	if (Properties.hasKey("RiverDepth")) RiverDepth = NumberFromJson(Properties.at("RiverDepth"));
+	if (Properties.hasKey("MinLineVelocity")) MinLineVelocity = NumberFromJson(Properties.at("MinLineVelocity"));
+	if (Properties.hasKey("MaxLineVelocity")) MaxLineVelocity = NumberFromJson(Properties.at("MaxLineVelocity"));
+	if (Properties.hasKey("MinLineLength")) MinLineLength = NumberFromJson(Properties.at("MinLineLength"));
+	if (Properties.hasKey("MaxLineLength")) MaxLineLength = NumberFromJson(Properties.at("MaxLineLength"));
+	if (Properties.hasKey("LineVertexCount"))
+		LineVertexCount = IntegerFromJson(Properties.at("LineVertexCount"), 1, 10000);
+	if (Properties.hasKey("WaveSpeedWeight")) WaveSpeedWeight = NumberFromJson(Properties.at("WaveSpeedWeight"));
+	if (Properties.hasKey("WavePhaseWeight")) WavePhaseWeight = NumberFromJson(Properties.at("WavePhaseWeight"));
+
+	if (RiverWidth < 0.f || RiverLength <= 0.f || RiverDepth < 0.f ||
+		MinLineVelocity < 0.f || MaxLineVelocity < MinLineVelocity ||
+		MinLineLength <= 0.f || MaxLineLength < MinLineLength ||
+		WaveSpeedWeight < 0.f || WavePhaseWeight < 0.f)
+	{
+		throw std::runtime_error("Invalid line river settings");
+	}
+
+	LineTime = 0.f;
+	LocalLoc = GetForwardVector() * (RiverLength / 2.f) + GetRightVector() * (RiverWidth / 2.f);
+	InitializeLineRiver();
+	UpdateBounds();
 }
 
 void ULineRiverComponent::Initialize()
@@ -63,6 +104,7 @@ void ULineRiverComponent::GetIndices(std::vector<uint32>& OutIndices) const
 
 void ULineRiverComponent::InitializeLineRiver()
 {
+	Lines.Reset(TotalLineNum);
 	std::uniform_real_distribution<float> DistWidth(0.0f, RiverWidth);
 	std::uniform_real_distribution<float> DistLength(0.0f, RiverLength);
 	std::uniform_real_distribution<float> DistDepth(0.0f, RiverDepth);

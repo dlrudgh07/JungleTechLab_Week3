@@ -84,5 +84,5 @@ TMap<FString, std::function<const FClassInfo*()>> FObjectFactory::mClassInfoMap 
 	{"UTextComponent", &UTextComponent::GetClass},
 	{"FFontAsset", &FFontAsset::GetClass},
 	{"ULineSpotLightComponent", &ULineSpotLightComponent::GetClass},
-	{"UWorld", &UWorld::GetClass},
-	{"ULineRiverComponent", &ULineRiverComponent::GetClass}};
+	{"ULineRiverComponent", &ULineRiverComponent::GetClass},
+	{"UWorld", &UWorld::GetClass}};

@@ -53,30 +53,30 @@ private:
 	//라인들을 저장
 	TArray<FLineRiver> Lines;
 	//총 라인의 개수
-	int32 TotalLineNum;
+	int32 TotalLineNum = 500;
 	//강의 폭
-	float RiverWidth;
+	float RiverWidth = 5.f;
 	//강의 길이
-	float RiverLength;
+	float RiverLength = 50.f;
 	//강의 깊이
-	float RiverDepth;
-	float MinLineVelocity;
-	float MaxLineVelocity;
-	float MinLineLength;
-	float MaxLineLength;
+	float RiverDepth = 0.01f;
+	float MinLineVelocity = 1.f;
+	float MaxLineVelocity = 2.f;
+	float MinLineLength = 0.5f;
+	float MaxLineLength = 2.f;
 
 	//라인 하나에 들어가는 버텍스 수
-	int32 LineVertexCount;
+	int32 LineVertexCount = 10;
 
 	std::mt19937 RandomEngine{ std::random_device{}() };
 
-	float LineTime;
+	float LineTime = 0.f;
 
 	//sin 파형 웨이브 속도
-	float WaveSpeedWeight;
-	float WavePhaseWeight;
+	float WaveSpeedWeight = 5.0f;
+	float WavePhaseWeight = 1.5f;
 
-	FVector LocalLoc;
+	FVector LocalLoc{};
 
 };
 
