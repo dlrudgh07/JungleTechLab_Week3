@@ -533,27 +533,13 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 		{
 			for (auto Element : mSelectedActor->GetComponents())
 			{
-				if (Element->IsA(UStaticMeshComponent::GetClass()))
+				if (Element->IsA(UPrimitiveComponent::GetClass()))
 				{
-					UStaticMeshComponent* MeshComponent = Element->Cast<UStaticMeshComponent>();
+					UPrimitiveComponent* PrimitiveComponent = Element->Cast<UPrimitiveComponent>();
 
-					UMaterial* Instance = MeshComponent->UMeshComponent::GetMaterial(0);
-
-					if (Instance == nullptr)
-					{
-						// 이 컴포넌트 전용 머티리얼을 하나 만들어 에셋 값을 복사해온다
-						Instance = FObjectFactory::ConstructObject<UMaterial>();
-						if (UMaterial* Src = MeshComponent->GetMaterial(0))   // 에셋 원본
-						{
-							Instance->BaseTexture = Src->BaseTexture;
-							Instance->TintColor = Src->TintColor;
-						}
-						MeshComponent->SetMaterial(0, Instance);
-
-						FResourceManager::Get().RegisterMaterial(
-							"MY_" + std::string(MeshComponent->ObjectID.GUID.ToString().CStr()), Instance);
-					}
-					Instance->TintColor = FVector4(Color[0], Color[1], Color[2], 1.0f);
+					if (PrimitiveComponent->IsOriginalColor())
+						PrimitiveComponent->SetOriginalColor(false);
+					PrimitiveComponent->SetPrimitiveColor(FVector4(Color[0], Color[1], Color[2], 1.0f));
 				}
 			}
 		}

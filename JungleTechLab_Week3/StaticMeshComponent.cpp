@@ -18,7 +18,7 @@ void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) c
 	Info.CollisionVertices = StaticMesh->CPUVertices.data();
 	Info.CollisionVertexCount = static_cast<int32>(StaticMesh->CPUVertices.size());
 
-	Info.Color = PrimitiveColor;
+	Info.Color = UPrimitiveComponent::GetPrimitiveColor();
 
 	if (CurrentMaterial)
 	{

@@ -11,6 +11,16 @@ json::JSON FVectorToJson(const FVector& Vector)
 	return vectorJson;
 }
 
+json::JSON FVector4ToJson(const FVector4& Vector)
+{
+	json::JSON vectorJson = json::JSON::Make(json::JSON::Class::Array);
+	vectorJson[0] = Vector.x;
+	vectorJson[1] = Vector.y;
+	vectorJson[2] = Vector.z;
+	vectorJson[3] = Vector.w;
+	return vectorJson;
+}
+
 json::JSON FRotatorToJson(const FRotator& Rotator)
 {
 	json::JSON rotatorJson = json::JSON::Make(json::JSON::Class::Array);
@@ -47,6 +57,17 @@ FVector FVectorFromJson(const json::JSON& json)
 	}
 
 	return FVector(NumberFromJson(json.at(0)), NumberFromJson(json.at(1)), NumberFromJson(json.at(2)));
+}
+
+FVector4 FVector4FromJson(const json::JSON& json)
+{
+	if (json.JSONType() != json::JSON::Class::Array)
+	{
+		throw std::runtime_error("Json Array expected for FVector");
+	}
+
+	return FVector4(NumberFromJson(json.at(0)), NumberFromJson(json.at(1)),
+		NumberFromJson(json.at(2)), NumberFromJson(json.at(3)));
 }
 
 FRotator FRotatorFromJson(const json::JSON& json)
@@ -105,4 +126,11 @@ float NumberFromJson(const json::JSON& Value)
 	if (!std::isfinite(Number) || std::abs(Number) > FLT_MAX)
 		throw std::runtime_error("Invalid scene number");
 	return static_cast<float>(Number);
+}
+
+bool BoolFromJson(const json::JSON& Value)
+{
+	if (Value.JSONType() != json::JSON::Class::Boolean)
+		throw std::runtime_error("Expected a boolean");
+	return Value.ToBool();
 }
