@@ -446,10 +446,8 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 		uint32 CurrentDisplayIndex = CurrentFName.GetDisplayIndex();
 		ImGui::Text("FName CurrentComparisonIndex : %u", CurrentComparisonIndex);
 		ImGui::Text("FName CurrentDisplayIndex : %u", CurrentDisplayIndex);
-		ImGui::Text("SetName");
-		ImGui::SameLine();
 		char Buf[128] = "";
-		if (ImGui::InputText("##SetName", Buf, sizeof(Buf), ImGuiInputTextFlags_EnterReturnsTrue))
+		if (ImGui::InputText("SetFName", Buf, sizeof(Buf), ImGuiInputTextFlags_EnterReturnsTrue))
 		{
 			mSelectedActor->SetName(FString(Buf));
 		}

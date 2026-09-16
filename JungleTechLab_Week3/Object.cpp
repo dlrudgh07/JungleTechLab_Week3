@@ -127,7 +127,7 @@ UObject* UObject::GetObjectByInternalIndex(uint32 internalIndex)
 	return nullptr;
 }
 
-FName UObject::GetName()
+const FName& UObject::GetName()
 {
 	return (Name);
 }

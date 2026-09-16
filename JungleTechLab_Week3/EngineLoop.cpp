@@ -236,7 +236,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				{
 					UPrimitiveComponent* RootComponent = static_cast<UPrimitiveComponent*>(Actor->GetRootComponent());
 					FGraphicsManager::Get().DrawCurrentUUID(RootComponent, ViewportClient->mCamera.GetUpVector(),
-						ViewportClient->mCamera.GetRightVector());
+						ViewportClient->mCamera.GetRightVector(), Actor->ObjectID.GUID.ToString());
 				}
 				FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
 			}

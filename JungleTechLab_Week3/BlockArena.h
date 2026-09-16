@@ -3,7 +3,7 @@
 #include "Core.h"
 #include <assert.h>
 
-#define MAX_BLOCK_SIZE 8192
+#define MAX_BLOCK_NUMBER 8192
 #define BLOCK_SIZE 2048
 #define BLOCK_BIT 13
 #define OFFSET_BIT 16 // MemoryAlign(8)로 나눠서 저장해서 512KB사용
@@ -82,7 +82,7 @@ public:
 
 
 private:
-	std::unique_ptr<uint8[]> Blocks[MAX_BLOCK_SIZE]; // 블록 시작 주소들 BlockBits가 13bit로 8192개
+	std::unique_ptr<uint8[]> Blocks[MAX_BLOCK_NUMBER]; // 블록 시작 주소들 BlockBits가 13bit로 8192개
 	uint32	CurrentBlock; // 현재 쓰고 있는 블록
 	uint32	Cursor; // 블록 에서 어디까지 사용했는지
 

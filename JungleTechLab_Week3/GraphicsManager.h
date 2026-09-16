@@ -84,7 +84,7 @@ public:
 	//UUID
 	// 호출 즉시 그리지 않고 배열에 쌓는다. FlushUUID()에서 한 번에 그린다.
 	void DrawUUID(const FQuad& quad);
-	void DrawCurrentUUID(UPrimitiveComponent* RootComponent, FVector UpVector, FVector RightVector);
+	void DrawCurrentUUID(UPrimitiveComponent* RootComponent, FVector UpVector, FVector RightVector, FString ActorUUID);
 	void FlushUUID(UTexture* FontTexture);
 
 	//bool GetShowWorldAxis() const { return mbShowWorldAxis; }

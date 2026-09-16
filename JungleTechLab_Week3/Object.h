@@ -82,7 +82,7 @@ public:
 	static TSparseArray<UObject*>& GetGObjectArray() { return GUObjectArray; }
 	inline static uint64 GetGObjectRevision() { return GUObjectRevision; }
 
-	FName GetName();
+	const FName& GetName();
 	void SetName(FString NewName);
 
 public:
