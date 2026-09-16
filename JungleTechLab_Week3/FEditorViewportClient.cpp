@@ -13,6 +13,8 @@
 #include "GraphicsManager.h"
 #include "StaticMeshComponent.h"
 
+FCamera FEditorViewportClient::mCamera;
+
 // 정점 배열이 보이는 스코프라 sizeof 로 개수가 나온다.
 // 포인터로 받으면 배열 크기 정보가 사라지므로 여기서 개수를 같이 넘긴다.
 static bool GetPrimitiveMesh(EPrimitive ePrimitive, const FVertexSimple*& OutVertices, uint32& OutCount)

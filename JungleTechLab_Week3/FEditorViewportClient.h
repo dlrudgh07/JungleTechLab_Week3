@@ -23,9 +23,9 @@ public:
 	void SetViewMode(EViewModeIndex mode) { ViewMode = mode; }
  void Reset();
 
-	FCamera& GetCamera() { return mCamera; }
+	static FCamera& GetCamera(){return mCamera; }
 
-	FCamera mCamera;
+	static FCamera mCamera;
 	FGizmo mGizmo;
 
 	// todo
