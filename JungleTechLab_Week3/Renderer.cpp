@@ -660,7 +660,7 @@ void URenderer::RenderLines(const FLineVertex* vertices, uint32 numVertices)
 
 	if (numVertices > LineVertexCapacity)
 	{
-		if (ReAllocateUUIDVertexBuffer(numVertices) == false)
+		if (ReAllocateLineVertexBuffer(numVertices) == false)
 		{
 			numVertices = LineVertexCapacity;
 		}

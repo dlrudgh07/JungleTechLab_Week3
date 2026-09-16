@@ -239,12 +239,29 @@ AActor* UWorld::SpawnSpotlightActor(const std::string& AssetName, FTransform Tra
 {
 	// 1. 리소스 매니저에서 에셋(UStaticMesh) 검색
 	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh(AssetName);
+
+	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+	ULineSpotLightComponent* LineComponent = FObjectFactory::ConstructObject<ULineSpotLightComponent>();
+
+	//LineComponent->(LoadedMesh); // 컴포넌트에 에셋 장착
+	ULineSpotLightComponent* Comp = FObjectFactory::ConstructObject<ULineSpotLightComponent>();  // Initialize 자동 호출
+	Comp->SetRelativeLocation(Transform.Location);
+	Comp->SetRelativeRotation(Transform.Rotation);
+	Comp->SetRelativeScale3D(Transform.Scale);
+	NewActor->AddRootSceneComponent(Comp);
+	AddActor(NewActor);
+	return NewActor;	
+}
+
+AActor* UWorld::SpawnLineRiverActor(FTransform Transform, const FResourceManager& ResourceManager)
+{
+	// 1. 리소스 매니저에서 에셋(UStaticMesh) 검색
+	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh("Quad");
 	if (LoadedMesh == nullptr)
 	{
 		// 에셋을 못 찾았을 경우 에러 처리
 		return nullptr;
 	}
-
 
 	// 2. 팩토리를 통해 빈 액터와 컴포넌트 생성 후 에셋 할당
 	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
@@ -261,21 +278,5 @@ AActor* UWorld::SpawnSpotlightActor(const std::string& AssetName, FTransform Tra
 	// 3. 씬의 액터 목록(Level 배열)에 추가
 	AddActor(NewActor);
 
-	return NewActor;
-}
-
-AActor* UWorld::SpawnLineRiverActor(FTransform Transform, const FResourceManager& ResourceManager)
-{
-	// 1. 리소스 매니저에서 에셋(UStaticMesh) 검색
-	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh("Quad");
-	ULineSpotLightComponent* LineComponent = FObjectFactory::ConstructObject<ULineSpotLightComponent>();
-
-	//LineComponent->(LoadedMesh); // 컴포넌트에 에셋 장착
-	ULineSpotLightComponent* Comp = FObjectFactory::ConstructObject<ULineSpotLightComponent>();  // Initialize 자동 호출
-	Comp->SetRelativeLocation(Transform.Location);
-	Comp->SetRelativeRotation(Transform.Rotation);
-	Comp->SetRelativeScale3D(Transform.Scale);
-	NewActor->AddRootSceneComponent(Comp);
-	AddActor(NewActor);
 	return NewActor;
 }
