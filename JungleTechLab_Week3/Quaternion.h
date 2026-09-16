@@ -96,7 +96,11 @@ struct FQuaternion
 	{
 		return qvq(FQuaternion(FVector4(axis.x, axis.y, axis.z, degree)), point);
 	}
-
+	static FVector3 QuaternionRotationRadian(float radian, const FVector3 axis, FVector3 point)
+	{
+		float degree = radian * 180 / PI;
+		return qvq(FQuaternion(FVector4(axis.x, axis.y, axis.z, degree)), point);
+	}
 	// 축 하나만 도는 쿼터니언. FromEuler 와 같은 부호 규약(Pitch/Roll 반전)을 쓴다.
 	static FQuaternion MakeYaw(float Degree) { return FQuaternion(FVector4(0, 0, 1, Degree)); }
 	static FQuaternion MakePitch(float Degree) { return FQuaternion(FVector4(0, 1, 0, -Degree)); }
