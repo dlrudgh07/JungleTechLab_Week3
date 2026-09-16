@@ -65,6 +65,11 @@ void UPrimitiveComponent::SetBillboardTransfom()
 	SetRelativeRotation(CameraRot);
 }
 
+FVector4 UPrimitiveComponent::GetPrimitiveColor() const
+{
+	return PrimitiveColor;
+}
+
 void UPrimitiveComponent::SetPrimitiveColor(FVector4& NewColor)
 {
 	PrimitiveColor = NewColor;

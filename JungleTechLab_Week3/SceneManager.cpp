@@ -561,18 +561,34 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 				SubUV->SetLoop(loop);
 		}
 
-		static float Color[3] = { 0, 0, 0 };
-		if (ImGui::ColorEdit3("Color", Color))
+		//선택된 액터의 PrimitiveComponent 색을 그대로 표시한다
+		UPrimitiveComponent* ColorTarget = nullptr;
+		for (auto Element : AllComp)
 		{
-			for (auto Element : mSelectedActor->GetComponents())
+			if (Element->IsA(UPrimitiveComponent::GetClass()))
 			{
-				if (Element->IsA(UPrimitiveComponent::GetClass()))
+				ColorTarget = Element->Cast<UPrimitiveComponent>();
+				break;
+			}
+		}
+
+		if (ColorTarget)
+		{
+			const FVector4 CurrentColor = ColorTarget->GetPrimitiveColor();
+			float Color[4] = { CurrentColor.x, CurrentColor.y, CurrentColor.z, CurrentColor.w };
+
+			if (ImGui::ColorEdit4("Color", Color))
+			{
+				FVector4 NewColor = FVector4(Color[0], Color[1], Color[2], Color[3]);
+				for (auto Element : AllComp)
 				{
+					if (!Element->IsA(UPrimitiveComponent::GetClass()))
+						continue;
+
 					UPrimitiveComponent* PrimitiveComponent = Element->Cast<UPrimitiveComponent>();
 
 					if (PrimitiveComponent->IsOriginalColor())
 						PrimitiveComponent->SetOriginalColor(false);
-					FVector4 NewColor = FVector4(Color[0], Color[1], Color[2], 1.0f);
 					PrimitiveComponent->SetPrimitiveColor(NewColor);
 				}
 			}
