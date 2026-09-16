@@ -220,13 +220,6 @@ void FEngineLoop::Tick(bool bPumpMessages)
 
 		FGraphicsManager::Get().FlushLines();
 
-		// Gizmo
-		if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
-		{
-			FGraphicsManager::Get().GizmoPrepare();
-			FGraphicsManager::Get().RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(&FResourceManager::Get()));
-		}
-
 		// UUID 텍스쳐 랜더링
 		if (HasFlag(flags, EEngineShowFlags::SF_UUID))
 		{
@@ -240,6 +233,13 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				}
 				FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
 			}
+		}
+
+		// Gizmo
+		if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
+		{
+			FGraphicsManager::Get().GizmoPrepare();
+			FGraphicsManager::Get().RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(&FResourceManager::Get()));
 		}
 
 		// NDC Gizmo

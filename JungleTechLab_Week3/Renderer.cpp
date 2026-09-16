@@ -9,6 +9,7 @@ void URenderer::Create(HWND hWindow)
 	CreateNoDepthStencilState();
 	CreateStencilMarkState();
 	CreateStencilOutlineState();
+	CreateNoWriteDepthStencilState();
 	CreateNoColorWriteBlendState();
 	CreateRasterizerState();
 	CreateSamplerState();
@@ -521,6 +522,9 @@ void URenderer::PrepareShader()
 	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
 	DeviceContext->PSSetShader(SimplePixelShader, nullptr, 0);
 	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	DeviceContext->OMSetDepthStencilState(DepthStencilState, 0);
+
+
 	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	if (ConstantBuffer)
 	{
@@ -550,6 +554,7 @@ void URenderer::PrepareFontShader()
 void URenderer::PrepareTextureShader()
 {
 	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
+	DeviceContext->OMSetDepthStencilState(NoWriteDepthStencilState, 0);
 
 	if (ConstantBuffer)
 	{
@@ -884,6 +889,19 @@ void URenderer::CreateNoDepthStencilState()
 	Device->CreateDepthStencilState(&desc, &NoDepthStencilState);
 }
 
+void URenderer::CreateNoWriteDepthStencilState()
+{
+	D3D11_DEPTH_STENCIL_DESC desc = {};
+	desc.DepthEnable = TRUE;
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	desc.DepthFunc = D3D11_COMPARISON_LESS;
+	desc.StencilEnable = FALSE;
+
+	Device->CreateDepthStencilState(&desc, &NoWriteDepthStencilState);
+}
+
+
+
 void URenderer::CreateStencilMarkState()
 {
 	D3D11_DEPTH_STENCIL_DESC desc = {};
@@ -978,6 +996,7 @@ void URenderer::ReleaseDepthStencilState()
 {
 	if (DepthStencilState) { DepthStencilState->Release();  DepthStencilState = nullptr; }
 	if (NoDepthStencilState) { NoDepthStencilState->Release();  NoDepthStencilState = nullptr; }
+	if (NoWriteDepthStencilState) { NoWriteDepthStencilState->Release(); NoWriteDepthStencilState = nullptr; }
 	if (StencilMarkState) { StencilMarkState->Release();  StencilMarkState = nullptr; }
 	if (StencilOutlineState) { StencilOutlineState->Release();  StencilOutlineState = nullptr; }
 }
