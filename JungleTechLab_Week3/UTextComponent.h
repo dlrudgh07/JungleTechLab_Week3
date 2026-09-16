@@ -52,6 +52,8 @@ public:
 	//Bounding 박스 계산
 	void CalculateLocalBounds();
 
+	void SetBillboardTransfom() override;
+
 private:
 	std::wstring Text = L"";
 
