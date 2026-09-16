@@ -243,12 +243,10 @@ AActor* UWorld::SpawnSpotlightActor(const std::string& AssetName, FTransform Tra
 	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
 	ULineSpotLightComponent* LineComponent = FObjectFactory::ConstructObject<ULineSpotLightComponent>();
 
-	//LineComponent->(LoadedMesh); // 컴포넌트에 에셋 장착
-	ULineSpotLightComponent* Comp = FObjectFactory::ConstructObject<ULineSpotLightComponent>();  // Initialize 자동 호출
-	Comp->SetRelativeLocation(Transform.Location);
-	Comp->SetRelativeRotation(Transform.Rotation);
-	Comp->SetRelativeScale3D(Transform.Scale);
-	NewActor->AddRootSceneComponent(Comp);
+	LineComponent->SetRelativeLocation(Transform.Location);
+	LineComponent->SetRelativeRotation(Transform.Rotation);
+	//LineComponent->SetRelativeScale3D(Transform.Scale);
+	NewActor->AddRootSceneComponent(LineComponent);
 	AddActor(NewActor);
 	return NewActor;	
 }

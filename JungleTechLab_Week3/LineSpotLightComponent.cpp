@@ -5,10 +5,13 @@
 #include <cmath>
 #include "Vector.h"
 #include "GraphicsManager.h"
+#include "Transform.h"
 void ULineSpotLightComponent::Initialize()
 {
 	HitMesh = FResourceManager::Get().GetStaticMesh("Sphere");   // 
 	UpdateBounds();
+	SetRelativeScale3D(FVector(0.3f));
+		
 }
 
 void ULineSpotLightComponent::AddRenderInfos(TArray<FRenderInfo>* Out) const
@@ -40,13 +43,6 @@ FBoxSphereBounds ULineSpotLightComponent::GetLocalBounds() const
 	return HitMesh ? HitMesh->LocalBounds : FBoxSphereBounds{};
 }
 
-void ULineSpotLightComponent::GetVertices(std::vector<FVertexSimple>& OutVertices) const
-{
-}
-
-void ULineSpotLightComponent::GetIndices(std::vector<uint32>& OutIndices) const
-{
-}
 
 void ULineSpotLightComponent::Update(TArray<FRenderInfo>* Out, float Dt)
 {
@@ -58,14 +54,19 @@ void ULineSpotLightComponent::Update(TArray<FRenderInfo>* Out, float Dt)
 
 void ULineSpotLightComponent::DrawCone() const
 {
-	FVector T= GetTransformMatrix().MakeMatrix().TransformPosition(0);
+	
+	FTransform OriginTransform = GetTransformMatrix();
+	FMatrix R = OriginTransform.Rotation.ToMatrix() * FMatrix::Translation(OriginTransform.Location);
 	//단위 : radian
+	FVector T;
 	T.y = tan(OuterAngle)*length;
-	for (int t = 0;t < 360;t += circleDensity)
+	for (int t = 0;t < Segments;++t)
 	{
-		T.x = length * std::cos((float)t*PI/180);
-		T.z = length * std::sin((float)t*PI/180);
-	FGraphicsManager::Get().DrawLine(Point, T,LineColor);
+		T.x = length * std::cos((float)t*PI*2/ Segments);
+		T.z = length * std::sin((float)t*PI*2/ Segments);
+
+		
+	FGraphicsManager::Get().DrawLine(OriginTransform.Location, R.TransformPosition(FVector(T.x,T.y,T.z)), LineColor);
 	}
 	
 }
