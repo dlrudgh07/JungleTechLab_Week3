@@ -269,6 +269,8 @@ void URenderer::CreateShader()
 	ID3DBlob* pixelshaderCSO;
 	ID3DBlob* LineVertexshaderCSO;
 	ID3DBlob* LinePixelshaderCSO;
+	ID3DBlob* GizmoVertexshaderCSO;
+	ID3DBlob* GizmoPixelshaderCSO;
 
 	HRESULT hr = D3DCompileFromFile(L"ShaderW0.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
 	if (FAILED(hr))
