@@ -3,6 +3,7 @@
 #include "SceneComponent.h"
 #include "FBoxSphereBounds.h"
 #include "Renderer.h"
+#include "Vector.h"
 
 class UPrimitiveComponent : public USceneComponent
 {
@@ -50,6 +51,7 @@ protected:
 
 
 	FBoxSphereBounds Bounds{};
+	FVector4 PrimitiveColor{ 1.f, 1.f, 1.f, 1.f };
 
 	//빌보드 옵션
 	//Primitive Component에서 빌보드 처리를 하진 않습니다.

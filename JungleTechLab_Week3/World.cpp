@@ -13,7 +13,9 @@
 #include "UTextComponent.h"
 #include "ParticleSubUVComponent.h"
 #include "ULineRiverComponent.h"
+#include "ParticleRainComponent.h"
 
+#include "LineSpotLightComponent.h"
 UWorld::~UWorld()
 {
 	for (AActor* CurrentActor : Actors)
@@ -197,13 +199,13 @@ AActor* UWorld::SpawnTextMeshActor(FTransform Transform, const FResourceManager&
 }
 
 
-AActor* UWorld::SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager)
+AActor* UWorld::SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager,const std::string& MaterialName)
 {
 	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
 	UParticleSubUVComponent* Comp = FObjectFactory::ConstructObject<UParticleSubUVComponent>();
 
 	Comp->SetStaticMesh(ResourceManager.GetStaticMesh("Quad"));
-	Comp->SetMaterial(0, ResourceManager.GetMaterial("SubUVMaterial"));
+	Comp->SetMaterial(0, ResourceManager.GetMaterial(MaterialName));
 
 	Comp->SetRelativeLocation(Transform.Location);
 	Comp->SetRelativeRotation(Transform.Rotation);
@@ -214,10 +216,29 @@ AActor* UWorld::SpawnParticleActor(FTransform Transform, const FResourceManager&
 	return NewActor;
 }
 
-AActor* UWorld::SpawnLineRiverActor(FTransform Transform, const FResourceManager& ResourceManager)
+AActor* UWorld::SpawnRainActor(FTransform Transform, const FResourceManager& ResourceManager)
+{
+	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+	UParticleRainComponent* Comp = FObjectFactory::ConstructObject<UParticleRainComponent>();
+
+	/*
+	Comp->SetStaticMesh(ResourceManager.GetStaticMesh("Quad"));
+	Comp->SetMaterial(0, ResourceManager.GetMaterial("SubUVMaterial"));
+	*/
+	Comp->SetRelativeLocation(Transform.Location);
+	Comp->SetRelativeRotation(Transform.Rotation);
+	Comp->SetRelativeScale3D(Transform.Scale);
+
+	NewActor->AddRootSceneComponent(Comp);
+	AddActor(NewActor);
+	return NewActor;
+}
+
+
+AActor* UWorld::SpawnSpotlightActor(const std::string& AssetName, FTransform Transform, const FResourceManager& ResourceManager)
 {
 	// 1. 리소스 매니저에서 에셋(UStaticMesh) 검색
-	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh("Quad");
+	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh(AssetName);
 	if (LoadedMesh == nullptr)
 	{
 		// 에셋을 못 찾았을 경우 에러 처리
@@ -240,5 +261,21 @@ AActor* UWorld::SpawnLineRiverActor(FTransform Transform, const FResourceManager
 	// 3. 씬의 액터 목록(Level 배열)에 추가
 	AddActor(NewActor);
 
+	return NewActor;
+}
+
+AActor* UWorld::SpawnLineRiverActor(FTransform Transform, const FResourceManager& ResourceManager)
+{
+	// 1. 리소스 매니저에서 에셋(UStaticMesh) 검색
+	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh("Quad");
+	ULineSpotLightComponent* LineComponent = FObjectFactory::ConstructObject<ULineSpotLightComponent>();
+
+	//LineComponent->(LoadedMesh); // 컴포넌트에 에셋 장착
+	ULineSpotLightComponent* Comp = FObjectFactory::ConstructObject<ULineSpotLightComponent>();  // Initialize 자동 호출
+	Comp->SetRelativeLocation(Transform.Location);
+	Comp->SetRelativeRotation(Transform.Rotation);
+	Comp->SetRelativeScale3D(Transform.Scale);
+	NewActor->AddRootSceneComponent(Comp);
+	AddActor(NewActor);
 	return NewActor;
 }

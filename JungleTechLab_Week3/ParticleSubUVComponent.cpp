@@ -1,17 +1,16 @@
 ﻿#include "ParticleSubUVComponent.h"
 #include "ResourceManager.h"
 #include "ObjectFactory.h"
-
+	
 void UParticleSubUVComponent::Initialize()
 {
-
+	bIsBillboard = true;
 }
 
 
 void UParticleSubUVComponent::Update(TArray<FRenderInfo>* outRenderInfos, float DeltaTime)
 {
 	Elapsed += DeltaTime;
-
 	UStaticMeshComponent::Update(outRenderInfos, DeltaTime);
 }
 
@@ -90,20 +89,3 @@ void UParticleSubUVComponent::DeserializeClass(const json::JSON& inJson)
 	if (Cols <= 0 || Rows <= 0)
 		throw std::runtime_error("Invalid SubUV grid");
 }
-
-//AActor* UParticleSubUVComponent::SpawnSubUVActor(FTransform Transform, const FResourceManager& RM)
-//{
-//	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
-//	UParticleSubUVComponent* Comp = FObjectFactory::ConstructObject<UParticleSubUVComponent>();
-//
-//	Comp->SetStaticMesh(RM.GetStaticMesh("Quad"));
-//	Comp->SetMaterial(0, RM.GetMaterial("SubUVMaterial"));
-//
-//	Comp->SetRelativeLocation(Transform.Location);
-//	Comp->SetRelativeRotation(Transform.Rotation);
-//	Comp->SetRelativeScale3D(Transform.Scale);
-//
-//	NewActor->AddRootSceneComponent(Comp);
-//	AddActor(NewActor);
-//	return NewActor;
-//}

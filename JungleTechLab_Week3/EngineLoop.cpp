@@ -68,7 +68,7 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 
 		}
 
-	
+	// made by 이경호
 	//********************로딩창 이미지 출력********************
 
 	// Initialize window infos
@@ -212,20 +212,13 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				FGraphicsManager::Get().RenderHighLight(clickedRenderInfo);
 			}
 
-			if (HasFlag(flags, EEngineShowFlags::SF_BoundingBoxes) && FGraphicsManager::Get().IsDrawAABB())
+			if (HasFlag(flags, EEngineShowFlags::SF_BoundingBoxes) && SelectedActor->GetRootComponent()->IsA(UPrimitiveComponent::GetClass()))
 			{
 				FGraphicsManager::Get().DrawAABB(static_cast<UPrimitiveComponent*>(SelectedActor->GetRootComponent())->GetWorldBounds());
 			}
 		}
 
 		FGraphicsManager::Get().FlushLines();
-
-		// Gizmo
-		if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
-		{
-			FGraphicsManager::Get().GizmoPrepare();
-			FGraphicsManager::Get().RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(&FResourceManager::Get()));
-		}
 
 		// UUID 텍스쳐 랜더링
 		if (HasFlag(flags, EEngineShowFlags::SF_UUID))
@@ -240,6 +233,13 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				}
 				FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
 			}
+		}
+
+		// Gizmo
+		if (HasFlag(flags, EEngineShowFlags::SF_Gizmo))
+		{
+			FGraphicsManager::Get().GizmoPrepare();
+			FGraphicsManager::Get().RenderOverlay(ViewportClient->mGizmo.GetGizmoRenderInfo(&FResourceManager::Get()));
 		}
 
 		// NDC Gizmo

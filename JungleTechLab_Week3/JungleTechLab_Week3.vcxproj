@@ -148,6 +148,7 @@
     <ClCompile Include="FBoxSphereBounds.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FName.cpp" />
+    <ClCompile Include="LineSpotLightComponent.cpp" />
     <ClCompile Include="NamePool.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Guid.cpp" />
@@ -173,6 +174,7 @@
     </ClCompile>
     <ClCompile Include="..\Test\Serialization\SceneSerializationTest.cpp" Condition="'$(SceneSerializationTests)'=='true'" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ParticleRainComponent.cpp" />
     <ClCompile Include="ParticleSubUVComponent.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
@@ -180,11 +182,13 @@
     <ClCompile Include="SceneData.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClInclude Include="BlockArena.h" />
+    <ClInclude Include="Boat.h" />
     <ClInclude Include="Circle.h" />
     <ClInclude Include="FFontAsset.h" />
     <ClInclude Include="FBoxSphereBounds.h" />
     <ClInclude Include="FName.h" />
     <ClInclude Include="FPath.h" />
+    <ClInclude Include="ParticleRainComponent.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="NameHashTable.h" />
@@ -260,6 +264,7 @@
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="StaticMeshComponent.h" />
     <ClInclude Include="ULineRiverComponent.h" />
+    <ClInclude Include="LineSpotLightComponent.h" />
     <ClInclude Include="UTextComponent.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="World.h" />

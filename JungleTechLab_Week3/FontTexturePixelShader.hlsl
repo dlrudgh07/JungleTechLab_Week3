@@ -16,16 +16,18 @@ struct PS_INPUT
     float2 uv : TEXCOORD;
 };
 
+
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
     float4 texColor = txDiffuse.Sample(samLinear, input.uv);
-
     //float4 ResultColor = input.color * texColor;
 
     //ResultColor.a = texColor.r;
     //texColor.a *= Tint.a;
     //return float4(1.0, 0.0, 0.0, 1.0);
+
+    // 투명이면 버림
+    clip(texColor.a * Tint.a - 0.01f);
+
     return texColor * Tint;
-    //return texColor;
-    //return float4(1.0, 0.0, 0.0, 1.0);
 }

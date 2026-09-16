@@ -162,6 +162,7 @@ void FGraphicsManager::RenderList(const TArray<FRenderInfo>& renderInfos)
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
 	}
+	//되돌리기
 	mRenderer->PrepareShader();
 }
 

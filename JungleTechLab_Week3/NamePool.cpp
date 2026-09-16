@@ -21,6 +21,8 @@ FNameIds	FNamePool::FindOrAdd(const char* Name, uint32 Length)
 	{
 		LowerBuffer[i] = FNameEntry::ToLower(Name[i]);
 	}
+	if (FNameEntry::StringCompare(LowerBuffer, "none", 4))
+		return (FNameIds(0, 0));
 
 	uint32 Hash = HashString(LowerBuffer, Length);
 	uint32 Existing = HashTable.Find(LowerBuffer, Length, Hash, Arena);

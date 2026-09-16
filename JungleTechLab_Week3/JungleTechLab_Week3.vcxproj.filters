@@ -192,6 +192,9 @@
     <ClCompile Include="FName.cpp">
       <Filter>Core\Types</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleRainComponent.cpp">
+      <Filter>Core\Component</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGui\imconfig.h">
@@ -407,6 +410,9 @@
     <ClInclude Include="Quaternion.h">
       <Filter>Core\Types</Filter>
     </ClInclude>
+    <ClInclude Include="ParticleRainComponent.h">
+      <Filter>Core\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderW0.hlsl">
@@ -421,6 +427,7 @@
     <FxCompile Include="FontVertexShader.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="DrawNDC.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Object.inl">

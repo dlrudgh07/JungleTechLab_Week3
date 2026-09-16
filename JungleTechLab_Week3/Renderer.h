@@ -35,7 +35,7 @@ struct FConstants
 	FMatrix World; //Model
 	FMatrix ViewProjection;
 	FVector4 Tint;          // rgb = 색, a = 섞는 비율
-	FVector4 UVTransform; // 현재 UV정보
+	FVector4 UVTransform=FVector4(1.0f, 1.0f, 0.0f, 0.0f); // 현재 UV정보
 };
 
 struct FConstantsNDC
@@ -63,6 +63,7 @@ public:
 	ID3D11DepthStencilView* DepthStencilView = nullptr;		// 그 메모리를 "출력 대상"으로 보는 뷰
 	ID3D11DepthStencilState* DepthStencilState = nullptr;	// 깊이 테스트용 상태
 	ID3D11DepthStencilState* NoDepthStencilState = nullptr;	// 깊이 테스트 안하는 상태
+	ID3D11DepthStencilState* NoWriteDepthStencilState = nullptr;	//  깊이 테스트는 적용하지만 쓰지는 않는 상태
 	ID3D11DepthStencilState* StencilMarkState = nullptr;	// 스텐실에 1 마킹용 상태
 	ID3D11DepthStencilState* StencilOutlineState = nullptr; // 아웃라인 그리기용
 
@@ -136,6 +137,7 @@ public:
 	void CreateConstantBufferNDC();
 	void CreateDepthStencilBuffer(UINT width, UINT height);
 	void CreateNoDepthStencilState();
+	void CreateNoWriteDepthStencilState();
 	void CreateDepthStencilState();
 	void CreateStencilMarkState();
 	void CreateStencilOutlineState();
