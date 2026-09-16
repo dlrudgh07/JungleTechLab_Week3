@@ -126,3 +126,13 @@ UObject* UObject::GetObjectByInternalIndex(uint32 internalIndex)
 	}
 	return nullptr;
 }
+
+FName UObject::GetName()
+{
+	return (Name);
+}
+
+void UObject::SetName(FString NewName)
+{
+	Name.SetName(NewName);
+}

@@ -420,6 +420,23 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 
 	if (mSelectedActor)
 	{
+		FName CurrentFName = mSelectedActor->GetName();
+		FString CurrentFString = CurrentFName.ToString();
+
+		ImGui::Text("FName: %s", CurrentFString.CStr());
+
+		uint32 CurrentComparisonIndex = CurrentFName.GetComparisonIndex();
+		uint32 CurrentDisplayIndex = CurrentFName.GetDisplayIndex();
+		ImGui::Text("FName CurrentComparisonIndex : %u", CurrentComparisonIndex);
+		ImGui::Text("FName CurrentDisplayIndex : %u", CurrentDisplayIndex);
+		ImGui::Text("SetName");
+		ImGui::SameLine();
+		char Buf[128] = "";
+		if (ImGui::InputText("##SetName", Buf, sizeof(Buf), ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			mSelectedActor->SetName(FString(Buf));
+		}
+
 		// Temporary variables to hold the values for ImGui input fields
 		const FTransform& originalTransform = mSelectedActor->GetTransform();
 
@@ -540,6 +557,7 @@ void FSceneManager::updateObjectListPanelGUI(const FGuiReference& guiReference)
 				{
 					ImGui::Text("Class: %s", object->GetRuntimeClass()->Name.CStr());
 					ImGui::Text("GUID: %s", object->ObjectID.GUID.ToString().CStr());
+					ImGui::Text("Name: %s", object->GetName().ToString().CStr());
 
 					// TODO: Move implement delete to where?
 					if (object->IsA<AActor>())

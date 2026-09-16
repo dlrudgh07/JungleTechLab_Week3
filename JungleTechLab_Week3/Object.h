@@ -6,6 +6,7 @@
 #include "TArray.h"
 #include "TSparseArray.h"
 #include "ObjectFactory.h"
+#include "FName.h"
 
 #include "Guid.h"
 
@@ -81,12 +82,17 @@ public:
 	static TSparseArray<UObject*>& GetGObjectArray() { return GUObjectArray; }
 	inline static uint64 GetGObjectRevision() { return GUObjectRevision; }
 
+	FName GetName();
+	void SetName(FString NewName);
+
 public:
 	static TSparseArray<UObject*> GUObjectArray;
+	
 
 protected:
 	UObject();
 	inline static uint64 GUObjectRevision = 0;
+	FName Name;
 
 private:
 
