@@ -66,7 +66,7 @@ private:
 
 
 	bool bMouseHit = false;
-	EViewModeIndex ViewMode = EViewModeIndex::VMI_Unlit;
+	EViewModeIndex ViewMode = EViewModeIndex::VMI_Solid;
 	// RayCast가 이번 프레임에 쏜 광선. 기즈모 드래그가 같은 광선을 다시 쓴다
 	FVector mRayNear;
 	FVector mRayFar;
