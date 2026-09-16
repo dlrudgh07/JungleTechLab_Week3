@@ -278,12 +278,14 @@ AActor* UWorld::SpawnLineRiverActor(FTransform Transform, const FResourceManager
 
 	MeshComponent->SetStaticMesh(LoadedMesh); // 컴포넌트에 에셋 장착
 
+	//MeshComponent->SetRelativeLocation(FVector(LineRiverComponent->GetRiverLength() / 2.f, LineRiverComponent->GetRiverWidth() / 2.f, 0.f));
 	MeshComponent->SetRelativeLocation(Transform.Location);
 	MeshComponent->SetRelativeRotation(FRotator(-90, 0, 0));
-	MeshComponent->SetRelativeScale3D(FVector(0.f, LineRiverComponent->GetRiverWidth(), LineRiverComponent->GetRiverLength()));
-	FVector4 QuadColor = FVector4(1.f, 1.f, 1.f, 1.f);
+	FVector QuadScale = FVector(0.015f, LineRiverComponent->GetRiverWidth(), LineRiverComponent->GetRiverLength()) * 1.01f;
+	MeshComponent->SetRelativeScale3D(QuadScale);
+	FVector4 QuadColor = FVector4(0.f, 0.27f, 0.55f, 1.f); 
 	MeshComponent->SetPrimitiveColor(QuadColor);
-	//MeshComponent->
+	MeshComponent->SetOriginalColor(false);
 
 	NewActor->AddComponent(MeshComponent);
 

@@ -388,7 +388,7 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	// ==========================================
 	// 디폴트 화이트 머티리얼 (단색 큐브용)
 	UMaterial* DefaultMaterial = FObjectFactory::ConstructObject<UMaterial>();
-	DefaultMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 0.0f);
+	DefaultMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	DefaultMaterial->BaseTexture = GetDefaultWhiteTexture(); // 매니저에 내장된 디폴트 화이트 UTexture
 	RegisterMaterial("DefaultMaterial", DefaultMaterial);
 

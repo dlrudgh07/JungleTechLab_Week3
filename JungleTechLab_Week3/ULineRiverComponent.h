@@ -74,6 +74,9 @@ private:
 
 	//sin 파형 웨이브 속도
 	float WaveSpeedWeight;
+	float WavePhaseWeight;
+
+	FVector LocalLoc;
 
 };
 

@@ -171,6 +171,13 @@ void AActor::SetLocation(FVector location)
 	{
 		RootComponent->SetRelativeLocation(location);
 	}
+	for (auto& Elem : Components)
+	{
+		if (Elem->IsA(USceneComponent::GetClass()))
+		{
+			static_cast<USceneComponent*>(Elem)->SetRelativeLocation(location);
+		}
+	}
 }
 
 void AActor::SetRotation(FRotator rotation)
@@ -178,6 +185,13 @@ void AActor::SetRotation(FRotator rotation)
 	if (RootComponent)
 	{
 		RootComponent->SetRelativeRotation(rotation);
+	}
+	for (auto& Elem : Components)
+	{
+		if (Elem->IsA(USceneComponent::GetClass()))
+		{
+			static_cast<USceneComponent*>(Elem)->SetRelativeRotation(rotation);
+		}
 	}
 }
 
@@ -187,6 +201,13 @@ void AActor::SetRotation(FQuaternion rotation)
 	{
 		RootComponent->SetRelativeRotation(rotation);
 	}
+	for (auto& Elem : Components)
+	{
+		if (Elem->IsA(USceneComponent::GetClass()))
+		{
+			static_cast<USceneComponent*>(Elem)->SetRelativeRotation(rotation);
+		}
+	}
 }
 
 void AActor::SetScale(FVector scale)
@@ -194,6 +215,13 @@ void AActor::SetScale(FVector scale)
 	if (RootComponent)
 	{
 		RootComponent->SetRelativeScale3D(scale);
+	}
+	for (auto& Elem : Components)
+	{
+		if (Elem->IsA(USceneComponent::GetClass()))
+		{
+			static_cast<USceneComponent*>(Elem)->SetRelativeScale3D(scale);
+		}
 	}
 }
 

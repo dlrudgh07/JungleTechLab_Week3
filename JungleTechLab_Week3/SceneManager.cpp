@@ -572,7 +572,8 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 
 					if (PrimitiveComponent->IsOriginalColor())
 						PrimitiveComponent->SetOriginalColor(false);
-					PrimitiveComponent->SetPrimitiveColor(FVector4(Color[0], Color[1], Color[2], 1.0f));
+					FVector4 NewColor = FVector4(Color[0], Color[1], Color[2], 1.0f);
+					PrimitiveComponent->SetPrimitiveColor(NewColor);
 				}
 			}
 		}

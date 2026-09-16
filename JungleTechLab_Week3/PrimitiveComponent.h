@@ -40,7 +40,7 @@ public:
 	void SetIsBillboard(bool pIsBillboard);
 
 	FVector4 GetPrimitiveColor() const;
-	void SetPrimitiveColor(FVector4 NewColor);
+	void SetPrimitiveColor(FVector4& NewColor);
 
 	const bool IsOriginalColor() const;
 	void SetOriginalColor(bool Value);
@@ -49,7 +49,6 @@ public:
 	//상속 컴포넌트 별로 다른 방향 처리를 해야한다면 override해야합니다.
 	virtual void SetBillboardTransfom();
 
-	void SetPrimitiveColor(FVector4& NewColor);
 
 protected:
 	virtual FBoxSphereBounds CalculateBounds(const FMatrix& LocalToWorld) const

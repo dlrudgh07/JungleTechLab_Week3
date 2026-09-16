@@ -14,10 +14,10 @@ void ULineRiverComponent::DeserializeClass(const json::JSON& inJson)
 
 void ULineRiverComponent::Initialize()
 {
-	TotalLineNum = 300;
+	TotalLineNum = 500;
 	RiverWidth = 5.f;
 	RiverLength = 50.f;
-	RiverDepth = 0.5f;
+	RiverDepth = 0.01f;
 	MinLineVelocity = 1.f;
 	MaxLineVelocity = 2.f;
 	MinLineLength = 0.5f;
@@ -25,14 +25,16 @@ void ULineRiverComponent::Initialize()
 
 	LineVertexCount = 10;
 	LineTime = 0.f;
-	WaveSpeedWeight = 3.0f;
+	WaveSpeedWeight = 5.0f;
+	WavePhaseWeight = 1.5f;
 
+	LocalLoc = GetForwardVector() * (RiverLength / 2.f) + GetRightVector() * (RiverWidth / 2.f);
 	InitializeLineRiver();
 
 	SetRelativeScale3D(FVector(0.f, RiverWidth, RiverLength));
 	PrimitiveColor = FVector4(1.f, 1.f, 1.f, 0.f);
 
-
+	//SetRelativeLocation(FVector(RiverLength / 2.f, RiverWidth / 2.f, 0.f));
 }
 
 void ULineRiverComponent::Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime)
@@ -72,9 +74,11 @@ void ULineRiverComponent::InitializeLineRiver()
 		line.LineVelocity = DistVelocity(RandomEngine);
 		line.LineWidth = DistWidth(RandomEngine);
 		line.LineLength = DistLength(RandomEngine);
+		//line.StartPoint = GetRelativeLocation() - LocalLoc + FVector(line.LineLength, line.LineWidth, 0.f);
 		line.StartPoint = GetRelativeLocation() + FVector(line.LineLength, line.LineWidth, 0.f);
 		line.LineDepth = DistDepth(RandomEngine);
 		line.Movement = FVector::dot(line.StartPoint, GetForwardVector());
+		line.StartPoint -= LocalLoc;
 		Lines.Add(line);
 	}
 }
@@ -88,8 +92,8 @@ void ULineRiverComponent::UpdateLine(float dt)
 	std::uniform_real_distribution<float> DistDepth(0.0f, RiverDepth);
 
 	//외각 라인 그려주기
-	FGraphicsManager::Get().DrawLine(GetRelativeLocation(), GetRelativeLocation() + GetForwardVector() * RiverLength, FVector4(1.f, 1.f, 1.f, 1.f));
-	FGraphicsManager::Get().DrawLine(GetRelativeLocation() + GetRightVector() * RiverWidth, GetRelativeLocation() + GetRightVector() * RiverWidth + GetForwardVector() * RiverLength, FVector4(1.f, 1.f, 1.f, 1.f));
+	FGraphicsManager::Get().DrawLine(GetRelativeLocation() - LocalLoc, GetRelativeLocation() - LocalLoc + GetForwardVector() * RiverLength, FVector4(1.f, 1.f, 1.f, 1.f));
+	FGraphicsManager::Get().DrawLine(GetRelativeLocation() - LocalLoc + GetRightVector() * RiverWidth, GetRelativeLocation() - LocalLoc + GetRightVector() * RiverWidth + GetForwardVector() * RiverLength, FVector4(1.f, 1.f, 1.f, 1.f));
 
 	for (FLineRiver& line : Lines)
 	{
@@ -102,7 +106,7 @@ void ULineRiverComponent::UpdateLine(float dt)
 			line.Movement = 0.f;
 			line.LineWidth = DistWidth(RandomEngine);
 			line.LineDepth = DistDepth(RandomEngine);
-			line.StartPoint = GetRelativeLocation() + FVector(0.f, line.LineWidth, line.LineDepth);
+			line.StartPoint = GetRelativeLocation() - LocalLoc + FVector(0.f, line.LineWidth, line.LineDepth);
 		}
 				
 		//버텍스 사이 간격 : 길이 / 버텍스 수
@@ -118,18 +122,17 @@ void ULineRiverComponent::UpdateLine(float dt)
 		{
 			Start = End;
 			float Angle = NoiseSpacing * (i + 1);
-			float AddNoise = FMath::Sin(FMath::DegreesToRadians(Angle) + LineTime * WaveSpeedWeight);
+			float AddNoise = FMath::Sin(FMath::DegreesToRadians(Angle) * WavePhaseWeight + LineTime * WaveSpeedWeight);
 			AddNoise *= 0.1f;
 			End = Straight + GetForwardVector() * VertexSpacing + GetRightVector() * AddNoise;
 			Straight += GetForwardVector() * VertexSpacing;
 
 			//모든 라인을 Draw Line에 추가
-			//FGraphicsManager::Get().DrawLine(Start, End, FVector4((float) i / 10.f, (float)i / 15.f, (float)i / 20.f, 1.f));
 			FGraphicsManager::Get().DrawLine(Start, End, FVector4(0.f, 0.f, 1.f - line.LineDepth, 1.f));
 		}
 
 		//line.StartPoint += GetForwardVector() * line.LineVelocity * dt;
-		line.StartPoint = GetRelativeLocation() + GetRightVector() * line.LineWidth + GetUpVector() * line.LineDepth + GetForwardVector() * line.Movement;
+		line.StartPoint = GetRelativeLocation() - LocalLoc + GetRightVector() * line.LineWidth + GetUpVector() * line.LineDepth + GetForwardVector() * line.Movement;
 	}
 }
 

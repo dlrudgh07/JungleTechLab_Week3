@@ -29,7 +29,6 @@ PS_INPUT mainVS(VS_INPUT input)
     
     output.position = mul(mul(float4(input.position.xyz, 1.0f), World), ViewProjection);
     output.color = float4(lerp(input.color.rgb, Tint.rgb, Tint.a), 1.0f);
-    
     output.uv = input.uv*UVTransform.xy+UVTransform.zw; 
     
     return output;
