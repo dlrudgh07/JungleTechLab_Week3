@@ -6,10 +6,12 @@
 
 void ULineRiverComponent::SerializeClass(json::JSON& outJson) const
 {
+	UPrimitiveComponent::SerializeClass(outJson);
 }
 
 void ULineRiverComponent::DeserializeClass(const json::JSON& inJson)
 {
+	UPrimitiveComponent::DeserializeClass(inJson);
 }
 
 void ULineRiverComponent::Initialize()

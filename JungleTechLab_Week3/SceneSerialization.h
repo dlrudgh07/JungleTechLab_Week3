@@ -1,8 +1,9 @@
-#pragma once
+﻿#pragma once
 #include "JsonUtil.h"
 #include "Object.h"
 #include <memory>
 #include <unordered_map>
+#include "Console.h"
 
 // A load transaction resolves references only against its own preloaded objects.
 class FSceneLoadScope
@@ -93,7 +94,10 @@ inline void ValidateSceneReferences(const json::JSON& Scene)
 		if (Value.JSONType() == json::JSON::Class::Null || Value.ToString() == "-1")
 			return;
 		if (Value.JSONType() != json::JSON::Class::String || !Guids.contains(Value.ToString()))
+		{
+			UE_LOG("throw : %s", Value.ToString().c_str());
 			throw std::runtime_error("Scene references an unregistered object or asset");
+		}
 	};
 	std::function<void(const json::JSON&)> Visit = [&](const json::JSON& Value) {
 		if (Value.JSONType() == json::JSON::Class::Object)
