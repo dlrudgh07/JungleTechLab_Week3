@@ -75,8 +75,6 @@ public:
 	void DrawLine(const FVector& start, const FVector& end, const FVector4& color);
 	void DrawWorldAxis();
 	void DrawAABB(const FBoxSphereBounds&& WorldBounds);
-	void SetDrawAABB(const bool bInputShowAABB) { bShowAABB = bInputShowAABB; }
-	bool IsDrawAABB() const { return bShowAABB; }
 	void DrawGrid(FTransform CameraTransform, float Offset, int32 Range);
 	void DrawGizmoNDC(const FMatrix& CameraViewRotationMatrix);
 	void FlushLines();

@@ -212,7 +212,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				FGraphicsManager::Get().RenderHighLight(clickedRenderInfo);
 			}
 
-			if (HasFlag(flags, EEngineShowFlags::SF_BoundingBoxes) && FGraphicsManager::Get().IsDrawAABB())
+			if (HasFlag(flags, EEngineShowFlags::SF_BoundingBoxes) && SelectedActor->GetRootComponent()->IsA(UPrimitiveComponent::GetClass()))
 			{
 				FGraphicsManager::Get().DrawAABB(static_cast<UPrimitiveComponent*>(SelectedActor->GetRootComponent())->GetWorldBounds());
 			}
