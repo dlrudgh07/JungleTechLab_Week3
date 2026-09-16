@@ -25,6 +25,10 @@ public:
 	void SerializeClass(json::JSON&) const override;
 	void DeserializeClass(const json::JSON&) override;
 	void SetScaleAndOffset(FVector4 sclaeOffset);
+	void  SetPlayRate(float rate) { PlayRate = rate; }
+	float GetPlayRate() const { return PlayRate; }
+	void  SetLoop(bool loop) { bLoop = loop; }
+	bool  GetLoop() const { return bLoop; }
 	//AActor* SpawnSubUVActor(FTransform Transform, const FResourceManager& RM);
 private:
 	int32 Cols=4; 
@@ -33,7 +37,7 @@ private:
 	float Elapsed=0.0f; //경과
 	float PlayRate=10.0f; //초당 몇칸넘길까
 	bool bLoop = true; 
-
+	
 	float scaleX=1;
 	float scaleY=1;
 	float offsetX=0;

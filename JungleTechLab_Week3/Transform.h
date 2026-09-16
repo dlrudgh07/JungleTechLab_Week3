@@ -23,7 +23,7 @@ struct FTransform
 	}
 	FVector Location = FVector(0);
 	FQuaternion Rotation;
-	FVector Scale = FVector(1);
+	FVector Scale = FVector(1); 
 
 	FMatrix MakeMatrix() const
 	{

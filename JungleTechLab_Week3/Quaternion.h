@@ -76,6 +76,11 @@ struct FQuaternion
 
 	}
 
+	FQuaternion ReverseRotate() 
+	{
+		return FQuaternion(X, Y, Z, -W);
+
+	}
 
 	//qvq* 최적화 구현함수
 	static FVector qvq(FQuaternion q, FVector v)
@@ -92,6 +97,15 @@ struct FQuaternion
 		return qvq(FQuaternion(FVector4(axis.x, axis.y, axis.z, degree)), point);
 	}
 
+	// 축 하나만 도는 쿼터니언. FromEuler 와 같은 부호 규약(Pitch/Roll 반전)을 쓴다.
+	static FQuaternion MakeYaw(float Degree) { return FQuaternion(FVector4(0, 0, 1, Degree)); }
+	static FQuaternion MakePitch(float Degree) { return FQuaternion(FVector4(0, 1, 0, -Degree)); }
+	static FQuaternion MakeRoll(float Degree) { return FQuaternion(FVector4(1, 0, 0, -Degree)); }
+
+	// 90도 고정 버전
+	static FQuaternion Yaw90() { return MakeYaw(90.0f); }
+	static FQuaternion Pitch90() { return MakePitch(90.0f); }
+	static FQuaternion Roll90() { return MakeRoll(90.0f); }
 
 // 기존 FMatrix::Rotate(P,Y,R)와 같은 회전. RotateX/Y가 왼손이라 Pitch/Roll 부호 반전
 	static FQuaternion FromEuler(const FRotator& R)

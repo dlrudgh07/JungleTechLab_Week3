@@ -15,7 +15,7 @@ struct FRenderInfo
 	
 	const struct FVertexSimple* CollisionVertices = nullptr;
 	uint32 CollisionVertexCount = 0;
-
+	
 	class UTexture* BaseTexture = nullptr;
 
 	//BlendMode 임시 설정
