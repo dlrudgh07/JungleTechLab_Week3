@@ -35,7 +35,7 @@ struct FConstants
 	FMatrix World; //Model
 	FMatrix ViewProjection;
 	FVector4 Tint;          // rgb = 색, a = 섞는 비율
-	FVector4 UVTransform; // 현재 UV정보
+	FVector4 UVTransform=FVector4(1.0f, 1.0f, 0.0f, 0.0f); // 현재 UV정보
 };
 
 struct FConstantsNDC

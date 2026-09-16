@@ -374,6 +374,7 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	if (!LoadTextureFromFile("FontTexture", "./Assets/DDS/FontAtlas.dds")) UE_LOG("Load Fail FontTexture");
 
 	if (!LoadTextureFromFile("FireTexture", "./Assets/FireAnimationTexture.png")) UE_LOG("Load Fail FireTexture");
+	if (!LoadTextureFromFile("GhostTexture", "./Assets/ghoast_animation_4x4.png")) UE_LOG("Load Fail FireTexture");
 
 	if (!LoadTextureFromFile("CrateTexture", "./Assets/crate.jpg")) UE_LOG("Load Fail Crate Texture");
 
@@ -403,11 +404,17 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	FontTexture->BaseTexture = GetTexture("FontTexture");
 	RegisterMaterial("FontTexture", FontTexture);
 
-	// SubUV 스프라이트 머티리얼
-	UMaterial* SubUVMaterial = FObjectFactory::ConstructObject<UMaterial>();
-	SubUVMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
-	SubUVMaterial->BaseTexture = GetTexture("FireTexture");
-	RegisterMaterial("SubUVMaterial", SubUVMaterial);
+	// 3-4. SubUV 스프라이트 머티리얼
+	UMaterial* FireMaterial = FObjectFactory::ConstructObject<UMaterial>();
+	FireMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	FireMaterial->BaseTexture = GetTexture("FireTexture");
+	RegisterMaterial("FireMaterial", FireMaterial);
+
+	// 3-5. Ghost 스프라이트 머티리얼
+	UMaterial* GhostMaterial = FObjectFactory::ConstructObject<UMaterial>();
+	GhostMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	GhostMaterial->BaseTexture = GetTexture("GhostTexture");
+	RegisterMaterial("GhostMaterial", GhostMaterial);
 
 	// 보트 머티리얼
 	UMaterial* BoatMaterial = FObjectFactory::ConstructObject<UMaterial>();
@@ -476,13 +483,29 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	QuadMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
 	QuadMesh->Initialize();
 	RegisterStaticMesh("Quad", QuadMesh);
-	
-	UStaticMesh* SubUVQuadMesh = FObjectFactory::ConstructObject<UStaticMesh>();
-	FBuffer* SubUVQuadBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices), SubUVQuadMesh->CPUVertices, SubUVQuadMesh->CPUIndices);
-	SubUVQuadMesh->VertexBuffer = SubUVQuadBuffer;
-	SubUVQuadMesh->StaticMaterials.Add(GetMaterial("SubUVMaterial"));
-	SubUVQuadMesh->Initialize();
-	RegisterStaticMesh("SubUVMesh", SubUVQuadMesh);
+
+	//fire
+	UStaticMesh* FireMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* FireBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices), FireMesh->CPUVertices, FireMesh->CPUIndices);
+	FireMesh->VertexBuffer = FireBuffer;
+	FireMesh->StaticMaterials.Add(GetMaterial("FireMaterial"));
+	FireMesh->Initialize();
+	RegisterStaticMesh("FireMaterial", FireMesh);
+
+	//fire
+	UStaticMesh* GhostMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* GhostBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices), GhostMesh->CPUVertices, GhostMesh->CPUIndices);
+	GhostMesh->VertexBuffer = GhostBuffer;
+	GhostMesh->StaticMaterials.Add(GetMaterial("GhostMaterial"));
+	GhostMesh->Initialize();
+	RegisterStaticMesh("GhostMaterial", GhostMesh);
+
+	//UStaticMesh* FireMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	//FBuffer* FireBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices), FireMesh->CPUVertices, FireMesh->CPUIndices);
+	//FireMesh->VertexBuffer = FireBuffer;
+	//FireMesh->StaticMaterials.Add(GetMaterial("FireMaterial"));
+	//FireMesh->Initialize();
+	//RegisterStaticMesh("FireMaterial", FireMesh);
 
 }
 

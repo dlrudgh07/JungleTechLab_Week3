@@ -68,7 +68,7 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 
 		}
 
-	
+	// made by 이경호
 	//********************로딩창 이미지 출력********************
 
 	// Initialize window infos

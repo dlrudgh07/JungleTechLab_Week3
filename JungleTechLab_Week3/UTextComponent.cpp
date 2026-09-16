@@ -203,6 +203,7 @@ void UTextComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
 		Info.LocalBoundsHalfExtent = FVector(0.5f, 0.5f, 0.5f);
 		Info.ObejctID = { Owner->ObjectID.GUID, Owner->ObjectID.InternalIndex };
 		Info.Color = Color;
+		Info.UVTransform = FVector4(1.0f, 1.0f, 0.f, 0.f);
 		//Info.Color = FVector4(1.f, 1.f, 1.f, 1.f); 
 		outRenderInfos->Add(Info);
 	}
@@ -263,6 +264,8 @@ void UTextComponent::SetHighLightQuadRenderInfo(TArray<FRenderInfo>* outRenderIn
 		HighLightInfo.LocalBoundsHalfExtent = LocalBounds.BoxHalfExtent;
 		HighLightInfo.ObejctID = { Owner->ObjectID.GUID, Owner->ObjectID.InternalIndex };
 		HighLightInfo.Color = FVector4(1.f, 1.f, 1.f, 0.f);
+		HighLightInfo.UVTransform = FVector4(1.f, 1.f, 0.f, 0.f);
+
 	}
 
 	HighLightInfo.WorldTransformMatrix = GetTransformMatrix().MakeMatrix();

@@ -55,7 +55,7 @@ void UPrimitiveComponent::SetIsBillboard(bool pIsBillboard)
 void UPrimitiveComponent::SetBillboardTransfom()
 {
 	//카메라의 반대 방향으로 회전을 설정합니다.
-	FQuaternion CameraRot = FEditorViewportClient::GetCamera().Transform.Rotation.Conjugate();
+	FQuaternion CameraRot = FEditorViewportClient::GetCamera().Transform.Rotation;
 	SetRelativeRotation(CameraRot);
 }
 

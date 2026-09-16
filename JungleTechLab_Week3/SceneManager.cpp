@@ -25,6 +25,7 @@
 
 #include "FrameTimer.h"
 #include "ActorComponent.h"
+#include "ParticleSubUVComponent.h"
 
 HIMC FSceneManager::s_savedImc = nullptr;
 bool FSceneManager::s_imeDisabled = false;
@@ -133,7 +134,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
 	// todo : 이건 추후 자동화해야할듯함
-	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh", "SubUVMesh", "Rain", "Boat"};
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh","Fire","Ghost","Spotlight","Rain","Boat"};
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
 	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
@@ -152,9 +153,17 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			{
 				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			}
-			else if (SelectedName == "SubUVMesh")
+			else if (SelectedName == "Fire")
 			{
-				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager, "FireMaterial");
+			}
+			else if (SelectedName == "Ghost")
+			{
+				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager, "GhostMaterial");
+			}
+			else if (SelectedName == "Spotlight")
+			{
+				AActor* newActor = mCurrentWorld->SpawnSpotlightActor("Sphere", { FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			}
 			else if (SelectedName == "Rain")
 			{
@@ -170,13 +179,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		}
 	}
 
-	////임시
-	//if (ImGui::Button("Spawn SubUV"))
-	//{
-	//	mCurrentWorld->SpawnSubUVActor(
-	//		{ FVector(0,0,0), FRotator(0,0,0), FVector(1,1,1) },
-	//		*guiReference.ResourceManager);
-	//}
+
 	
 	ImGui::SameLine();
 	if (ImGui::InputInt("Number of spawn", &spawnCount))
@@ -526,6 +529,32 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 				//활성화 중인지 편집중이라면 1, 아니라면 0이다.
 				bWasEditingLastFrame = ImGui::IsItemActive();
 			}
+		}
+
+		//Particle(suvUV)이면
+		for (auto Elem : AllComp)
+		{
+			if (!Elem->IsA(UParticleSubUVComponent::GetClass()))
+				continue;
+
+			UParticleSubUVComponent* SubUV = Elem->Cast<UParticleSubUVComponent>();
+			ImGui::SeparatorText("SubUV");
+
+			int32 cols = SubUV->GetCols();
+			if (ImGui::InputInt("Cols", &cols))
+				SubUV->SetCols(cols < 1 ? 1 : cols);
+
+			int32 rows = SubUV->GetRows();
+			if (ImGui::InputInt("Rows", &rows))
+				SubUV->SetRows(rows < 1 ? 1 : rows);
+
+			float rate = SubUV->GetPlayRate();
+			if (ImGui::DragFloat("Play Rate", &rate, 0.5f, 0.0f, 120.0f, "%.1f fps"))
+				SubUV->SetPlayRate(rate);
+
+			bool loop = SubUV->GetLoop();
+			if (ImGui::Checkbox("Loop", &loop))
+				SubUV->SetLoop(loop);
 		}
 
 		static float Color[3] = { 0, 0, 0 };

@@ -31,9 +31,10 @@ public:
 
 	AActor* SpawnStaticMeshActor(const std::string& AssetName, struct FTransform Transform, const FResourceManager& ResourceManager);
 	AActor* SpawnTextMeshActor(struct FTransform Transform, const FResourceManager& ResourceManager);
-	AActor* SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager);
-	AActor* SpawnRainActor(FTransform Transform, const FResourceManager& ResourceManager);
-
+ 	AActor* SpawnRainActor(FTransform Transform, const FResourceManager& ResourceManager);
+	AActor* SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager, const std::string& MaterialName);
+	AActor* SpawnSpotlightActor(const std::string& AssetName, FTransform Transform, const FResourceManager& ResourceManager);
+ 
 private:
 	int32 GetActorIndex(FGuid TargetGuid) const;
 

@@ -148,6 +148,7 @@
     <ClCompile Include="FBoxSphereBounds.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FName.cpp" />
+    <ClCompile Include="LineSpotLightComponent.cpp" />
     <ClCompile Include="NamePool.cpp" />
     <ClCompile Include="Gizmo.cpp" />
     <ClCompile Include="Guid.cpp" />
@@ -261,6 +262,7 @@
     <ClInclude Include="TSparseArray.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="StaticMeshComponent.h" />
+    <ClInclude Include="LineSpotLightComponent.h" />
     <ClInclude Include="UTextComponent.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="World.h" />
