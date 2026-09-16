@@ -2,6 +2,7 @@
 
 #include "SceneComponent.h"
 #include "FBoxSphereBounds.h"
+#include "Renderer.h"
 
 class UPrimitiveComponent : public USceneComponent
 {
@@ -33,6 +34,9 @@ public:
 
 
 	void UpdateBounds();
+
+	virtual void GetVertices(std::vector<FVertexSimple>& OutVertices)const {};
+	virtual void GetIndices(std::vector<uint32>& OutIndices)const {};
 
 protected:
 	virtual FBoxSphereBounds CalculateBounds(const FMatrix& LocalToWorld) const

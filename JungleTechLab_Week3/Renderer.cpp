@@ -167,7 +167,7 @@ void URenderer::ReleaseVertexBuffer(ID3D11Buffer* vertexBuffer)
 void URenderer::CreateLineVertexBuffer(uint32 maxVertices)
 {
 	D3D11_BUFFER_DESC vertexbufferdesc = {};
-	vertexbufferdesc.ByteWidth = maxVertices * sizeof(FVertexSimple);
+	vertexbufferdesc.ByteWidth = maxVertices * sizeof(FLineVertex);
 	vertexbufferdesc.Usage = D3D11_USAGE_DYNAMIC;
 	vertexbufferdesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexbufferdesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -300,22 +300,6 @@ void URenderer::CreateShader()
 		assert(false);
 	}
 
-	D3DCompileFromFile(L"FontTexturePixelShader.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
-
-	if (FAILED(hr))
-	{
-		UE_LOG("FontTexturePixelShader.hlsl compile failed.");
-		assert(false);
-	}
-
-	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &FontTexturePixelShader);
-
-	if (FAILED(hr))
-	{
-		UE_LOG("Create FontTexturePixelShader failed.");
-		assert(false);
-	}
-
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -331,6 +315,52 @@ void URenderer::CreateShader()
 		assert(false);
 	}
 
+	hr = D3DCompileFromFile(L"FontVertexShader.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertexshaderCSO, nullptr);
+	if (FAILED(hr))
+	{
+		UE_LOG("FontVertexShader.hlsl compile failed.");
+		assert(false);
+	}
+
+	hr = Device->CreateVertexShader(vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), nullptr, &FontVertexShader);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create FontVertexShader failed.");
+		assert(false);
+	}
+
+	D3DCompileFromFile(L"FontTexturePixelShader.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixelshaderCSO, nullptr);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("FontTexturePixelShader.hlsl compile failed.");
+		assert(false);
+	}
+
+	Device->CreatePixelShader(pixelshaderCSO->GetBufferPointer(), pixelshaderCSO->GetBufferSize(), nullptr, &FontPixelShader);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create FontTexturePixelShader failed.");
+		assert(false);
+	}
+
+	D3D11_INPUT_ELEMENT_DESC Fontlayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	hr = Device->CreateInputLayout(Fontlayout, ARRAYSIZE(Fontlayout), vertexshaderCSO->GetBufferPointer(), vertexshaderCSO->GetBufferSize(), &FontInputLayout);
+
+	if (FAILED(hr))
+	{
+		UE_LOG("Create FontInputLayout failed.");
+		assert(false);
+	}
+	   
 	//// Line용 Shader
 	D3DCompileFromFile(L"ShaderLine.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &LineVertexshaderCSO, nullptr);
 
@@ -342,7 +372,7 @@ void URenderer::CreateShader()
 
 	D3D11_INPUT_ELEMENT_DESC LineLayout[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }, 
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
@@ -391,6 +421,24 @@ void URenderer::ReleaseShader()
 	{
 		LineVertexShader->Release();
 		LineVertexShader = nullptr;
+	}
+
+	if (FontInputLayout)
+	{
+		FontInputLayout->Release();
+		FontInputLayout = nullptr;
+	}
+
+	if (FontVertexShader)
+	{
+		FontVertexShader->Release();
+		FontVertexShader = nullptr;
+	}
+
+	if (FontPixelShader)
+	{
+		FontPixelShader->Release();
+		FontPixelShader = nullptr;
 	}
 }
 
@@ -461,13 +509,14 @@ void URenderer::PrepareFontShader()
 {
 	ClearTextureCache(); // 프레임 렌더링 시작 전 캐시 초기화
 
-	DeviceContext->VSSetShader(SimpleVertexShader, nullptr, 0);
-	DeviceContext->PSSetShader(FontTexturePixelShader, nullptr, 0);
-	DeviceContext->IASetInputLayout(SimpleInputLayout);
+	DeviceContext->VSSetShader(FontVertexShader, nullptr, 0);
+	DeviceContext->PSSetShader(FontPixelShader, nullptr, 0);
+	DeviceContext->IASetInputLayout(FontInputLayout);
 	DeviceContext->OMSetBlendState(AlphaBlendState, nullptr, 0xffffffff);
 	if (ConstantBuffer)
 	{
 		DeviceContext->VSSetConstantBuffers(0, 1, &ConstantBuffer);
+		DeviceContext->PSSetConstantBuffers(0, 1, &ConstantBuffer); 
 	}
 
 	BindSampler(0, SamplerState.Get());	// texture mapping
@@ -594,7 +643,7 @@ void URenderer::RenderLines(const FLineVertex* vertices, uint32 numVertices)
 	{
 		return;
 	}
-	memcpy(lineBufferMSR.pData, vertices, numVertices * sizeof(FVertexSimple));
+	memcpy(lineBufferMSR.pData, vertices, numVertices * sizeof(FLineVertex));
 	DeviceContext->Unmap(LineVertexBuffer, 0);
 
 	// 직전에 메시 버퍼가 물려 있으므로 갈아끼워야 한다
@@ -764,7 +813,7 @@ void URenderer::CreateDepthStencilState()
 {
 	D3D11_DEPTH_STENCIL_DESC desc = {};
 	desc.DepthEnable = TRUE;							 // 깊이 테스트 켜기
-	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;    // 통과한 픽셀의 z를 기록
+	desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;    // 통과한 픽셀의 z를 기록
 	desc.DepthFunc = D3D11_COMPARISON_LESS;				 // 더 가까우면(작으면) 통과
 	desc.StencilEnable = FALSE;
 

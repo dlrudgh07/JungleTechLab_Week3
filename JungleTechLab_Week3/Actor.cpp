@@ -181,6 +181,14 @@ void AActor::SetRotation(FRotator rotation)
 	}
 }
 
+void AActor::SetRotation(FQuaternion rotation)
+{
+	if (RootComponent)
+	{
+		RootComponent->SetRelativeRotation(rotation);
+	}
+}
+
 void AActor::SetScale(FVector scale)
 {
 	if (RootComponent)

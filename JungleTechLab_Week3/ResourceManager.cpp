@@ -364,14 +364,12 @@ UTexture* FResourceManager::GetDefaultWhiteTexture() const
 	return GetTexture("DefaultWhite");
 }
 
-void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager)
+void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager) 
 {
 	// ==========================================
 	// [1] 텍스처 에셋 로드 및 등록
 	// ==========================================
-	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)
-	if (!LoadTextureFromFile("CrateTexture", "./Assets/FireAnimationTexture.png")) UE_LOG("Load Fail CrateTexture");
-	
+	// (LoadTextureFromFile 내부에서 파일 읽기 + UTexture 생성 + RegisterTexture 까지 한 번에 해줌)	
 	if (!LoadTextureFromFile("FontTexture", "./Assets/DDS/FontAtlas.dds")) UE_LOG("Load Fail FontTexture");
 
 	if (!LoadTextureFromFile("FireTexture", "./Assets/FireAnimationTexture.png")) UE_LOG("Load Fail FireTexture");
@@ -400,7 +398,7 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	FontTexture->BaseTexture = GetTexture("FontTexture");
 	RegisterMaterial("FontTexture", FontTexture);
 
-	// 3-4. suvUV 머티리얼 
+	// 3-4. SubUV 스프라이트 머티리얼
 	UMaterial* SubUVMaterial = FObjectFactory::ConstructObject<UMaterial>();
 	SubUVMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	SubUVMaterial->BaseTexture = GetTexture("FireTexture");
@@ -459,6 +457,14 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	QuadMesh->StaticMaterials.Add(GetMaterial("DefaultMaterial"));
 	QuadMesh->Initialize();
 	RegisterStaticMesh("Quad", QuadMesh);
+	
+	UStaticMesh* SubUVQuadMesh = FObjectFactory::ConstructObject<UStaticMesh>();
+	FBuffer* SubUVQuadBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices), SubUVQuadMesh->CPUVertices, SubUVQuadMesh->CPUIndices);
+	SubUVQuadMesh->VertexBuffer = SubUVQuadBuffer;
+	SubUVQuadMesh->StaticMaterials.Add(GetMaterial("SubUVMaterial"));
+	SubUVQuadMesh->Initialize();
+	RegisterStaticMesh("SubUVMesh", SubUVQuadMesh);
+
 }
 
 #include "SceneSerialization.h"

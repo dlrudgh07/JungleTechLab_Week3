@@ -404,6 +404,9 @@
     <ClInclude Include="NamePool.h">
       <Filter>Core\Types</Filter>
     </ClInclude>
+    <ClInclude Include="Quaternion.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ShaderW0.hlsl">
@@ -413,6 +416,9 @@
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="ShaderLine.hlsl">
+      <Filter>Rendering\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="FontVertexShader.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

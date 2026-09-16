@@ -55,6 +55,9 @@ public:
 
 	void AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const override;
 
+	void GetVertices(std::vector<FVertexSimple>& OutVertices)const override;
+	void GetIndices(std::vector<uint32>& OutIndices)const override;
+
 	REFLECT_CLASS(UStaticMeshComponent, UMeshComponent)
 
 private:

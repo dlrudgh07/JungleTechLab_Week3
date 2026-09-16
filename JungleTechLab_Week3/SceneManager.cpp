@@ -25,6 +25,9 @@
 #include "FrameTimer.h"
 #include "ActorComponent.h"
 
+HIMC FSceneManager::s_savedImc = nullptr;
+bool FSceneManager::s_imeDisabled = false;
+
 FSceneManager::FSceneManager()
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -61,7 +64,7 @@ void FSceneManager::Update(float DeltaTime)
 	}
 	if (bPendingLoadScene && PendingFileManager)
 	{
-		ExecuteLoadScene();
+		ExecuteLoadScene(*PendingFileManager);
 		bPendingLoadScene = false;
 	}
 
@@ -73,6 +76,9 @@ void FSceneManager::Update(float DeltaTime)
 
 void FSceneManager::UpdateGUI(const FGuiReference& guiReference)
 {
+	//한글 입력 버그 방지
+	UpdateImeAssociation();
+
 	//ImGui
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -126,7 +132,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
 	// todo : 이건 추후 자동화해야할듯함
-	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh"};
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh","SubUVMesh"};
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
 	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
@@ -145,6 +151,10 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			{
 				AActor* newActor = mCurrentWorld->SpawnTextMeshActor({ FVector(0, 0, 0), FRotator(0, 90, 90), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			}
+			else if (SelectedName == "SubUVMesh")
+			{
+				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+			}
 			else
 			{
 				// Factory를 통해 UStaticMeshComponent를 가진 진짜 액터를 스폰
@@ -155,13 +165,13 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 		}
 	}
 
-	//임시
-	if (ImGui::Button("Spawn SubUV"))
-	{
-		mCurrentWorld->SpawnSubUVActor(
-			{ FVector(0,0,0), FRotator(0,0,0), FVector(1,1,1) },
-			*guiReference.ResourceManager);
-	}
+	////임시
+	//if (ImGui::Button("Spawn SubUV"))
+	//{
+	//	mCurrentWorld->SpawnSubUVActor(
+	//		{ FVector(0,0,0), FRotator(0,0,0), FVector(1,1,1) },
+	//		*guiReference.ResourceManager);
+	//}
 	
 	ImGui::SameLine();
 	if (ImGui::InputInt("Number of spawn", &spawnCount))
@@ -204,9 +214,9 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	{
 		/* -------------사용법--------------------
 		bool b시각화대상 = HasFlag(guiReference.ViewportClient->GetShowFlags(), EEngineShowFlags::SF_시각화대상);
-		if (ImGui::Checkbox("BillBoard", &b시각화대상))
+		if (ImGui::Checkbox("시각화대상", &b시각화대상))
 		{
-			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_Primitives, b시각화대상);
+			guiReference.ViewportClient->SetShowFlag(EEngineShowFlags::SF_시각화대상, b시각화대상);
 		}
 		*/
 		bool bShowWorldAxis = HasFlag(guiReference.ResourceManager->IniConfig.GetShowFlags(), EEngineShowFlags::SF_WorldAxis);
@@ -329,16 +339,23 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	ImGui::SetNextItemWidth(itemWidth);
 	ImGui::DragFloat("##CamLocZ", &camera.Transform.Location.z, 0.1f, 10.0f);
 
+	// 회전은 쿼터니언으로 보관하므로 각도로 풀어서 편집하고 바뀌면 다시 변환한다
+	FRotator camEuler = camera.Transform.Rotation.ToEuler();
+	bool camRotChanged = false;
 	ImGui::Text("Rotation   ");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	ImGui::DragFloat("##CamRotX", &camera.Transform.Rotation.Roll, 0.1f, 180.0f);
+	camRotChanged |= ImGui::DragFloat("##CamRotX", &camEuler.Roll, 0.1f, 180.0f);
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	ImGui::DragFloat("##CamRotY", &camera.Transform.Rotation.Pitch, 0.1f, 180.0f);
+	camRotChanged |= ImGui::DragFloat("##CamRotY", &camEuler.Pitch, 0.1f, 180.0f);
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	ImGui::DragFloat("##CamRotZ", &camera.Transform.Rotation.Yaw, 0.1f, 180.0f);
+	camRotChanged |= ImGui::DragFloat("##CamRotZ", &camEuler.Yaw, 0.1f, 180.0f);
+	if (camRotChanged)
+	{
+		camera.Transform.Rotation = FQuaternion::FromEuler(camEuler);
+	}
 	//ImGui::Checkbox("Depth Test", &renderer->bDepthTestEnabled);
 	//ImGui::TextUnformatted(renderer->bDepthTestEnabled
 	//	? "ON : orange (near) stays in front"
@@ -442,11 +459,8 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 
 		// Get the current transform of the clicked actor
 		FVector translationInput = originalTransform.Location;
-		FVector rotationInput = {
-			originalTransform.Rotation.Roll,
-			originalTransform.Rotation.Pitch,
-			originalTransform.Rotation.Yaw
-		};
+		const FRotator euler = originalTransform.Rotation.ToEuler();   // 표시용으로만 각도로 풀어냄
+		FVector rotationInput = { euler.Roll, euler.Pitch, euler.Yaw };
 		FVector scaleInput = originalTransform.Scale;
 
 		// Display and edit the transform properties using ImGui input fields
@@ -475,20 +489,31 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 		{
 			if (Elem->IsA(UTextComponent::GetClass()))
 			{
+				//직전에 활성 상태였는지
 				UTextComponent* TextComp = Elem->Cast<UTextComponent>();
-				std::wstring text = TextComp->GetText();
-
-				std::string text_ToString = WStringToString(text);
-
+				//bool bIsEditing = ImGui::IsItemActivated();
 				static char buffer[256] = {};
-				strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
 
+				static bool bWasEditingLastFrame = false;
+
+				if (LastComp != TextComp || !bWasEditingLastFrame)
+				{
+					std::wstring text = TextComp->GetText();
+
+					std::string text_ToString = WStringToString(text);
+
+					strncpy_s(buffer, text_ToString.c_str(), sizeof(buffer) - 1);
+
+					LastComp = TextComp;
+				}				
 				//글자가 바뀐다면
-				if (ImGui::InputText("Text", buffer, sizeof(buffer), 0))
-				{					
+				if (ImGui::InputText("Text", buffer, sizeof(buffer)))
+				{
 					TextComp->SetText(StringToWString(buffer));
-					
 				}
+
+				//활성화 중인지 편집중이라면 1, 아니라면 0이다.
+				bWasEditingLastFrame = ImGui::IsItemActive();
 			}
 		}
 	}
@@ -672,7 +697,76 @@ void FSceneManager::SaveScene(std::string_view sceneName, const FFileManager& fi
 	}
 }
 
-void FSceneManager::ExecuteLoadScene()
+void FSceneManager::ExecuteLoadScene(const FFileManager& FileManager)
+{
+	// 파일 탐색기를 열고, 기본 파일명으로 PendingSceneName을 띄워줍니다.
+	FString absoluteFilePath = FileManager.OpenFileDialog(PendingSceneName, kSceneDataSuffix, kSceneDataDir);
+
+	// 유저가 탐색기에서 '취소'를 눌렀다면 로드를 중단합니다.
+	if (absoluteFilePath.Empty())
+	{
+		//UE_LOG("Scene load canceled by user.");
+		return;
+	}
+
+	FString jsonString;
+
+	try
+	{
+		// 탐색기에서 받아온 절대 경로(absoluteFilePath)를 이용해 바로 파일을 읽습니다.
+		jsonString = PendingFileManager->ReadFileToString(absoluteFilePath);
+	}
+	catch (...)
+	{
+		UE_LOG("Failed to load scene {}: file not found.", absoluteFilePath.CStr());
+		return;
+	}
+
+	try
+	{
+		auto Data = json::JSON::Load(jsonString);
+		if (!mResources)
+			throw std::runtime_error("Scene resource manager is not initialized");
+
+		FResourceManager& StagedResources = FResourceManager::Get();
+		StagedResources.ClearAll();
+		mResources->InitializeForLoad(StagedResources);
+
+		FSceneLoadScope Scope;
+		if (Data.hasKey("Version") &&
+			(Data.at("Version").JSONType() != json::JSON::Class::Integral || Data.at("Version").ToInt() > 1))
+			throw std::runtime_error("Unsupported scene version");
+
+		if (Data.hasKey("Version") && Data.at("Version").ToInt() == 1 && !Data.hasKey("Assets"))
+			throw std::runtime_error("Missing scene assets");
+
+		if (Data.hasKey("Assets"))
+		{
+			if (!Data.hasKey("Version") || Data.at("Version").ToInt() != 1)
+				throw std::runtime_error("Unsupported scene version");
+			StagedResources.DeserializeAssets(Data.at("Assets"));
+		}
+		else if (mGraphics)
+			StagedResources.InitializeDefaultAssets(mGraphics);
+
+		auto NewWorld = PreloadObject<UWorld>(Data.at("World"));
+		NewWorld->DeserializeClass(Data.at("World"));
+		ResetSelectedActor();
+		delete mCurrentWorld;
+		mCurrentWorld = NewWorld.release();
+		mResources->SwapAssets(StagedResources);
+
+		if (!Data.hasKey("Assets"))
+			UE_LOG("Legacy scene has no asset data; missing mesh references cannot be recovered.");
+	}
+	catch (const std::exception& Error)
+	{
+		UE_LOG("Failed to load scene %s: %s", absoluteFilePath.CStr(), Error.what());
+	}
+}
+
+/*
+void FSceneManager::ExecuteLoadScene(const FFileManager& FileManager)
 {
 	FString fileName = kSceneDataDir;
 	fileName += FString("/");
@@ -727,6 +821,10 @@ void FSceneManager::ExecuteLoadScene()
 		UE_LOG("Failed to load scene %s: %s", PendingSceneName.c_str(), Error.what());
 	}
 }
+*/
+
+
+
 void  FSceneManager::SetSelectedActor(AActor* actor)
 {
 	if (actor == nullptr)
@@ -776,6 +874,29 @@ std::wstring FSceneManager::StringToWString(const std::string& utf8)
 	std::wstring result(sizeNeeded, 0);
 	MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), result.data(), sizeNeeded);
 	return result;
+}
+
+void FSceneManager::SetHwnd(HWND& phwnd)
+{
+	hwnd = phwnd;
+}
+
+void FSceneManager::UpdateImeAssociation()
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	if (!io.WantTextInput && !s_imeDisabled)
+	{
+		// 지금 아무 텍스트 위젯도 입력을 원하지 않음 -> IME를 창에서 완전히 떼어냄
+		s_savedImc = ImmAssociateContext(hwnd, nullptr);
+		s_imeDisabled = true;
+	}
+	else if (io.WantTextInput && s_imeDisabled)
+	{
+		// 다시 어떤 위젯(InputText)이 텍스트 입력을 원함 -> IME를 원래대로 다시 연결
+		ImmAssociateContext(hwnd, s_savedImc);
+		s_imeDisabled = false;
+	}
 }
 
 const TArray<FRenderInfo>& FSceneManager::GetRenderInfos() const

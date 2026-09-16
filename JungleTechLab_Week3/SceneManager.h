@@ -8,6 +8,9 @@
 #include "RenderInfo.h"
 #include "enum.h"
 #include "GraphicsManager.h"
+#include "ActorComponent.h"
+#include <windows.h>
+#include <imm.h>
 
 inline constexpr std::string_view kSceneDataDir = "SceneData\\";
 inline constexpr std::string_view kSceneDataSuffix = ".Scene";
@@ -82,6 +85,10 @@ public:
 	//char -> wchar
 	std::wstring StringToWString(const std::string& utf8);
 
+	void SetHwnd(HWND& phwnd);	
+
+	void UpdateImeAssociation();
+
 private:
 	// 예약된 씬 작업을 저장할 변수들
 	FResourceManager* mResources = nullptr;
@@ -92,7 +99,7 @@ private:
 	const FFileManager* PendingFileManager = nullptr;
 
 	void ExecuteNewScene();
-	void ExecuteLoadScene();
+	void ExecuteLoadScene(const FFileManager&);
 
 
 
@@ -110,4 +117,10 @@ private:
 	void updateControlPanelGUI(const FGuiReference& guiReference);
 	void updatePropertyWindowGUI(const FGuiReference& guiReference);
 	void updateObjectListPanelGUI(const FGuiReference& guiReference);
+
+	UActorComponent* LastComp = nullptr;
+
+	HWND hwnd;
+	static HIMC s_savedImc; // 원래 IME 컨텍스트를 보관해둘 곳
+	static bool s_imeDisabled;
 };

@@ -32,9 +32,48 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	if (FAILED(hr)) { UE_LOG("Failed to initialize COM library."); }
 
 
+	//********************로딩창 이미지 출력********************
+	 //로딩 동안 보여줄 스플래시. 메인 창은 D3D 스왑체인이 덮어쓰므로 별도 팝업 창에 그린다
+		HWND splashWnd = nullptr;
+		if (HBITMAP splash = (HBITMAP)LoadImageW(nullptr, L"./Assets/ghoast.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE))
+		{
+			BITMAP bm; GetObject(splash, sizeof(bm), &bm);
+			const int w = GetSystemMetrics(SM_CXSCREEN);   // 화면 전체
+			const int h = GetSystemMetrics(SM_CYSCREEN);
+
+			WNDCLASSW splashClass = { 0, DefWindowProcW, 0, 0, 0, 0, 0, 0, 0, L"JungleSplash" };
+			RegisterClassW(&splashClass);
+			splashWnd = CreateWindowExW(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, L"JungleSplash", L"",
+				WS_POPUP | WS_VISIBLE, 0, 0, w, h, nullptr, nullptr, hInstance, nullptr);
+
+			HDC dc = GetDC(splashWnd);
+
+			// 1) 흰 배경
+			RECT full = { 0, 0, w, h };
+			FillRect(dc, &full, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+			// 2) 유령을 비율 유지해서 가운데. 화면 높이의 60% 로 맞춘다 (원하면 비율 조정)
+			const int drawH = static_cast<int>(h * 0.6f);
+			const int drawW = drawH * bm.bmWidth / bm.bmHeight;
+			const int drawX = (w - drawW) / 2;
+			const int drawY = (h - drawH) / 2;
+
+			HDC memDC = CreateCompatibleDC(dc);
+			SelectObject(memDC, splash);
+			SetStretchBltMode(dc, HALFTONE);
+			StretchBlt(dc, drawX, drawY, drawW, drawH, memDC, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
+			DeleteDC(memDC);
+			ReleaseDC(splashWnd, dc);
+			DeleteObject(splash);
+
+		}
+
+	
+	//********************로딩창 이미지 출력********************
+
 	// Initialize window infos
 	WCHAR WindowClass[] = L"JungleWindowClass";
-	WCHAR Title[] = L"Game Tech Lab";
+	WCHAR Title[] = L"Ghoast Engine";
 	WNDCLASSW wndclass = { 0, WndProc, 0, 0, 0, 0, 0, 0, 0, WindowClass };
 	RegisterClassW(&wndclass);
 
@@ -46,11 +85,11 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 
 	ShowWindow(hWnd, SW_SHOWMAXIMIZED);
 	UpdateWindow(hWnd);
-
 	RECT clientRect;
 	GetClientRect(hWnd, &clientRect);
 	int clientWidth = clientRect.right - clientRect.left;
 	int clientHeight = clientRect.bottom - clientRect.top;
+
 
 	RAWINPUTDEVICE rid = {};
 	rid.usUsagePage = 0x01;
@@ -73,7 +112,7 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 
 	// 매니저 할당 및 디바이스 주입	
 	FResourceManager::Get().Initialize(FGraphicsManager::Get().GetRenderer()->Device, FGraphicsManager::Get().GetRenderer()->DeviceContext);
-	FileManager = new FFileManager();
+	FileManager = new FFileManager(hWnd);
 
 	// 에셋 생성 로직을 ResourceManager에서만 처리
 	FResourceManager::Get().InitializeDefaultAssets(&FGraphicsManager::Get());
@@ -85,6 +124,12 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 	SceneManager->SetResourceManager(&FResourceManager::Get(), &FGraphicsManager::Get());
 	//SceneManager->RequestNewScene();
 	SceneManager->RequestNewScene();
+	SceneManager->SetHwnd(hWnd);
+
+	//로딩창 제거
+	Tick(false);
+	if (splashWnd) DestroyWindow(splashWnd);
+
 }
 
 

@@ -331,6 +331,10 @@ bool FString::Empty()
 {
 	return (mData->empty());
 }
+bool FString::Empty() const
+{
+	return (mData->empty());
+}
 
 char* FString::Data() const
 {

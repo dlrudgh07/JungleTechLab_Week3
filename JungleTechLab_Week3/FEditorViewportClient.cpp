@@ -95,16 +95,18 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 	{
 		// 컴포넌트 정보 가져오기
 		USceneComponent* RootCompnent = CurrentActor->GetRootComponent();
-		if (RootCompnent == nullptr || !RootCompnent->IsA(UStaticMeshComponent::GetClass()))
+
+		if (RootCompnent == nullptr || !RootCompnent->IsA(UPrimitiveComponent::GetClass()))
 			continue;
-		UStaticMeshComponent* StaticMeshComponent = static_cast<UStaticMeshComponent*>(RootCompnent);
-		if (StaticMeshComponent->GetStaticMesh() == nullptr)
+
+		UPrimitiveComponent* PrimitiveComponent = static_cast<UPrimitiveComponent*>(RootCompnent);
+		if (PrimitiveComponent == nullptr)
 			continue;
 
 		// ==========================================
 		// [Broad Phase]: World AABB vs World Ray
 		// ==========================================
-		FBoxSphereBounds WorldBounds = StaticMeshComponent->GetWorldBounds();
+		FBoxSphereBounds WorldBounds = PrimitiveComponent->GetWorldBounds();
 		float HitTimeAABB;
 
 		if (!IsRayIntersectAABB(RayOrigin, RayDirection, WorldBounds.Center, WorldBounds.BoxHalfExtent, HitTimeAABB))
@@ -120,7 +122,7 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 		// [Narrow Phase]: Local Triangle vs Local Ray
 		// ==========================================
 		// AABB 검사를 통과한 엑터들만 비싼 Inverse 연산을 수행
-		const FMatrix WorldToLocal = StaticMeshComponent->GetTransformMatrix().MakeMatrix().Inverse();
+		const FMatrix WorldToLocal = PrimitiveComponent->GetTransformMatrix().MakeMatrix().Inverse();
 		if (WorldToLocal == FMatrix::Zero) continue;
 
 		// 위치(Origin)는 TransformPosition으로 변환
@@ -129,9 +131,29 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 		// 방향(Direction)은 이동(Translation)을 무시해야 하므로 TransformVector로 변환!
 		const FVector LocalDir = WorldToLocal.TransformVector(RayDirection);
 
-		const std::vector<FVertexSimple>& Vertices = StaticMeshComponent->GetStaticMesh()->CPUVertices;
-		const std::vector<uint32>& Indices = StaticMeshComponent->GetStaticMesh()->CPUIndices;
-		uint32 IndexCount = static_cast<uint32>(Indices.size());
+		std::vector<FVertexSimple> Vertices;
+		PrimitiveComponent->GetVertices(Vertices);
+
+		if (Vertices.size() == 0) return;
+
+		std::vector<uint32> Indices;
+		PrimitiveComponent->GetIndices(Indices);
+
+		uint32 IndexCount = 0;
+		//인덱스 버퍼가 없는 거면 Vertex Buffer의 수로 한다.
+		if (Indices.size() == 0)
+		{
+			for (uint32 i = 0; i < Vertices.size(); i++)
+			{
+				Indices.push_back(i);
+			}
+
+			IndexCount = static_cast<uint32>(Indices.size());
+		}
+		else
+		{
+			IndexCount = static_cast<uint32>(Indices.size());
+		}
 
 		for (uint32 CurrentIndex = 0; CurrentIndex + 2 < IndexCount; CurrentIndex += 3)
 		{
@@ -169,7 +191,7 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 	FVector MoveDir(0.f, 0.f, 0.f);
 	if (!io.WantCaptureKeyboard)
 	{
-		const FMatrix R = FMatrix::Rotate(mCamera.Transform.Rotation);
+		const FMatrix R = mCamera.Transform.Rotation.ToMatrix();
 		const FVector Forward = R.GetUnitAxis(EAxis::X);
 		const FVector Right = R.GetUnitAxis(EAxis::Y);
 
@@ -301,7 +323,7 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 		if (mGizmo.eType == EGIZMO_TYPE::ROTATE)
 		{
 			// 링 평면 위에서 잰 각도. 시작 회전에 누적각을 한 번만 얹는다
-			FRotator newRotation;
+			FQuaternion newRotation;
 			if (mGizmo.GetDragRotation(mRayNear, mRayFar, newRotation))
 			{
 				//ClickedActor->SetRotation(newRotation);
@@ -418,7 +440,7 @@ void FEditorViewportClient::DeprojectScreenToWorld(int32 MouseX, int32 MouseY, f
 	const float xScale = yScale / Aspect;
 
 	// 3) 카메라 기저로 월드 방향 합성. 전방 성분이 1 이므로 정규화하면 안 된다
-	const FMatrix R = FMatrix::Rotate(mCamera.Transform.Rotation);
+	const FMatrix R = mCamera.Transform.Rotation.ToMatrix();
 	FVector V = R.GetUnitAxis(EAxis::X);                    // 전방 (성분 1)
 	V += R.GetUnitAxis(EAxis::Y) * (ndcX / xScale);         // 우측
 	V += R.GetUnitAxis(EAxis::Z) * (ndcY / yScale);         // 상방
@@ -440,7 +462,7 @@ void FEditorViewportClient::DeprojectScreenToWorldForOrtho(int32 MouseX, int32 M
 	const float orthoHeight = mCamera.mOrthoHeight;
 	const float orthoWidth = orthoHeight * Aspect;
 
-	const FMatrix R = FMatrix::Rotate(mCamera.Transform.Rotation);
+	const FMatrix R = mCamera.Transform.Rotation.ToMatrix();
 	const FVector Forward = R.GetUnitAxis(EAxis::X);
 	const FVector Right = R.GetUnitAxis(EAxis::Y);
 	const FVector Up = R.GetUnitAxis(EAxis::Z);
