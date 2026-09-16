@@ -660,7 +660,7 @@ void URenderer::RenderLines(const FLineVertex* vertices, uint32 numVertices)
 
 	if (numVertices > LineVertexCapacity)
 	{
-		if (ReAllocateUUIDVertexBuffer(numVertices) == false)
+		if (ReAllocateLineVertexBuffer(numVertices) == false)
 		{
 			numVertices = LineVertexCapacity;
 		}
@@ -772,26 +772,37 @@ void URenderer::RenderUUID(const FVertexSimple* vertices, uint32 numVertices)
 	DeviceContext->Draw(numVertices, 0);
 }
 
-void URenderer::RenderHighlight(FBuffer* pBuffer, FMatrix mViewProjectionMatrix, FMatrix Outline, const FRenderInfo& RI)
+void URenderer::RenderHighlight(
+	FBuffer* pBuffer,
+	FMatrix viewProjection,
+	FMatrix outline,
+	const FRenderInfo& renderInfo)
 {
-	// (a) 스텐실에 1 마킹. 색은 쓰지 않으므로 화면 변화 없음.
-	//     다른 오브젝트에 가려진 부분도 반드시 마킹해야 한다. 여기서 빠지면
-	//     (b)의 != 1 조건을 통과해 버려서 겹친 영역 전체가 단색으로 칠해진다.
-	DeviceContext->OMSetBlendState(NoColorWriteBlendState, nullptr, 0xffffffff);
+	PrepareShader();
+
+	// 이전 오브젝트의 Fire/Ghost 텍스처가 하이라이트에 사용되지 않게 한다.
+	BindTexture(0, DefaultWhiteTextureSRV.Get());
+
+	DeviceContext->OMSetBlendState(
+		NoColorWriteBlendState, nullptr, 0xffffffff);
 	DeviceContext->OMSetDepthStencilState(StencilMarkState, 1);
-	UpdateConstant(RI.WorldTransformMatrix, mViewProjectionMatrix);
+
+	UpdateConstant(
+		renderInfo.WorldTransformMatrix,
+		viewProjection);
 	RenderPrimitive(pBuffer);
 
-	// (b) 확대판을 단색으로. 스텐실 != 1 인 곳만 통과 -> 테두리
 	DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
 	DeviceContext->OMSetDepthStencilState(StencilOutlineState, 1);
-	UpdateConstant(Outline, mViewProjectionMatrix, FVector4(1.f, 0.6f, 0.f, 1.f));
+
+	UpdateConstant(
+		outline,
+		viewProjection,
+		FVector4(1.f, 0.6f, 0.f, 1.f));
 	RenderPrimitive(pBuffer);
 
-	// (c) 원상복구
 	DeviceContext->OMSetDepthStencilState(DepthStencilState, 0);
 }
-
 
 //=============================================
 

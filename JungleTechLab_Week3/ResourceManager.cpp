@@ -490,7 +490,7 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	FireMesh->VertexBuffer = FireBuffer;
 	FireMesh->StaticMaterials.Add(GetMaterial("FireMaterial"));
 	FireMesh->Initialize();
-	RegisterStaticMesh("FireMaterial", FireMesh);
+	RegisterStaticMesh("Fire", FireMesh);
 
 	//fire
 	UStaticMesh* GhostMesh = FObjectFactory::ConstructObject<UStaticMesh>();
@@ -498,7 +498,7 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	GhostMesh->VertexBuffer = GhostBuffer;
 	GhostMesh->StaticMaterials.Add(GetMaterial("GhostMaterial"));
 	GhostMesh->Initialize();
-	RegisterStaticMesh("GhostMaterial", GhostMesh);
+	RegisterStaticMesh("Ghost", GhostMesh);
 
 	//UStaticMesh* FireMesh = FObjectFactory::ConstructObject<UStaticMesh>();
 	//FBuffer* FireBuffer = GraphicsManager->CreateBuffer(Quad_vertices, sizeof(Quad_vertices), FireMesh->CPUVertices, FireMesh->CPUIndices);

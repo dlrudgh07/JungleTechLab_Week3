@@ -154,11 +154,11 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			}
 			else if (SelectedName == "Fire")
 			{
-				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager, "FireMaterial");
+				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager, "Fire");
 			}
 			else if (SelectedName == "Ghost")
 			{
-				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager, "GhostMaterial");
+				AActor* newActor = mCurrentWorld->SpawnParticleActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager, "Ghost");
 			}
 			else if (SelectedName == "Spotlight")
 			{
