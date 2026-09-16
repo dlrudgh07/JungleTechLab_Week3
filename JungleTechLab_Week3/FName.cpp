@@ -51,8 +51,7 @@ FString FName::ToString() const
 {
 	const FNameEntry* NameEntry = FNamePool::GetInstance().Resolve(DisplayIndex);
 
-	FString result = FString(std::string_view(NameEntry->Data, NameEntry->Length));
-	return (result);
+	return (FString(std::string_view(NameEntry->Data, NameEntry->Length)));
 
 }
 
