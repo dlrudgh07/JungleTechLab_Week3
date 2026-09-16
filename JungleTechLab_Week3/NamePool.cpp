@@ -2,7 +2,9 @@
 
 FNamePool::FNamePool()
 {
-	assert(StoreEntry("None", 4) == 0);
+	uint32 Hash = HashString("none", 4);
+	uint32 NewId = StoreEntry("None", 4);
+	HashTable.Insert(NewId, Hash);
 }
 
 FNamePool& FNamePool::GetInstance()
