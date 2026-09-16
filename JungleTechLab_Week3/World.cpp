@@ -199,13 +199,13 @@ AActor* UWorld::SpawnTextMeshActor(FTransform Transform, const FResourceManager&
 }
 
 
-AActor* UWorld::SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager,const std::string& MaterialName)
+AActor* UWorld::SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager,const std::string& MeshName)
 {
 	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
 	UParticleSubUVComponent* Comp = FObjectFactory::ConstructObject<UParticleSubUVComponent>();
 
-	Comp->SetStaticMesh(ResourceManager.GetStaticMesh("Quad"));
-	Comp->SetMaterial(0, ResourceManager.GetMaterial(MaterialName));
+	Comp->SetStaticMesh(ResourceManager.GetStaticMesh(MeshName));
+	//Comp->SetMaterial(0, ResourceManager.GetMaterial(MaterialName));
 
 	Comp->SetRelativeLocation(Transform.Location);
 	Comp->SetRelativeRotation(Transform.Rotation);
