@@ -10,6 +10,8 @@
 #define MEMORY_ALIGN 8
 #define HEADDER_SIZE 2
 
+#pragma warning(push)
+#pragma warning(disable: 4200)
 
 struct FNameEntry
 {
@@ -64,6 +66,9 @@ struct FNameEntry
 	}
 
 };
+
+#pragma warning(pop)
+
 
 struct FAllocateResult {
 	uint32 Id;
