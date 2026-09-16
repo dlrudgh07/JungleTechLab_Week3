@@ -9,7 +9,7 @@ class UParticleSubUVComponent : public UStaticMeshComponent
 {
 	REFLECT_CLASS(UParticleSubUVComponent, UStaticMeshComponent)
 public:
-	UParticleSubUVComponent() = default;
+	UParticleSubUVComponent() { bIsBillboard = true; }
 	virtual ~UParticleSubUVComponent() {  }
 
 

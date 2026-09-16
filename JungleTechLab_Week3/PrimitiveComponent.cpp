@@ -19,6 +19,7 @@ void UPrimitiveComponent::SerializeClass(json::JSON& outJson) const
 
 	outJson["Properties"]["PrimitiveColor"] = FVector4ToJson(PrimitiveColor);
 	outJson["Properties"]["bIsOriginalColor"] = bIsOriginalColor;
+	outJson["Properties"]["bIsBillboard"] = bIsBillboard;
 }
 void UPrimitiveComponent::DeserializeClass(const json::JSON& inJson)
 {
@@ -26,15 +27,19 @@ void UPrimitiveComponent::DeserializeClass(const json::JSON& inJson)
 
 	const json::JSON& propertiesJson = inJson.at("Properties");
 
-	if (!propertiesJson.hasKey("PrimitiveColor")
-		|| propertiesJson.at("PrimitiveColor").JSONType() != json::JSON::Class::Array
-		|| propertiesJson.at("PrimitiveColor").length() != 4)
+	if (propertiesJson.hasKey("PrimitiveColor") &&
+		(propertiesJson.at("PrimitiveColor").JSONType() != json::JSON::Class::Array
+		|| propertiesJson.at("PrimitiveColor").length() != 4))
 	{
 		throw std::runtime_error(std::format("{}: PrimitiveColor property requires an array of length 4", GetRuntimeClass()->Name));
 	}
 
-	PrimitiveColor = FVector4FromJson(propertiesJson.at("PrimitiveColor"));
-	bIsOriginalColor = BoolFromJson(propertiesJson.at("bIsOriginalColor"));
+	if (propertiesJson.hasKey("PrimitiveColor"))
+		PrimitiveColor = FVector4FromJson(propertiesJson.at("PrimitiveColor"));
+	if (propertiesJson.hasKey("bIsOriginalColor"))
+		bIsOriginalColor = BoolFromJson(propertiesJson.at("bIsOriginalColor"));
+	if (propertiesJson.hasKey("bIsBillboard"))
+		bIsBillboard = BoolFromJson(propertiesJson.at("bIsBillboard"));
 }
 
 void UPrimitiveComponent::UpdateBounds()

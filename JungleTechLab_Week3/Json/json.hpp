@@ -291,7 +291,8 @@ class JSON
         string ToString() const { bool b; return std::move( ToString( b ) ); }
         string ToString( bool &ok ) const {
             ok = (Type == Class::String);
-            return ok ? std::move( json_escape( *Internal.String ) ): string("");
+            // Escaping belongs to dump(); callers need the decoded string value.
+            return ok ? *Internal.String : string("");
         }
 
         double ToFloat() const { bool b; return ToFloat( b ); }

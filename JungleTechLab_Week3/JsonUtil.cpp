@@ -134,3 +134,10 @@ bool BoolFromJson(const json::JSON& Value)
 		throw std::runtime_error("Expected a boolean");
 	return Value.ToBool();
 }
+
+int32 IntegerFromJson(const json::JSON& Value, int32 Min, int32 Max)
+{
+	if (Value.JSONType() != json::JSON::Class::Integral || Value.ToInt() < Min || Value.ToInt() > Max)
+		throw std::runtime_error("Invalid scene integer");
+	return static_cast<int32>(Value.ToInt());
+}

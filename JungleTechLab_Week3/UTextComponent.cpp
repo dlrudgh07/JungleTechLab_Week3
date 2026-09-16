@@ -9,6 +9,54 @@
 #include "Actor.h"
 #include "FEditorViewportClient.h"
 #include "FQuad.h"
+#include "SceneSerialization.h"
+#include <Windows.h>
+
+void UTextComponent::SerializeClass(json::JSON& Out) const
+{
+	UPrimitiveComponent::SerializeClass(Out);
+	auto& P = Out["Properties"];
+	std::string Utf8;
+	if (!Text.empty())
+	{
+		const int Size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, Text.data(), static_cast<int>(Text.size()), nullptr, 0, nullptr, nullptr);
+		if (Size <= 0) throw std::runtime_error("Invalid UTF-16 text");
+		Utf8.resize(Size);
+		WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, Text.data(), static_cast<int>(Text.size()), Utf8.data(), Size, nullptr, nullptr);
+	}
+	P["Text"] = Utf8;
+	P["FontAssetGUID"] = ObjectReference(FontAsset);
+	P["Color"] = FVector4ToJson(Color);
+	P["FontScale"] = FontScale;
+}
+
+void UTextComponent::DeserializeClass(const json::JSON& In)
+{
+	UPrimitiveComponent::DeserializeClass(In);
+	const auto& P = In.at("Properties");
+	if (P.hasKey("Text"))
+	{
+		if (P.at("Text").JSONType() != json::JSON::Class::String) throw std::runtime_error("Invalid text");
+		const auto Utf8 = P.at("Text").ToString();
+		Text.clear();
+		if (!Utf8.empty())
+		{
+			const int Size = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, Utf8.data(), static_cast<int>(Utf8.size()), nullptr, 0);
+			if (Size <= 0) throw std::runtime_error("Invalid UTF-8 text");
+			Text.resize(Size);
+			MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, Utf8.data(), static_cast<int>(Utf8.size()), Text.data(), Size);
+		}
+	}
+	if (P.hasKey("FontAssetGUID")) FontAsset = ResolveReference<FFontAsset>(P.at("FontAssetGUID"));
+	if (P.hasKey("Color")) Color = FVector4FromJson(P.at("Color"));
+	if (P.hasKey("FontScale")) FontScale = NumberFromJson(P.at("FontScale"));
+	if (FontScale <= 0) throw std::runtime_error("Invalid font scale");
+	Release();
+	CPUVertices.clear();
+	LocalBounds = {};
+	PenX = PenY = 0;
+	bDirty = true; // Build GPU geometry on the next render after scene commit.
+}
 
 UTextComponent::UTextComponent()
 {
@@ -47,6 +95,7 @@ FFontAsset* UTextComponent::GetFontAsset() const
 void UTextComponent::SetFontAsset(FFontAsset* Font)
 {
 	FontAsset = Font;
+	bDirty = true;
 }
 
 void UTextComponent::BuildTextQuads()
@@ -128,7 +177,6 @@ void UTextComponent::BuildTextQuads()
 	//기존 글자 버퍼 해제
 	for (auto& Elem : PageBuffers)
 	{
-		Elem.second->VertexBuffer->Release();
 		delete Elem.second;
 	}
 
@@ -196,7 +244,7 @@ void UTextComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) const
 
 		FRenderInfo Info;
 		Info.VertexBuffer = buffer;
-		Info.BaseTexture = FResourceManager::Get().GetTexture(FontAsset->GetPageName(page));
+		Info.BaseTexture = FontAsset->GetPageTexture(page);
 		Info.BlendMode = EBlendMode::Translucent;
 		Info.WorldTransformMatrix = GetTransformMatrix().MakeMatrix();
 		Info.LocalBoundsCenter = FVector(0.0f, 0.0f, 0.0f);
@@ -214,9 +262,12 @@ void UTextComponent::Release()
 	//PageBuffers
 	for (auto& Pair : PageBuffers)
 	{
-		Pair.second->VertexBuffer->Release();
+		delete Pair.second;
 	}
 	PageBuffers.Reset();
+	delete HighLightBuffer;
+	HighLightBuffer = nullptr;
+	HighLightInfo = {};
 }
 
 void UTextComponent::SetHighLightQuadRenderInfo(TArray<FRenderInfo>* outRenderInfos)
@@ -250,6 +301,7 @@ void UTextComponent::SetHighLightQuadRenderInfo(TArray<FRenderInfo>* outRenderIn
 
 		//하이라이트 버퍼 생성
 		uint32 Count = Vertices.Num() * sizeof(FVertexSimple);
+		delete HighLightBuffer;
 		HighLightBuffer = FGraphicsManager::Get().CreateDynamicBuffer(Vertices.Data(), Count);
 		FGraphicsManager::Get().UpdateDynamicBuffer(HighLightBuffer->VertexBuffer.Get(), Vertices.Data(), Vertices.Num());
 
@@ -258,7 +310,7 @@ void UTextComponent::SetHighLightQuadRenderInfo(TArray<FRenderInfo>* outRenderIn
 		UpdateBounds();
 
 		HighLightInfo.VertexBuffer = HighLightBuffer;
-		HighLightInfo.BaseTexture = FResourceManager::Get().GetTexture(FontAsset->GetPageName(0));
+		HighLightInfo.BaseTexture = FontAsset->GetPageTexture(0);
 		HighLightInfo.BlendMode = EBlendMode::Translucent; 
 		HighLightInfo.LocalBoundsCenter = LocalBounds.Center;
 		HighLightInfo.LocalBoundsHalfExtent = LocalBounds.BoxHalfExtent;

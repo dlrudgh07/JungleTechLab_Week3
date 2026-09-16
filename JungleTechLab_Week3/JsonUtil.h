@@ -19,3 +19,4 @@ EPrimitive EPrimitiveFromJson(const json::JSON& json);
 float NumberFromJson(const json::JSON& Value);
 
 bool BoolFromJson(const json::JSON& Value);
+int32 IntegerFromJson(const json::JSON& Value, int32 Min = INT32_MIN, int32 Max = INT32_MAX);

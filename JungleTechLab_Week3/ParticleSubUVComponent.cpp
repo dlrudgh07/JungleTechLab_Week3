@@ -69,15 +69,15 @@ void UParticleSubUVComponent::DeserializeClass(const json::JSON& inJson)
 	UStaticMeshComponent::DeserializeClass(inJson);
 	const auto& P = inJson.at("Properties");
 	if (P.hasKey("Cols"))
-		Cols = static_cast<decltype(Cols)>(P.at("Cols").ToInt());
+		Cols = IntegerFromJson(P.at("Cols"), 1, 32767);
 	if (P.hasKey("Rows"))
-		Rows = static_cast<decltype(Rows)>(P.at("Rows").ToInt());
+		Rows = IntegerFromJson(P.at("Rows"), 1, 32767);
 	if (P.hasKey("Elapsed"))
 		Elapsed = NumberFromJson(P.at("Elapsed"));
 	if (P.hasKey("PlayRate"))
 		PlayRate = NumberFromJson(P.at("PlayRate"));
 	if (P.hasKey("bLoop"))
-		bLoop = static_cast<decltype(bLoop)>(P.at("bLoop").ToBool());
+		bLoop = BoolFromJson(P.at("bLoop"));
 	if (P.hasKey("scaleX"))
 		scaleX = NumberFromJson(P.at("scaleX"));
 	if (P.hasKey("scaleY"))
@@ -86,6 +86,6 @@ void UParticleSubUVComponent::DeserializeClass(const json::JSON& inJson)
 		offsetX = NumberFromJson(P.at("offsetX"));
 	if (P.hasKey("offsetY"))
 		offsetY = NumberFromJson(P.at("offsetY"));
-	if (Cols <= 0 || Rows <= 0)
+	if (Cols <= 0 || Rows <= 0 || Elapsed < 0 || PlayRate < 0 || static_cast<double>(Elapsed) * PlayRate > INT32_MAX)
 		throw std::runtime_error("Invalid SubUV grid");
 }

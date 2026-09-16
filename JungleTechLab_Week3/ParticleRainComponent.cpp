@@ -1,6 +1,7 @@
 ﻿#include "ParticleRainComponent.h"
 #include "GraphicsManager.h" 
-#include <cstdlib>           
+#include <cstdlib>
+#include "JsonUtil.h"
 
 
 float UParticleRainComponent::GetRandomFloat(float Min, float Max) const
@@ -75,15 +76,34 @@ void UParticleRainComponent::SerializeClass(json::JSON& OutJson) const
 {
 	USceneComponent::SerializeClass(OutJson);
 
-	// 현재는 동적으로 변화를 주지 않기때문에 저장할 값도 없음
+	OutJson["Properties"]["MaxRainDrops"] = MaxRainDrops;
+	OutJson["Properties"]["MaxSplashDrops"] = MaxSplashDrops;
+	OutJson["Properties"]["SpawnRadius"] = SpawnRadius;
+	OutJson["Properties"]["SpawnHeight"] = SpawnHeight;
+	OutJson["Properties"]["FloorZ"] = FloorZ;
+	OutJson["Properties"]["RainDropSpeed"] = RainDropSpeed;
+	OutJson["Properties"]["Gravity"] = Gravity;
+	OutJson["Properties"]["RainSpawnRate"] = RainSpawnRate;
 }
 
 void UParticleRainComponent::DeserializeClass(const json::JSON& InJson)
 {
 	USceneComponent::DeserializeClass(InJson);
 
-	// 로드할때는 initialize()를 호출하여 rain drop이 시작되도록 하자
-	Initialize();
+	const auto& P = InJson.at("Properties");
+	if (P.hasKey("MaxRainDrops")) MaxRainDrops = IntegerFromJson(P.at("MaxRainDrops"), 0, 1000000);
+	if (P.hasKey("MaxSplashDrops")) MaxSplashDrops = IntegerFromJson(P.at("MaxSplashDrops"), 0, 1000000);
+	if (P.hasKey("SpawnRadius")) SpawnRadius = NumberFromJson(P.at("SpawnRadius"));
+	if (P.hasKey("SpawnHeight")) SpawnHeight = NumberFromJson(P.at("SpawnHeight"));
+	if (P.hasKey("FloorZ")) FloorZ = NumberFromJson(P.at("FloorZ"));
+	if (P.hasKey("RainDropSpeed")) RainDropSpeed = NumberFromJson(P.at("RainDropSpeed"));
+	if (P.hasKey("Gravity")) Gravity = NumberFromJson(P.at("Gravity"));
+	if (P.hasKey("RainSpawnRate")) RainSpawnRate = NumberFromJson(P.at("RainSpawnRate"));
+	if (SpawnRadius < 0 || SpawnHeight < 0 || RainDropSpeed < 0 || Gravity < 0 || RainSpawnRate <= 0)
+		throw std::runtime_error("Invalid rain settings");
+	RainPool.assign(MaxRainDrops, FRainDrop{});
+	SplashPool.assign(MaxSplashDrops, FSplashDrop{});
+	RainSpawnTimer = 0; // Restart transient simulation using the saved emitter settings.
 }
 
 void UParticleRainComponent::SpawnRainDrop()

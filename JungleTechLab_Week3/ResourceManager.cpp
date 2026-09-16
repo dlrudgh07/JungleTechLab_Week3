@@ -126,7 +126,7 @@ bool FResourceManager::LoadFont_FNTFile(const FString& AssetName, const FString&
 		return false;
 	}
 	
-	FFontAsset* NewFont = new FFontAsset();
+	auto NewFont = std::unique_ptr<FFontAsset>(FObjectFactory::ConstructUnInitializedObject<FFontAsset>());
 	NewFont->SetFontName(AssetName);
 
 	std::string rawLine;
@@ -178,6 +178,7 @@ bool FResourceManager::LoadFont_FNTFile(const FString& AssetName, const FString&
 
 			//나중에 찾을 수 있게 인덱스와 이름을 저장
 			NewFont->AddPageName(PageId, FileName);
+			NewFont->SetPageTexture(PageId, GetTexture(FileName));
 		}
 		//문자 데이터 저장
 		else if (line.Find(FString("char"), 0) == 0)
@@ -210,7 +211,8 @@ bool FResourceManager::LoadFont_FNTFile(const FString& AssetName, const FString&
 	}
 
 	//등록
-	RegisterFontAsset(AssetName, NewFont);
+	RegisterFontAsset(AssetName, NewFont.get());
+	NewFont.release();
 	return true;
 }
 
@@ -257,7 +259,13 @@ TMap<FString, FString> FResourceManager::ParseKeyValueLine(const FString& line)
 void FResourceManager::RegisterFontAsset(const std::string& Name, FFontAsset* Font)
 {
 	assert(Font != nullptr && "Cannot register a null Font!");
-	FontAssetMap[Name] = Font;
+	if (Name.empty() || !Font) throw std::runtime_error("Invalid font registration");
+	for (const auto& [Key, Value] : FontAssetMap)
+	{
+		if (Key == Name && Value == Font) return;
+		if (Key == Name || Value == Font) throw std::runtime_error("Duplicate font registration");
+	}
+	FontAssetMap.emplace(Name, Font);
 }
 
 FFontAsset* FResourceManager::GetFontAsset(const std::string& Name) const
@@ -386,7 +394,7 @@ void FResourceManager::InitializeDefaultAssets(FGraphicsManager* GraphicsManager
 	// ==========================================
 	// 디폴트 화이트 머티리얼 (단색 큐브용)
 	UMaterial* DefaultMaterial = FObjectFactory::ConstructObject<UMaterial>();
-	DefaultMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 0.0f);
+	DefaultMaterial->TintColor = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 	DefaultMaterial->BaseTexture = GetDefaultWhiteTexture(); // 매니저에 내장된 디폴트 화이트 UTexture
 	RegisterMaterial("DefaultMaterial", DefaultMaterial);
 
@@ -505,6 +513,7 @@ void FResourceManager::SwapAssets(FResourceManager& Other)
 	StaticMeshMap.swap(Other.StaticMeshMap);
 	MaterialMap.swap(Other.MaterialMap);
 	TextureMap.swap(Other.TextureMap);
+	FontAssetMap.swap(Other.FontAssetMap);
 }
 void FResourceManager::SerializeAssets(json::JSON& Out) const
 {
@@ -524,6 +533,7 @@ void FResourceManager::SerializeAssets(json::JSON& Out) const
 	Save(TextureMap);
 	Save(MaterialMap);
 	Save(StaticMeshMap);
+	Save(FontAssetMap);
 	// References to unregistered resources must not silently produce broken scenes.
 	auto Check = [&](const UObject* O) {
 		if (O && !Saved.contains(O))
@@ -540,7 +550,7 @@ void FResourceManager::DeserializeAssets(const json::JSON& In)
 	std::unique_ptr<FSceneLoadScope> OwnScope;
 	if (!FSceneLoadScope::Current)
 		OwnScope = std::make_unique<FSceneLoadScope>();
-	if (!StaticMeshMap.empty() || !MaterialMap.empty() || !TextureMap.empty())
+	if (!StaticMeshMap.empty() || !MaterialMap.empty() || !TextureMap.empty() || !FontAssetMap.empty())
 		throw std::runtime_error("Asset load requires an empty resource manager");
 	if (In.JSONType() != json::JSON::Class::Array)
 		throw std::runtime_error("Assets requires array");
@@ -569,6 +579,11 @@ void FResourceManager::DeserializeAssets(const json::JSON& In)
 			if (StaticMeshMap.contains(Name))
 				throw std::runtime_error("Duplicate mesh name");
 			RegisterStaticMesh(Name, static_cast<UStaticMesh*>(Raw));
+		}
+		else if (Raw->IsA<FFontAsset>())
+		{
+			if (FontAssetMap.contains(Name)) throw std::runtime_error("Duplicate font name");
+			RegisterFontAsset(Name, static_cast<FFontAsset*>(Raw));
 		}
 		else
 			throw std::runtime_error("Unsupported asset class");

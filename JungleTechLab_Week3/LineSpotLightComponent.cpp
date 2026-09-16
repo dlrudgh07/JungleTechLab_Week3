@@ -6,6 +6,7 @@
 #include "Vector.h"
 #include "GraphicsManager.h"
 #include "Transform.h"
+#include "SceneSerialization.h"
 void ULineSpotLightComponent::Initialize()
 {
 	HitMesh = FResourceManager::Get().GetStaticMesh("Sphere");   // 
@@ -73,18 +74,27 @@ void ULineSpotLightComponent::DrawCone() const
 
 void ULineSpotLightComponent::SerializeClass(json::JSON& OutJson) const
 {
-//	UPrimitiveComponent::SerializeClass(OutJson);   // FIX: 부모 호출 (Transform 저장)
-//	OutJson["Properties"]["OuterAngle"] = OuterAngle;
-//	OutJson["Properties"]["Range"] = Range;
-//	OutJson["Properties"]["Segments"] = Segments;
+	UPrimitiveComponent::SerializeClass(OutJson);
+	auto& P = OutJson["Properties"];
+	P["OuterAngle"] = OuterAngle;
+	P["Length"] = length;
+	P["Segments"] = Segments;
+	P["LineColor"] = FVector4ToJson(LineColor);
+	P["Point"] = FVectorToJson(Point);
+	P["HitMeshGUID"] = ObjectReference(HitMesh);
 }
 
 void ULineSpotLightComponent::DeserializeClass(const json::JSON& InJson)
 {
 	UPrimitiveComponent::DeserializeClass(InJson);
-//	const auto& P = InJson.at("Properties");
-//	if (P.hasKey("OuterAngle")) OuterAngle = static_cast<float>(P.at("OuterAngle").ToFloat());
-//	if (P.hasKey("Range"))      Range = static_cast<float>(P.at("Range").ToFloat());
-//	if (P.hasKey("Segments"))   Segments = static_cast<int32>(P.at("Segments").ToInt());
-//	Initialize();   // FIX: LoadObject는 Initialize를 안 부른다
+	const auto& P = InJson.at("Properties");
+	if (P.hasKey("OuterAngle")) OuterAngle = NumberFromJson(P.at("OuterAngle"));
+	if (P.hasKey("Length")) length = NumberFromJson(P.at("Length"));
+	else if (P.hasKey("Range")) length = NumberFromJson(P.at("Range"));
+	if (P.hasKey("Segments")) Segments = IntegerFromJson(P.at("Segments"), 1, 100000);
+	if (length < 0) throw std::runtime_error("Invalid spotlight length");
+	if (P.hasKey("LineColor")) LineColor = FVector4FromJson(P.at("LineColor"));
+	if (P.hasKey("Point")) Point = FVectorFromJson(P.at("Point"));
+	if (P.hasKey("HitMeshGUID")) HitMesh = ResolveReference<UStaticMesh>(P.at("HitMeshGUID"));
+	UpdateBounds(); // Initialize would overwrite the restored scale.
 }

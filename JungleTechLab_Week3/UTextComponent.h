@@ -20,6 +20,8 @@ public:
 
 	// factory 에서 필요함
 	void Initialize() {};
+	void SerializeClass(json::JSON& Out) const override;
+	void DeserializeClass(const json::JSON& In) override;
 
 	virtual void Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime) override;
 

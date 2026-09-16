@@ -3,6 +3,8 @@
 #include "TMap.h"
 #include "Vector.h"
 #include "TArray.h"
+#include "Object.h"
+class UTexture;
 
 //한 글자가 담고 있는 폰트 정보
 struct FCharacterInfo
@@ -28,9 +30,14 @@ struct FCharacterInfo
 	//Kerning 데이터는 추후 추가할 것. 한글에는 없지만 영어에는 있다.
 };
 
-class FFontAsset
+class FFontAsset : public UObject
 {
+    REFLECT_CLASS(FFontAsset, UObject)
 public:
+	void SerializeClass(json::JSON& Out) const override;
+	void DeserializeClass(const json::JSON& In) override;
+	void SetPageTexture(int32 Page, UTexture* Texture) { PageTextures.Add(Page, Texture); }
+	UTexture* GetPageTexture(int32 Page) const { auto* Found = PageTextures.Find(Page); return Found ? *Found : nullptr; }
 	void AddCharInfo(int32 CharKey, FCharacterInfo Info);
 	//문자 Id에 따라 CharacterInfo를 반환
 	const FCharacterInfo* GetCharInfo(int32 CharId)const;
@@ -68,6 +75,7 @@ private:
 	//생성한 아틀라스 텍스처 이름을 저장합니다.
 	// Page 인덱스 번호로 해당하는 Texture의 이름을 들고 옵니다.
 	TMap<int32, FString> PageNames;
+	TMap<int32, UTexture*> PageTextures;
 
 	//common에서 읽을 데이터들
 	//줄 바꿈 높이

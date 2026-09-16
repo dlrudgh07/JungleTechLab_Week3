@@ -1,5 +1,26 @@
 # 씬 직렬화 구조와 `UObject` 파생 클래스 구현 가이드
 
+## 2026-09-17 추가 기능의 저장 정책
+
+| 대상 | 저장 데이터 | 로드 후 처리 |
+| --- | --- | --- |
+| UPrimitiveComponent | 색상, 원본 색상 사용, 빌보드 옵션 | 예전 파일에 없는 옵션은 생성자 기본값 유지 |
+| UParticleSubUVComponent | 시트 행/열, 재생 시간/속도, 반복, UV 설정 | 빌보드 기본값을 생성자에도 적용; 행/열과 시간 범위 검사 |
+| UParticleRainComponent | 풀 용량, 생성 반경/높이/주기, 바닥 높이, 낙하 속도, 중력 | 빗방울/물보라 풀과 타이머를 초기화하여 시뮬레이션 재시작 |
+| ULineSpotLightComponent | 각도, Length, 분할 수, 선 색상, Point, HitMeshGUID | 저장된 스케일을 유지하면서 GUID 참조와 바운드 복구 |
+| UTextComponent | UTF-8 문자열, FontAssetGUID, Color, FontScale 및 부모 속성 | 씬 교체 후 첫 렌더에서 글자/하이라이트 GPU 버퍼와 바운드 생성 |
+| FFontAsset | 문자 메트릭, 페이지 이름/인덱스, TextureGUID, 아틀라스 크기 | 선등록한 텍스처를 GUID로 참조; 텍스트는 페이지 텍스처 포인터 사용 |
+
+`UTextComponent`, `ULineSpotLightComponent`, `FFontAsset`를 팩토리에 등록했다. 폰트는 ResourceManager의 저장·로드·교체·삭제 수명주기에 포함된다. 새 폰트를 직접 생성할 때도 팩토리를 사용하고, 각 페이지에 `SetPageTexture()`로 등록된 UTexture를 연결해야 한다.
+
+폰트 메타데이터는 씬 안에 포함하므로 새 씬 로드에 원본 .fnt 파일은 필요하지 않다. 아틀라스 이미지는 다른 텍스처와 동일하게 SourcePath에서 읽는다. 폰트와 아틀라스 참조는 일반 UObject GUID 검증을 통과해야 한다.
+
+기존 씬에서 아예 저장하지 않았던 텍스트 내용이나 빈 스포트라이트 블록은 원래 값을 추론해 복구할 수 없다. 현재 월드를 새 구현으로 다시 저장해야 한다. 새 선택 필드가 없는 유효한 객체는 기본값으로 읽는다.
+
+JSON의 `ToString()`은 디코딩된 값을 반환하고, `dump()`만 이스케이프한다. 줄바꿈, 따옴표, 역슬래시를 읽을 때 다시 이스케이프하면 왕복 과정에서 값이 달라진다.
+
+검증용 실행 파일은 프로젝트에 `SceneSerializationTests=true` 속성을 주어 빌드한다. `Test/Serialization/SceneSerializationTest.cpp`가 실제 JSON 왕복, 굴림 폰트, 공유 GUID 참조, 이전 필드 기본값 및 잘못된 입력 거부를 검사한다. 실행 작업 디렉터리는 Assets가 있는 엔진 프로젝트 디렉터리다.
+
 ## 현재 로드 순서
 
 질문에서 정리한 개념이 맞다. 정확한 실행 순서는 다음과 같다.
@@ -36,7 +57,7 @@ flowchart TD
 }
 ```
 
-- `Assets`: `FResourceManager`가 소유한 텍스처, 머티리얼, 스태틱 메시
+- `Assets`: `FResourceManager`가 소유한 텍스처, 머티리얼, 스태틱 메시, 폰트
 - `World`: 월드가 소유한 액터와 각 액터가 소유한 컴포넌트
 - `ClassName`: `FObjectFactory`가 실제 클래스를 선택할 때 사용하는 이름
 - `Properties.GUID`: 객체의 영속 식별자
@@ -235,11 +256,12 @@ const bool bRegistered = FObjectFactory::RegisterClassInfo(
 
 ## 에셋 클래스를 추가할 때
 
-현재 `FResourceManager::DeserializeAssets()`는 아래 세 종류만 지원한다.
+현재 `FResourceManager::DeserializeAssets()`는 아래 네 종류를 지원한다.
 
 - `UTexture`
 - `UMaterial`
 - `UStaticMesh`
+- `FFontAsset` (UObject 파생 클래스이며 기존 이름 유지)
 
 예를 들어 `USkeletalMesh`를 추가한다면 다음 작업이 모두 필요하다.
 
