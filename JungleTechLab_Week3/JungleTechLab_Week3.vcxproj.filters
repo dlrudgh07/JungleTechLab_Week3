@@ -421,6 +421,7 @@
     <FxCompile Include="FontVertexShader.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="DrawNDC.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Object.inl">

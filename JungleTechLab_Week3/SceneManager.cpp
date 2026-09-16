@@ -17,6 +17,7 @@
 #include "Camera.h"
 #include "Console.h"
 #include "UTextComponent.h"
+#include "StaticMeshComponent.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
@@ -520,6 +521,36 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 
 				//활성화 중인지 편집중이라면 1, 아니라면 0이다.
 				bWasEditingLastFrame = ImGui::IsItemActive();
+			}
+		}
+
+		static float Color[3] = { 0, 0, 0 };
+		if (ImGui::ColorEdit3("Color", Color))
+		{
+			for (auto Element : mSelectedActor->GetComponents())
+			{
+				if (Element->IsA(UStaticMeshComponent::GetClass()))
+				{
+					UStaticMeshComponent* MeshComponent = Element->Cast<UStaticMeshComponent>();
+
+					UMaterial* Instance = MeshComponent->UMeshComponent::GetMaterial(0);
+
+					if (Instance == nullptr)
+					{
+						// 이 컴포넌트 전용 머티리얼을 하나 만들어 에셋 값을 복사해온다
+						Instance = FObjectFactory::ConstructObject<UMaterial>();
+						if (UMaterial* Src = MeshComponent->GetMaterial(0))   // 에셋 원본
+						{
+							Instance->BaseTexture = Src->BaseTexture;
+							Instance->TintColor = Src->TintColor;
+						}
+						MeshComponent->SetMaterial(0, Instance);
+
+						FResourceManager::Get().RegisterMaterial(
+							"MY_" + std::string(MeshComponent->ObjectID.GUID.ToString().CStr()), Instance);
+					}
+					Instance->TintColor = FVector4(Color[0], Color[1], Color[2], 1.0f);
+				}
 			}
 		}
 	}
