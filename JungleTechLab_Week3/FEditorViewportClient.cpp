@@ -47,7 +47,7 @@ static bool GetPrimitiveMesh(EPrimitive ePrimitive, const FVertexSimple*& OutVer
 }
 
 
-void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, float perspectiveRatio)
+void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, float perspectiveRatio, FIniConfig IniConfig)
 {
 	bMouseHit = false;
 
@@ -82,6 +82,12 @@ void FEditorViewportClient::RayCast(D3D11_VIEWPORT ViewportInfo, UWorld* World, 
 		return;
 	}
 
+	EEngineShowFlags flags = IniConfig.GetShowFlags();
+
+	if (!HasFlag(flags, EEngineShowFlags::SF_Primitives))
+	{
+		return;
+	}
 	// Object 탐색
 	// 광선의 출발점과 방향(정규화)을 월드 공간 기준으로 구합니다.
 	FVector RayOrigin = NearPoint;
@@ -255,7 +261,7 @@ void FEditorViewportClient::Update(float deltaTime, D3D11_VIEWPORT ViewportInfo,
 	}
 
 	
-	RayCast(ViewportInfo, sceneManager->GetCurrentWorld(), perspectiveRatio);
+	RayCast(ViewportInfo, sceneManager->GetCurrentWorld(), perspectiveRatio, IniConfig);
 
 
 	// 누른 순간에만 선택을 갱신한다. 떼는 것으로는 선택이 풀리지 않는다.
