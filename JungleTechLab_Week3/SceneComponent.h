@@ -4,6 +4,8 @@
 
 #include "Vector.h"
 #include "Quaternion.h"
+#include "enum.h"
+#include "Matrix.h"
 
 struct FTransform;
 
@@ -37,9 +39,13 @@ public:
 		UActorComponent::Update(OutRenderInfos, DeltaTime);
 	}
 
+	FVector GetForwardVector() const { return RelativeRotation.ToMatrix().GetUnitAxis(EAxis::X); }
+	FVector GetRightVector()   const { return RelativeRotation.ToMatrix().GetUnitAxis(EAxis::Y); }
+	FVector GetUpVector()      const { return RelativeRotation.ToMatrix().GetUnitAxis(EAxis::Z); }
+
 	REFLECT_CLASS(USceneComponent, UActorComponent)
 
-private:
+protected:
 	FVector RelativeLocation;
 	FQuaternion RelativeRotation;
 	FVector RelativeScale3D;

@@ -211,6 +211,7 @@
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="StaticMesh.cpp" />
     <ClCompile Include="StaticMeshComponent.cpp" />
+    <ClCompile Include="ULineRiverComponent.cpp" />
     <ClCompile Include="UTextComponent.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
@@ -262,6 +263,7 @@
     <ClInclude Include="TSparseArray.h" />
     <ClInclude Include="StaticMesh.h" />
     <ClInclude Include="StaticMeshComponent.h" />
+    <ClInclude Include="ULineRiverComponent.h" />
     <ClInclude Include="LineSpotLightComponent.h" />
     <ClInclude Include="UTextComponent.h" />
     <ClInclude Include="Vector.h" />

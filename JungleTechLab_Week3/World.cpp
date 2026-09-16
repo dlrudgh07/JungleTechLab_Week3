@@ -12,6 +12,7 @@
 #include "StaticMeshComponent.h"
 #include "UTextComponent.h"
 #include "ParticleSubUVComponent.h"
+#include "ULineRiverComponent.h"
 #include "ParticleRainComponent.h"
 
 #include "LineSpotLightComponent.h"
@@ -238,14 +239,7 @@ AActor* UWorld::SpawnSpotlightActor(const std::string& AssetName, FTransform Tra
 {
 	// 1. 리소스 매니저에서 에셋(UStaticMesh) 검색
 	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh(AssetName);
-	if (LoadedMesh == nullptr)
-	{
-		// 에셋을 못 찾았을 경우 에러 처리
-		return nullptr;
-	}
 
-
-	// 2. 팩토리를 통해 빈 액터와 컴포넌트 생성 후 에셋 할당
 	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
 	ULineSpotLightComponent* LineComponent = FObjectFactory::ConstructObject<ULineSpotLightComponent>();
 
@@ -254,6 +248,47 @@ AActor* UWorld::SpawnSpotlightActor(const std::string& AssetName, FTransform Tra
 	//LineComponent->SetRelativeScale3D(Transform.Scale);
 	NewActor->AddRootSceneComponent(LineComponent);
 	AddActor(NewActor);
-	return NewActor;
+	return NewActor;	
 }
 
+AActor* UWorld::SpawnLineRiverActor(FTransform Transform, const FResourceManager& ResourceManager)
+{
+	//팩토리를 통해 빈 액터와 컴포넌트 생성 후 에셋 할당
+	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+	ULineRiverComponent* LineRiverComponent = FObjectFactory::ConstructObject<ULineRiverComponent>();
+
+	LineRiverComponent->SetRelativeLocation(Transform.Location);
+	LineRiverComponent->SetRelativeRotation(Transform.Rotation);
+	LineRiverComponent->SetRelativeScale3D(Transform.Scale);
+
+	NewActor->AddRootSceneComponent(LineRiverComponent); // 액터의 루트로 등록
+
+	//리소스 매니저에서 에셋(UStaticMesh) 검색
+	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh("Quad");
+	if (LoadedMesh == nullptr)
+	{
+		// 에셋을 못 찾았을 경우 에러 처리
+		return nullptr;
+	}
+
+	//바닥으로 쓸 쿼드
+	UStaticMeshComponent* MeshComponent = FObjectFactory::ConstructObject<UStaticMeshComponent>();
+
+	MeshComponent->SetStaticMesh(LoadedMesh); // 컴포넌트에 에셋 장착
+
+	//MeshComponent->SetRelativeLocation(FVector(LineRiverComponent->GetRiverLength() / 2.f, LineRiverComponent->GetRiverWidth() / 2.f, 0.f));
+	MeshComponent->SetRelativeLocation(Transform.Location);
+	MeshComponent->SetRelativeRotation(FRotator(-90, 0, 0));
+	FVector QuadScale = FVector(0.015f, LineRiverComponent->GetRiverWidth(), LineRiverComponent->GetRiverLength()) * 1.01f;
+	MeshComponent->SetRelativeScale3D(QuadScale);
+	FVector4 QuadColor = FVector4(0.f, 0.27f, 0.55f, 1.f); 
+	MeshComponent->SetPrimitiveColor(QuadColor);
+	MeshComponent->SetOriginalColor(false);
+
+	NewActor->AddComponent(MeshComponent);
+
+	//씬의 액터 목록(Level 배열)에 추가
+	AddActor(NewActor);
+
+	return NewActor;
+}

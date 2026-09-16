@@ -134,7 +134,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 
 	// 1. ResourceManager에 등록된 스태틱 메쉬 에셋 이름들 (하드코딩 Enum을 대체)
 	// todo : 이건 추후 자동화해야할듯함
-	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh","Fire","Ghost","Spotlight","Rain"};
+	const char* AssetNames[] = { "Cube", "Sphere", "Quad", "Crate", "Text Mesh","Fire","Ghost","Spotlight","Rain", "Line River" };
 	int32 spawnCount = mGuiInputField.SpawnCount;
 
 	// 2. 콤보 박스 UI (선택한 인덱스가 mGuiInputField.SelectedMeshIndex에 저장됨)
@@ -168,6 +168,10 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 			else if (SelectedName == "Rain")
 			{
 				AActor* newActor = mCurrentWorld->SpawnRainActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
+			}
+			else if (SelectedName == "Line River")
+			{
+				AActor* newActor = mCurrentWorld->SpawnLineRiverActor({ FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1) }, *guiReference.ResourceManager);
 			}
 			else
 			{
@@ -568,7 +572,8 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 
 					if (PrimitiveComponent->IsOriginalColor())
 						PrimitiveComponent->SetOriginalColor(false);
-					PrimitiveComponent->SetPrimitiveColor(FVector4(Color[0], Color[1], Color[2], 1.0f));
+					FVector4 NewColor = FVector4(Color[0], Color[1], Color[2], 1.0f);
+					PrimitiveComponent->SetPrimitiveColor(NewColor);
 				}
 			}
 		}

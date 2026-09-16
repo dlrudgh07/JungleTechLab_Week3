@@ -35,6 +35,8 @@ public:
 	AActor* SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager, const std::string& MaterialName);
 	AActor* SpawnSpotlightActor(const std::string& AssetName, FTransform Transform, const FResourceManager& ResourceManager);
  
+	AActor* SpawnLineRiverActor(FTransform Transform, const FResourceManager& ResourceManager);
+
 private:
 	int32 GetActorIndex(FGuid TargetGuid) const;
 
