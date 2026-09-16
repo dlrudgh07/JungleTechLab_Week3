@@ -9,7 +9,6 @@
 #include "FQuad.h"
 #include "MeshUtility.h"
 
-
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
 static constexpr uint32 UUID_VERTEX_CAPACITY = 8192; // 초기에할당한 크기이다 용량이 꽉차면 2배로 재할당
@@ -32,17 +31,17 @@ void FGraphicsManager::Initialize(HWND hWindow)
 	mRenderer->Create(hWindow);
 	mRenderer->CreateShader();
 	mRenderer->CreateConstantBuffer();
+	mRenderer->CreateConstantBufferNDC();
 	mRenderer->CreateLineVertexBuffer(LINE_VERTEX_CAPACITY);
 	mRenderer->CreateUUIDVertexBuffer(UUID_VERTEX_CAPACITY);
 
 	mAspect = mRenderer->ViewportInfo.Width / mRenderer->ViewportInfo.Height;
-
-
 }
 
 void FGraphicsManager::Release()
 {
 	mRenderer->ReleaseLineVertexBuffer();
+	mRenderer->ReleaseConstantBufferNDC();
 	mRenderer->ReleaseConstantBuffer();
 	mRenderer->ReleaseUUIDVertexBuffer();
 	mRenderer->ReleaseShader();
@@ -77,8 +76,6 @@ void FGraphicsManager::Prepare(const FCamera* mCamera, EViewModeIndex viewMode)
 	mViewOrthogonalProjectionMatrix = view * projection_u_o;
 	mViewUnifiedProjectionMatrix = view * projection_u;
 
-	mViewNormalProjectionMatrix = view * mCamera->GetProjectionMatrix(mAspect, mCamera->mFovDegree, nearZ, farZ);
-
 	// 하이라이트 두께를 화면 픽셀 기준으로 환산할 때 쓴다
 	mCameraLocation = mCamera->Transform.Location;
 	mCameraForward = mCamera->GetForwardVector();
@@ -99,11 +96,13 @@ void FGraphicsManager::GizmoPrepare()
 
 void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 {
+	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
 	if (renderInfos.IsEmpty())
 	{
 		//없어도 일단 PrepareShader();
 		mRenderer->PrepareShader();
 	}
+
 	//불투명, 반투명 나누기
 	TArray<FRenderInfo> OpaqueList;
 	TArray<FRenderInfo> TranslucentList;
@@ -117,7 +116,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 		}
 		else
 		{
-			OpaqueList.Add(renderInfo);			
+			OpaqueList.Add(renderInfo);
 		}
 	}
 
@@ -132,6 +131,7 @@ void FGraphicsManager::Render(const TArray<FRenderInfo>& renderInfos)
 void FGraphicsManager::RenderList(const TArray<FRenderInfo>& renderInfos)
 {
 	FMatrix viewProjection = mViewUnifiedProjectionMatrix;
+
 
 	for (const FRenderInfo& renderInfo : renderInfos)
 	{
@@ -157,12 +157,16 @@ void FGraphicsManager::RenderList(const TArray<FRenderInfo>& renderInfos)
 			// 택스쳐가 없으면 렌더러에 내장된 디폴트 화이트 활용
 			mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());
 		}
-		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.UVTransform); 
+		mRenderer->UpdateConstant(renderInfo.WorldTransformMatrix, viewProjection, renderInfo.Color, renderInfo.UVTransform);
 
 
 		mRenderer->RenderPrimitive(renderInfo.VertexBuffer);
 	}
+	mRenderer->PrepareShader();
 }
+
+
+
 
 
 void FGraphicsManager::DrawLine(const FVector& start, const FVector& end, const FVector4& color)
@@ -258,6 +262,40 @@ void FGraphicsManager::DrawAABB(const FBoxSphereBounds&& WorldBounds)
 }
 
 
+
+void FGraphicsManager::DrawGizmoNDC(const FMatrix& CameraViewRotationMatrix)
+{
+	mRenderer->UpdateConstantNDC(CameraViewRotationMatrix, mAspect);
+
+	mRenderer->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	// 버퍼리스(Bufferless) 렌더링
+	mRenderer->DeviceContext->IASetInputLayout(nullptr);
+	// Vertex Buffer와 Index Buffer 바인딩 해제
+	UINT Stride = 0;
+	UINT Offset = 0;
+	ID3D11Buffer* NullBuffer = nullptr;
+	mRenderer->DeviceContext->IASetVertexBuffers(0, 1, &NullBuffer, &Stride, &Offset);
+	mRenderer->DeviceContext->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+
+	// Depth 끄기 및 쉐이더 바인딩
+	mRenderer->DeviceContext->OMSetDepthStencilState(mRenderer->NoDepthStencilState, 0);
+
+	// 기즈모 전용 쉐이더 및 상수 버퍼(카메라 회전 등) 세팅
+	mRenderer->DeviceContext->VSSetShader(mRenderer->NDCVertexShader, nullptr, 0);
+	mRenderer->DeviceContext->PSSetShader(mRenderer->NDCPixelShader, nullptr, 0);
+	mRenderer->DeviceContext->VSSetConstantBuffers(0, 1, &mRenderer->ConstantBufferNDC);
+
+	// 인덱스나 정점 버퍼 없이 SV_VertexID 0~5를 사용해 그리기
+	mRenderer->DeviceContext->Draw(6, 0);
+
+	// 이후 패스가 NDC 렌더 상태를 물려받지 않도록 기본 3D 상태로 복원합니다.
+	mRenderer->DeviceContext->OMSetDepthStencilState(mRenderer->DepthStencilState, 0);
+	mRenderer->DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mRenderer->PrepareShader();
+}
+
+
 void FGraphicsManager::DrawGrid(FTransform CameraTransform, float Offset, int32 Range)
 {
 	if (!mbShowGrid) return;
@@ -320,7 +358,6 @@ void FGraphicsManager::FlushLines()
 	mRenderer->UpdateConstant(FMatrix::Identity, mViewUnifiedProjectionMatrix, FVector4(0, 0, 0, 0));
 	mRenderer->BindTexture(0, mRenderer->DefaultWhiteTextureSRV.Get());   // 도형 없어도 정점색이 나오도록 흰색 텍스처
 	mRenderer->RenderLines(&mLineVertices[0], mLineVertices.Num());
-
 
 	// 안 비우면 매 프레임 누적돼 버퍼가 넘친다. 용량은 유지한 채 개수만 0으로
 	mLineVertices.Reset(LINE_VERTEX_CAPACITY);
@@ -402,7 +439,7 @@ void FGraphicsManager::RenderOverlay(const TArray<FRenderInfo> renderInfos) //�
 void GraphicsManager::Render(FTransform worldTransformMatrix, EPrimitive ePrimitive)
 {
 	mRenderer->UpdateConstant(worldTransformMatrix.MakeMatrix(), mViewProjectionMatrix);
-	
+
 	FBuffer vertexBuffer = mBufferMap[ePrimitive];
 	mRenderer->RenderPrimitive(vertexBuffer.Buffer, vertexBuffer.SourceNum);
 }
@@ -534,24 +571,12 @@ void FGraphicsManager::RenderHighLight(const FRenderInfo& RI)
 		* FMatrix::Translation(Center)
 		* RI.WorldTransformMatrix;
 
-	/*UE_LOG_F("WorldScale=({},{},{}) Center=({},{},{}) OutlineScale=({},{},{})",
-			 WorldScale.x, WorldScale.y, WorldScale.z,
-			 Center.x, Center.y, Center.z,
-			 OutlineScale.x, OutlineScale.y, OutlineScale.z);*/
-
 	mRenderer->RenderHighlight(
 		RI.VertexBuffer,
 		mViewUnifiedProjectionMatrix,
 		Outline,
 		RI
 	);
-
-	/*mRenderer->RenderHighlight(
-		RI.VertexBuffer,
-		mViewNormalProjectionMatrix,
-		Outline,
-		RI
-	);*/
 }
 
 

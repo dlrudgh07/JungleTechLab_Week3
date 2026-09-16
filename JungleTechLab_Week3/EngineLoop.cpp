@@ -73,7 +73,7 @@ void FEngineLoop::Init(HINSTANCE hInstance, WNDPROC WndProc)
 
 	// Initialize window infos
 	WCHAR WindowClass[] = L"JungleWindowClass";
-	WCHAR Title[] = L"Ghoast Engine";
+	WCHAR Title[] = L"Ghost Engine";
 	WNDCLASSW wndclass = { 0, WndProc, 0, 0, 0, 0, 0, 0, 0, WindowClass };
 	RegisterClassW(&wndclass);
 
@@ -240,6 +240,13 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				}
 				FGraphicsManager::Get().FlushUUID(FResourceManager::Get().GetTexture("FontTexture"));
 			}
+		}
+
+		// NDC Gizmo
+		if (HasFlag(flags, EEngineShowFlags::SF_WorldAxis))
+		{
+			const FMatrix CameraViewRotation = ViewportClient->GetCamera().Transform.Rotation.ToMatrix().Transpose() * FMatrix::UEToDX;
+			FGraphicsManager::Get().DrawGizmoNDC(CameraViewRotation);
 		}
 
 		//ImGui

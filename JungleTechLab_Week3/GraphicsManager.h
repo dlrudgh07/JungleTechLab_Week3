@@ -78,6 +78,7 @@ public:
 	void SetDrawAABB(const bool bInputShowAABB) { bShowAABB = bInputShowAABB; }
 	bool IsDrawAABB() const { return bShowAABB; }
 	void DrawGrid(FTransform CameraTransform, float Offset, int32 Range);
+	void DrawGizmoNDC(const FMatrix& CameraViewRotationMatrix);
 	void FlushLines();
 
 
@@ -107,7 +108,6 @@ private:
 	FMatrix mViewProjectionMatrix{};
 	FMatrix mViewOrthogonalProjectionMatrix{};
 	FMatrix mViewUnifiedProjectionMatrix{};
-	FMatrix mViewNormalProjectionMatrix{};
 
 	// Prepare에서 갱신. 하이라이트 두께의 픽셀 → 월드 환산에 쓴다
 	FVector mCameraLocation{};
@@ -133,5 +133,4 @@ private:
 	float mProjectionElapsed = 0.0f;
 	float mProjectionDuration = 1.0f;
 	bool mbProjectionTransitioning = false;
-
 };
