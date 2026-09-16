@@ -297,7 +297,7 @@ void FSceneManager::updateControlPanelGUI(const FGuiReference& guiReference)
 	}
 
 	// viewMode UI. 배열 순서는 EViewModeIndex 선언 순서(Lit, Unlit, Wireframe)와 맞아야 한다
-	const char* viewModeNames[] = { "Lit", "Unlit", "Wireframe" };
+	const char* viewModeNames[] = { "Solid", "Wireframe" };
 	int32 viewModeIndex = static_cast<int32>(guiReference.ViewportClient->GetViewMode());
 	if (ImGui::Combo("View Mode", &viewModeIndex, viewModeNames, IM_ARRAYSIZE(viewModeNames)))
 	{

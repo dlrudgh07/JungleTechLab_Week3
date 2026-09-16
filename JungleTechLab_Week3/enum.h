@@ -28,9 +28,9 @@ enum EGIZMO_TYPE {
 
 enum class EViewModeIndex : uint32  // 오직하나만 있어야하는 친구들
 {
-	VMI_Lit, //week3 미구현
-	VMI_Unlit, //week3 미구현
+	VMI_Solid,
 	VMI_Wireframe,
+
 };
 
 enum class EEngineShowFlags : uint64 // 여러개가 동시일수도 있는 친구들(비트마스크)
