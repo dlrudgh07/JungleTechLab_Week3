@@ -415,19 +415,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="ShaderW0.hlsl">
+    <FxCompile Include="Shaders\ShaderW0.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="FontTexturePixelShader.hlsl">
+    <FxCompile Include="Shaders\FontTexturePixelShader.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ShaderLine.hlsl">
+    <FxCompile Include="Shaders\ShaderLine.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="FontVertexShader.hlsl">
+    <FxCompile Include="Shaders\FontVertexShader.hlsl">
       <Filter>Rendering\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="DrawNDC.hlsl" />
+    <FxCompile Include="Shaders\DrawNDC.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Object.inl">
