@@ -18,7 +18,14 @@ void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) c
 	Info.CollisionVertices = StaticMesh->CPUVertices.data();
 	Info.CollisionVertexCount = static_cast<int32>(StaticMesh->CPUVertices.size());
 
-	Info.Color = UPrimitiveComponent::GetPrimitiveColor();
+	//기본은 머티리얼이 정한 틴트. 머티리얼이 없으면 "틴트 없음"
+	Info.Color = CurrentMaterial ? CurrentMaterial->TintColor
+		: FVector4(1, 1, 1, 0);
+
+	// 컴포넌트가 색을 덮어썼다면 교체한다
+	if (!UPrimitiveComponent::IsOriginalColor())
+		Info.Color = PrimitiveColor;
+
 
 	if (CurrentMaterial)
 	{

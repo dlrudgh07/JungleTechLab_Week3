@@ -42,7 +42,7 @@ public:
 	FVector4 GetPrimitiveColor() const;
 	void SetPrimitiveColor(FVector4 NewColor);
 
-	const bool IsOriginalColor();
+	const bool IsOriginalColor() const;
 	void SetOriginalColor(bool Value);
 
 	//bIsBillboard가 true라면 카메라 반대방향으로 SetRelativeRotation을 합니다.
