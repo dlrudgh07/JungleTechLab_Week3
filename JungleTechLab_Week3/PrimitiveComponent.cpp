@@ -32,6 +32,7 @@ bool UPrimitiveComponent::GetIsBillboard() const
 }
 
 void UPrimitiveComponent::SetIsBillboard(bool pIsBillboard)
+\
 {
 	bIsBillboard = pIsBillboard;
 }

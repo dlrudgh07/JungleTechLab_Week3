@@ -12,6 +12,7 @@
 #include "StaticMeshComponent.h"
 #include "UTextComponent.h"
 #include "ParticleSubUVComponent.h"
+#include "ULineRiverComponent.h"
 
 UWorld::~UWorld()
 {
@@ -210,5 +211,34 @@ AActor* UWorld::SpawnParticleActor(FTransform Transform, const FResourceManager&
 
 	NewActor->AddRootSceneComponent(Comp);
 	AddActor(NewActor);
+	return NewActor;
+}
+
+AActor* UWorld::SpawnLineRiverActor(FTransform Transform, const FResourceManager& ResourceManager)
+{
+	// 1. 리소스 매니저에서 에셋(UStaticMesh) 검색
+	UStaticMesh* LoadedMesh = ResourceManager.GetStaticMesh("Quad");
+	if (LoadedMesh == nullptr)
+	{
+		// 에셋을 못 찾았을 경우 에러 처리
+		return nullptr;
+	}
+
+
+	// 2. 팩토리를 통해 빈 액터와 컴포넌트 생성 후 에셋 할당
+	AActor* NewActor = FObjectFactory::ConstructObject<AActor>();
+	ULineRiverComponent* LineRiverComponent = FObjectFactory::ConstructObject<ULineRiverComponent>();
+
+	LineRiverComponent->SetStaticMesh(LoadedMesh); // 컴포넌트에 에셋 장착
+
+	LineRiverComponent->SetRelativeLocation(Transform.Location);
+	LineRiverComponent->SetRelativeRotation(Transform.Rotation);
+	LineRiverComponent->SetRelativeScale3D(Transform.Scale);
+
+	NewActor->AddRootSceneComponent(LineRiverComponent); // 액터의 루트로 등록
+
+	// 3. 씬의 액터 목록(Level 배열)에 추가
+	AddActor(NewActor);
+
 	return NewActor;
 }

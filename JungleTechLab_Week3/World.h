@@ -32,6 +32,7 @@ public:
 	AActor* SpawnStaticMeshActor(const std::string& AssetName, struct FTransform Transform, const FResourceManager& ResourceManager);
 	AActor* SpawnTextMeshActor(struct FTransform Transform, const FResourceManager& ResourceManager);
 	AActor* SpawnParticleActor(FTransform Transform, const FResourceManager& ResourceManager);
+	AActor* SpawnLineRiverActor(FTransform Transform, const FResourceManager& ResourceManager);
 
 
 private:
