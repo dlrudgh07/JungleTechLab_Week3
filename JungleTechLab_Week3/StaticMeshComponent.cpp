@@ -27,6 +27,7 @@ void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) c
 		Info.Color = PrimitiveColor;
 
 
+	auto cache = Info.Color.w;
 	if (CurrentMaterial)
 	{
 		Info.BaseTexture = CurrentMaterial->BaseTexture;
@@ -46,6 +47,7 @@ void UStaticMeshComponent::AddRenderInfos(TArray<FRenderInfo>* outRenderInfos) c
 		// 4. 결과를 다시 구조체에 저장
 		DirectX::XMStoreFloat4(reinterpret_cast<DirectX::XMFLOAT4*>(&Info.Color), ResultVec);
 	}
+	Info.Color.w = cache;
 
 	Info.LocalBoundsCenter = StaticMesh->LocalBounds.Center;
 	Info.LocalBoundsHalfExtent = StaticMesh->LocalBounds.BoxHalfExtent;
