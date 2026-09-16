@@ -62,6 +62,7 @@ const FClassInfo* UObject::GetClass()
 void UObject::SerializeClass(json::JSON& outJson) const
 {
 	outJson["ClassName"] = GetRuntimeClass()->Name;
+	outJson["Name"] = Name.ToString();
 
 	json::JSON propertiesJson = json::JSON::Make(json::JSON::Class::Object);
 	propertiesJson["GUID"] = ObjectID.GUID.ToString();
@@ -70,6 +71,12 @@ void UObject::SerializeClass(json::JSON& outJson) const
 
 void UObject::DeserializeClass(const json::JSON& inJson)
 {
+	if (!inJson.hasKey("Name") || inJson.at("Name").JSONType() != json::JSON::Class::String)
+	{
+		throw std::runtime_error("Invalid JSON format for Name");
+	}
+	Name = FName(inJson.at("Name").ToString().c_str());
+
 	if (!inJson.hasKey("Properties") || inJson.at("Properties").JSONType() != json::JSON::Class::Object)
 	{
 		throw std::runtime_error("Invalid JSON format for Properties");
