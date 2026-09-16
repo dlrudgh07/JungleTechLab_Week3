@@ -42,3 +42,8 @@ void UPrimitiveComponent::SetBillboardTransfom()
 	FQuaternion CameraRot = FEditorViewportClient::GetCamera().Transform.Rotation;
 	SetRelativeRotation(CameraRot);
 }
+
+void UPrimitiveComponent::SetPrimitiveColor(FVector4& NewColor)
+{
+	PrimitiveColor = NewColor;
+}

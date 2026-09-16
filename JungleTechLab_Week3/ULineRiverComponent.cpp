@@ -28,12 +28,17 @@ void ULineRiverComponent::Initialize()
 	WaveSpeedWeight = 3.0f;
 
 	InitializeLineRiver();
+
+	SetRelativeScale3D(FVector(0.f, RiverWidth, RiverLength));
+	PrimitiveColor = FVector4(1.f, 1.f, 1.f, 0.f);
+
+
 }
 
 void ULineRiverComponent::Update(TArray<FRenderInfo>* OutRenderInfos, float DeltaTime)
 {
 	//여기서 StaticMesh의 RenderInfo는 넘어갈것이다.
-	UStaticMeshComponent::Update(OutRenderInfos, DeltaTime);
+	UPrimitiveComponent::Update(OutRenderInfos, DeltaTime);
 
 	UpdateLine(DeltaTime);
 }
@@ -46,12 +51,10 @@ void ULineRiverComponent::Update(TArray<FRenderInfo>* OutRenderInfos, float Delt
 
 void ULineRiverComponent::GetVertices(std::vector<FVertexSimple>& OutVertices) const
 {
-	UStaticMeshComponent::GetVertices(OutVertices);
 }
 
 void ULineRiverComponent::GetIndices(std::vector<uint32>& OutIndices) const
 {
-	UStaticMeshComponent::GetIndices(OutIndices);
 }
 
 void ULineRiverComponent::InitializeLineRiver()
@@ -128,4 +131,14 @@ void ULineRiverComponent::UpdateLine(float dt)
 		//line.StartPoint += GetForwardVector() * line.LineVelocity * dt;
 		line.StartPoint = GetRelativeLocation() + GetRightVector() * line.LineWidth + GetUpVector() * line.LineDepth + GetForwardVector() * line.Movement;
 	}
+}
+
+float ULineRiverComponent::GetRiverWidth() const
+{
+	return RiverWidth;
+}
+
+float ULineRiverComponent::GetRiverLength() const
+{
+	return RiverLength;
 }

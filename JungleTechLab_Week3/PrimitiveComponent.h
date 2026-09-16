@@ -43,6 +43,8 @@ public:
 	//상속 컴포넌트 별로 다른 방향 처리를 해야한다면 override해야합니다.
 	virtual void SetBillboardTransfom();
 
+	void SetPrimitiveColor(FVector4& NewColor);
+
 protected:
 	virtual FBoxSphereBounds CalculateBounds(const FMatrix& LocalToWorld) const
 	{

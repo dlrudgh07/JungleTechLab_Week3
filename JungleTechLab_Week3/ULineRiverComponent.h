@@ -19,7 +19,7 @@ struct FLineRiver
 };
 
 class ULineRiverComponent :
-    public UStaticMeshComponent
+    public UPrimitiveComponent
 {
 public:
 	void SerializeClass(json::JSON& outJson) const override;
@@ -44,7 +44,10 @@ public:
 	//시간에 맞춰 라인의 상태를 업데이트합니다.
 	void UpdateLine(float dt);
 
-	REFLECT_CLASS(ULineRiverComponent, UStaticMeshComponent)
+	float GetRiverWidth()const;
+	float GetRiverLength()const;
+
+	REFLECT_CLASS(ULineRiverComponent, UPrimitiveComponent)
 
 private:
 	//라인들을 저장
