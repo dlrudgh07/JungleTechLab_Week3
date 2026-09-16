@@ -173,6 +173,7 @@
     </ClCompile>
     <ClCompile Include="..\Test\Serialization\SceneSerializationTest.cpp" Condition="'$(SceneSerializationTests)'=='true'" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ParticleRainComponent.cpp" />
     <ClCompile Include="ParticleSubUVComponent.cpp" />
     <ClCompile Include="PrimitiveComponent.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="FBoxSphereBounds.h" />
     <ClInclude Include="FName.h" />
     <ClInclude Include="FPath.h" />
+    <ClInclude Include="ParticleRainComponent.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Guid.h" />
     <ClInclude Include="NameHashTable.h" />
