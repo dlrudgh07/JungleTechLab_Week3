@@ -142,7 +142,6 @@ void FGraphicsManager::RenderList(const TArray<FRenderInfo>& renderInfos)
 		{
 			if (renderInfo.BlendMode == EBlendMode::Translucent)
 			{
-
 				mRenderer->PrepareFontShader();
 			}
 			else

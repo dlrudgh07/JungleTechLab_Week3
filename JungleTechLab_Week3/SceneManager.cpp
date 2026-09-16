@@ -17,6 +17,7 @@
 #include "Camera.h"
 #include "Console.h"
 #include "UTextComponent.h"
+#include "StaticMeshComponent.h"
 
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_dx11.h"
@@ -556,6 +557,21 @@ void FSceneManager::updatePropertyWindowGUI(const FGuiReference& guiReference)
 				SubUV->SetLoop(loop);
 		}
 
+		static float Color[3] = { 0, 0, 0 };
+		if (ImGui::ColorEdit3("Color", Color))
+		{
+			for (auto Element : mSelectedActor->GetComponents())
+			{
+				if (Element->IsA(UPrimitiveComponent::GetClass()))
+				{
+					UPrimitiveComponent* PrimitiveComponent = Element->Cast<UPrimitiveComponent>();
+
+					if (PrimitiveComponent->IsOriginalColor())
+						PrimitiveComponent->SetOriginalColor(false);
+					PrimitiveComponent->SetPrimitiveColor(FVector4(Color[0], Color[1], Color[2], 1.0f));
+				}
+			}
+		}
 	}
 	ImGui::End();
 }
